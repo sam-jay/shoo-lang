@@ -5,20 +5,27 @@
 
 ## Table of Contents
 
-- [Install](#install)
+- [Requirements](#requirements)
+- [Usage](#usage)
 - [Introduction](#introduction)
 - [Running tests](#running-tests)
-- [Using the compiler](#using-the-compiler)
 
-## Install
+## Requirements
 
-Before installing, download and install OCaml.
+Install OCaml and OPAM.
 OCaml version 4.04.0 or higher is required.
 
-Installation is done using the following command.
+* Install dependencies:
+```sh
+$ opam install ounit
+```
+
+## Usage
+
+Build the compiler binary using make.
 
 ```sh
-$ install-command-goes-here
+$ make
 ```
 
 ## Introduction
@@ -65,5 +72,7 @@ println(final);
 
 ## Running tests
 
-
-## Using the compiler
+```sh
+$ make test
+$ ./test.native
+```
