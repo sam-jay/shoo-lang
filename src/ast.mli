@@ -12,7 +12,6 @@ type expr =
 | Assign of string * expr
 | FDecl of string * param list
 | FCall of string * expr list
-| Shoo of expr
 
 type stmt =
   Block of stmt list

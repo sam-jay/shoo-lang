@@ -26,20 +26,18 @@ expr:
 | BOOLLIT { BoolLit($1) }
 | ID { Id($1) }
 | ID ASSIGN expr { Assign($1, $3) }
-| named_func { $1 }
-| anon_func { $1 }
-| SHOO expr { Shoo($2) }
+| FUNC id_opt LPAREN params_opt RPAREN LBRACE stmt_list RBRACE { FDecl($2, $4) }
 | ID LPAREN args_opt RPAREN { FCall($1, $3) }
-
-named_func: FUNC ID LPAREN params_opt RPAREN LBRACE stmt_list RBRACE { FDecl($2, $4) }
-
-anon_func: FUNC LPAREN params_opt RPAREN LBRACE stmt_list RBRACE { FDecl("", $3) }
 
 typ:
   INT { Int }
 | FLOAT { Float }
 | BOOL { Bool }
 | STRING { String }
+
+id_opt:
+  { "" }
+| ID { $1 }
 
 params_opt:
   { [] }

@@ -28,7 +28,6 @@ let rec fmt_expr = function
 | Assign(s, e) -> fmt_two "Assign" s (fmt_expr e)
 | FDecl(n, p) -> fmt_two "FDecl" n (fmt_params p)
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
-| Shoo(_) -> "Shoo"
 
 let fmt_stmt = function
   Block(_) -> "Block"
