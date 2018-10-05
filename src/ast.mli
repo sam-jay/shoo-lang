@@ -22,6 +22,8 @@ type expr =
 
 and stmt =
   Expr of expr
+| VDecl of typ * string
+| VDef of typ * string * expr
 | Return of expr
 | FDecl of string * param list * typ * stmt list
 

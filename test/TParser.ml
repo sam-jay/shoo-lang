@@ -40,6 +40,15 @@ let float_tests =
     "Should accept positive with leading 0 omitted" >:: float_test2;
   ]
 
+let int_dec text_ctxt = assert_equal [VDecl(Int, "x")] (parse "int x;")
+let int_def text_ctxt = assert_equal [VDef(Int, "x", IntLit(5))] (parse "int x = 5;")
+let vdec_tests =
+  "Variable declarations and definitions" >:::
+  [
+    "Should handle declaration of int" >:: int_dec;
+    "Should handle definition of int" >:: int_def;
+  ]
+
 let tests =
   "Parser" >:::
   [
@@ -48,4 +57,5 @@ let tests =
     "Semicolon should be mandatory" >:: mandatory_semi;
     comment_tests;
     float_tests;
+    vdec_tests;
   ]

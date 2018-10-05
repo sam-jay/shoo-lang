@@ -20,8 +20,10 @@ stmt_list:
 
 stmt:
   expr SEMI { Expr $1 }
+| typ ID ASSIGN expr SEMI { VDef($1, $2, $4) }
+| typ ID SEMI { VDecl($1, $2) }
 | FUNC ID LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE { FDecl($2, $4, $6, $8) }
-| RETURN expr { Return($2) }
+| RETURN expr SEMI { Return($2) }
 
 expr:
 | INTLIT { IntLit($1) }
