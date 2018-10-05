@@ -39,6 +39,9 @@ and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
 | FDecl(n, p, t, b) -> fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
+| VDecl(t, n) -> fmt_two "VDecl" (fmt_typ t) n
+| VDef(t, n, e) -> fmt_three "VDef" (fmt_typ t) n (fmt_expr e)
+| If(e, trueL, falseL) -> fmt_three "If" (fmt_expr e) (fmt_stmt_list trueL) (fmt_stmt_list falseL)
 
 and fmt_stmt_list l =
   let stmts = List.map fmt_stmt l in
