@@ -1,11 +1,13 @@
 %{ open Ast %}
 
 %token EOF SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
-%token COMMA RETURN ANY VOID
+%token COMMA RETURN ANY VOID IF ELIF ELSE
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <bool> BOOLLIT
 %token <string> ID
+
+%nonassoc NOELSE
 
 %start program
 %type <Ast.program> program
@@ -24,6 +26,15 @@ stmt:
 | typ ID SEMI { VDecl($1, $2) }
 | FUNC ID LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE { FDecl($2, $4, $6, $8) }
 | RETURN expr SEMI { Return($2) }
+| IF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { If($3, $6, $8) }
+
+false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
+
+elif:
+ELIF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { [If($3, $6, $8)] }
+
+cf_else:
+ELSE LBRACE stmt_list RBRACE { $3 }
 
 expr:
 | INTLIT { IntLit($1) }

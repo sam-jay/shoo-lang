@@ -19,10 +19,13 @@ rule token = parse
 | "any" { ANY }
 | "void" { VOID }
 | "return" { RETURN }
+| "elif" { ELIF }
+| "if" { IF }
+| "else" { ELSE }
+| "true"|"false" as lxm { BOOLLIT(bool_of_string lxm) }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
 | ['0'-'9']*"."['0'-'9']+ as lxm { FLOATLIT(float_of_string lxm) }
 | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { ID(lxm) }
-| "true"|"false" as lxm { BOOLLIT(bool_of_string lxm) }
 | eof { EOF }
 
 and comment level = parse
