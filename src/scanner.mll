@@ -22,6 +22,7 @@ rule token = parse
 | "elif" { ELIF }
 | "if" { IF }
 | "else" { ELSE }
+| "for" { FOR }
 | "true"|"false" as lxm { BOOLLIT(bool_of_string lxm) }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
 | ['0'-'9']*"."['0'-'9']+ as lxm { FLOATLIT(float_of_string lxm) }

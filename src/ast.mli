@@ -19,6 +19,7 @@ type expr =
 | Assign of string * expr
 | FCall of string * expr list
 | FExpr of param list * typ * stmt list
+| NoExpr
 
 and stmt =
   Expr of expr
@@ -27,5 +28,6 @@ and stmt =
 | Return of expr
 | FDecl of string * param list * typ * stmt list
 | If of expr * stmt list * stmt list
+| ForLoop of expr * expr * expr * stmt list
 
 type program = stmt list

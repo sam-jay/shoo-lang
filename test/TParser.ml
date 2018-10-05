@@ -40,15 +40,14 @@ let float_tests =
     "Should accept positive with leading 0 omitted" >:: float_test2;
   ]
 
-let int_dec text_ctxt = assert_equal [VDecl(Int, "x")] (parse "int x;")
-let int_def text_ctxt = assert_equal [VDef(Int, "x", IntLit(5))] (parse "int x = 5;")
+let int_dec test_ctxt = assert_equal [VDecl(Int, "x")] (parse "int x;")
+let int_def test_ctxt = assert_equal [VDef(Int, "x", IntLit(5))] (parse "int x = 5;")
 let vdec_tests =
   "Variable declarations and definitions" >:::
   [
     "Should handle declaration of int" >:: int_dec;
     "Should handle definition of int" >:: int_def;
   ]
-
 
 let if_only text_ctxt = 
   assert_equal [If(BoolLit(true),[VDecl(Int, "x")],[])] (parse "if(true){int x;}")
@@ -73,6 +72,30 @@ let if_else_tests =
     "Should handle if statement with elif and else" >:: if_elif1_else;
     "Should handle if statement with 2 elifs and else" >:: if_elif2_else;
   ]
+  
+(* TODO(claire) someone needs to write a test for assignment *)
+
+(* TODO(claire) need to implement this once minus is implemented *)
+(*let for_all = assert_equal [ForLoop(VDef(Int, "x", IntLit(0)), true 
+  (* TODO(claire): change this one > and < are implemented *), Assign("x", Expr*)  
+let for_no_init_no_imp test_ctxt = assert_equal [ForLoop( NoExpr, BoolLit(true) (* TODO(claire): change this one once have <> *), 
+  NoExpr, [Expr(IntLit(5))])] (parse "for ( ; true; ) { 5; }") 
+
+let for_no_test test_ctxt =
+  let f = fun () -> parse "for (; ; ) {5;}" in
+  assert_raises Parsing.Parse_error f
+
+let for_tests = 
+    "For loops" >:::
+    [
+(*      "Should handle for loop with initialization, testing, and increment"
+        >:: for_all;*) (* TODO(claire) impelement this one math is implemented *)
+      (*"Should handle for with missing initialization" >:: for_no_init;
+      "Should handle for with missing increment" >:: for_no_increment;*)
+      (* TODO(claire) ^^^^ implement after math is impelemented *)
+      "Should handle for loop with missing init and increment" >:: for_no_init_no_imp;
+      "Should raise error if no test" >:: for_no_test;
+    ]
 
 let tests =
   "Parser" >:::
@@ -84,4 +107,5 @@ let tests =
     float_tests;
     vdec_tests;
     if_else_tests;
+    for_tests;
   ]

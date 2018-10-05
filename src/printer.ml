@@ -34,13 +34,18 @@ let rec fmt_expr = function
 | Assign(s, e) -> fmt_two "Assign" s (fmt_expr e)
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
 | FExpr(p, t, b) -> fmt_three "FExpr" (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
+| NoExpr -> "NoExpr"
 
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
-| FDecl(n, p, t, b) -> fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
-| VDecl(t, n) -> fmt_two "VDecl" (fmt_typ t) n
-| VDef(t, n, e) -> fmt_three "VDef" (fmt_typ t) n (fmt_expr e)
+| FDecl(n, p, t, b) -> 
+  fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
+| VDecl (t, n ) -> fmt_two "VDecl" (fmt_typ t) n
+| VDef (t, n, e) -> fmt_three "VDef" (fmt_typ t) n (fmt_expr e)
+| ForLoop (e1, e2, e3, s) -> 
+  fmt_four "ForLoop" (fmt_expr e1) (fmt_expr e2) 
+  (fmt_expr e3) (fmt_stmt_list s)
 | If(e, trueL, falseL) -> fmt_three "If" (fmt_expr e) (fmt_stmt_list trueL) (fmt_stmt_list falseL)
 
 and fmt_stmt_list l =
