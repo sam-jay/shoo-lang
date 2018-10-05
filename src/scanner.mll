@@ -2,6 +2,7 @@
 
 rule token = parse
   [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
+| "//" { linec lexbuf }
 | "/*" { comment 0 lexbuf } (* Comments *)
 | ';' { SEMI }
 | '=' { ASSIGN }
@@ -28,3 +29,7 @@ and comment level = parse
   "*/" { match level with 0 -> token lexbuf | _ -> comment (level - 1) lexbuf }
 | "/*" { comment (level + 1) lexbuf }
 | _ { comment level lexbuf }
+
+and linec = parse
+  '\n' { token lexbuf }
+| _ { linec lexbuf }

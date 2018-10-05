@@ -19,12 +19,15 @@ let comment_test2 test_ctxt = assert_equal [Expr(IntLit(5)); Expr(IntLit(6))] (p
 
 let comment_test3 test_ctxt = assert_equal [Expr(IntLit(5)); Expr(IntLit(6))] (parse "5;/* this is a /* /* twice \n 5; */ \n nested */ multiline \n comment */6;")
 
+let linec_test test_ctxt = assert_equal [Expr(IntLit(5)); Expr(IntLit(6))] (parse "5; // this is a comment \n 6;")
+
 let comment_tests =
   "Comments" >:::
   [
     "Should accept multiline comment" >:: comment_test1;
     "Should accept once nested multiline comment" >:: comment_test2;
     "Should accept twice nested multiline comment" >:: comment_test3;
+    "Should handle single line comment" >:: linec_test;
   ]
 
 let float_test1 test_ctxt = assert_equal [Expr(FloatLit(0.1234))] (parse "0.1234;")
