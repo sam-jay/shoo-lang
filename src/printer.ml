@@ -4,19 +4,25 @@ open Ast
 
 let fmt_one name v = String.concat "" [name; "("; v; ")"]
 let fmt_two name v1 v2 = String.concat "" [name; "("; v1; ","; v2; ")"]
+let fmt_three name v1 v2 v3 = String.concat "" [name; "("; v1; ","; v2; ","; v3; ")"]
+let fmt_four name v1 v2 v3 v4 = String.concat "" [name; "("; v1; ","; v2; ","; v3; ","; v4; ")"]
 
 let fmt_list l =
   let items = String.concat ";" l in
   String.concat "" ["["; items; "]"]
 
-let fmt_params l =
-  let fmt_t = function
-    Int -> "Int"
+let fmt_typ = function
+    Any -> "Any"
+  | Void -> "Void"
+  | Func -> "Func"
+  | Int -> "Int"
   | Float -> "Float"
   | Bool -> "Bool"
-  | String -> "String" in
+  | String -> "String"
+
+let fmt_params l =
   let fmt_p = function
-    (t, n) -> String.concat "" ["("; fmt_t t; ", "; n; ")"] in
+    (t, n) -> String.concat "" ["("; fmt_typ t; ", "; n; ")"] in
   fmt_list (List.map fmt_p l)
 
 let rec fmt_expr = function
@@ -26,16 +32,20 @@ let rec fmt_expr = function
 | BoolLit(l) -> fmt_one "BoolLit" (string_of_bool l)
 | Id(s) -> fmt_one "Id" s
 | Assign(s, e) -> fmt_two "Assign" s (fmt_expr e)
-| FDecl(n, p) -> fmt_two "FDecl" n (fmt_params p)
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
+| FExpr(p, t, b) -> fmt_three "FExpr" (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
 
-let fmt_stmt = function
-  Block(_) -> "Block"
-| Expr(e) -> fmt_expr e
+and fmt_stmt = function
+  Expr(e) -> fmt_expr e
+| Return(e) -> fmt_one "Return" (fmt_expr e)
+| FDecl(n, p, t, b) -> fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
+
+and fmt_stmt_list l =
+  let stmts = List.map fmt_stmt l in
+  String.concat "" ["["; String.concat ", " stmts; "]"]
 
 let fmt_prog program =
-  let stmts = List.map fmt_stmt program in
-  String.concat "\n" stmts
+  fmt_stmt_list program
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in

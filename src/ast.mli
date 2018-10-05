@@ -1,5 +1,12 @@
 
-type typ = Int | Float | Bool | String
+type typ =
+  Any
+| Void
+| Int
+| Float
+| Bool
+| String
+| Func
 
 type param = typ * string
 
@@ -10,11 +17,12 @@ type expr =
 | BoolLit of bool
 | Id of string
 | Assign of string * expr
-| FDecl of string * param list
 | FCall of string * expr list
+| FExpr of param list * typ * stmt list
 
-type stmt =
-  Block of stmt list
-| Expr of expr
+and stmt =
+  Expr of expr
+| Return of expr
+| FDecl of string * param list * typ * stmt list
 
 type program = stmt list

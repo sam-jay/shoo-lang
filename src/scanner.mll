@@ -15,6 +15,9 @@ rule token = parse
 | "float" { FLOAT }
 | "string" { STRING }
 | "bool" { BOOL }
+| "any" { ANY }
+| "void" { VOID }
+| "return" { RETURN }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
 | ['0'-'9']*"."['0'-'9']+ as lxm { FLOATLIT(float_of_string lxm) }
 | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { ID(lxm) }

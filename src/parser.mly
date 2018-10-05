@@ -1,6 +1,7 @@
 %{ open Ast %}
 
-%token EOF SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE COMMA SHOO
+%token EOF SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
+%token COMMA RETURN ANY VOID
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <bool> BOOLLIT
@@ -19,6 +20,8 @@ stmt_list:
 
 stmt:
   expr SEMI { Expr $1 }
+| FUNC ID LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE { FDecl($2, $4, $6, $8) }
+| RETURN expr { Return($2) }
 
 expr:
 | INTLIT { IntLit($1) }
@@ -26,18 +29,19 @@ expr:
 | BOOLLIT { BoolLit($1) }
 | ID { Id($1) }
 | ID ASSIGN expr { Assign($1, $3) }
-| FUNC id_opt LPAREN params_opt RPAREN LBRACE stmt_list RBRACE { FDecl($2, $4) }
+| FUNC LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE { FExpr($3, $5, $7) }
 | ID LPAREN args_opt RPAREN { FCall($1, $3) }
+
+ret_typ:
+  ANY { Any }
+| VOID { Void }
+| typ { $1 }
 
 typ:
   INT { Int }
 | FLOAT { Float }
 | BOOL { Bool }
 | STRING { String }
-
-id_opt:
-  { "" }
-| ID { $1 }
 
 params_opt:
   { [] }
