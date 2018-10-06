@@ -49,6 +49,30 @@ let vdec_tests =
     "Should handle definition of int" >:: int_def;
   ]
 
+let if_only text_ctxt = 
+  assert_equal [If(BoolLit(true),[VDecl(Int, "x")],[])] (parse "if(true){int x;}")
+let if_else text_ctxt = 
+  assert_equal [If(BoolLit(false),[VDecl(Int, "x")],[VDecl(Int, "y")])] 
+  (parse "if(false){int x;}else{int y;}")
+let if_elif1 text_ctxt = 
+  assert_equal [If(BoolLit(false),[VDecl(Int, "x")],[If(BoolLit(true),[VDecl(Int, "y")],[])])] 
+  (parse "if(false){int x;}elif(true){int y;}")
+let if_elif1_else text_ctxt = 
+  assert_equal [If(BoolLit(false),[VDecl(Int, "x")],[If(BoolLit(false),[VDecl(Int, "y")],[VDecl(Int, "z")])])] 
+  (parse "if(false){int x;}elif(false){int y;}else{int z;}")
+let if_elif2_else text_ctxt = 
+  assert_equal [If(BoolLit(false),[VDecl(Int, "x")],[If(BoolLit(false),[VDecl(Int, "y")],[If(BoolLit(false),[VDecl(Int, "w")],[VDecl(Int, "z")])])])] 
+  (parse "if(false){int x;}elif(false){int y;}elif(false){int w;}else{int z;}")
+let if_else_tests =
+  "If else tests" >:::
+  [
+    "Should handle if statement by itself" >:: if_only;
+    "Should handle if statement with else" >:: if_else;
+    "Should handle if statement with elif" >:: if_elif1;
+    "Should handle if statement with elif and else" >:: if_elif1_else;
+    "Should handle if statement with 2 elifs and else" >:: if_elif2_else;
+  ]
+  
 (* TODO(claire) someone needs to write a test for assignment *)
 
 (* TODO(claire) need to implement this once minus is implemented *)
@@ -82,5 +106,6 @@ let tests =
     comment_tests;
     float_tests;
     vdec_tests;
+    if_else_tests;
     for_tests;
   ]

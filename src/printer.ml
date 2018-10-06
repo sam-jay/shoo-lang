@@ -46,7 +46,7 @@ and fmt_stmt = function
 | ForLoop (e1, e2, e3, s) -> 
   fmt_four "ForLoop" (fmt_expr e1) (fmt_expr e2) 
   (fmt_expr e3) (fmt_stmt_list s)
-
+| If(e, trueL, falseL) -> fmt_three "If" (fmt_expr e) (fmt_stmt_list trueL) (fmt_stmt_list falseL)
 
 and fmt_stmt_list l =
   let stmts = List.map fmt_stmt l in

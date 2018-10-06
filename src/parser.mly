@@ -1,11 +1,13 @@
 %{ open Ast %}
 
 %token EOF SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
-%token FOR COMMA RETURN ANY VOID
+%token FOR COMMA RETURN ANY VOID IF ELIF ELSE
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <bool> BOOLLIT
 %token <string> ID
+
+%nonassoc NOELSE
 
 %start program
 %type <Ast.program> program
@@ -26,6 +28,15 @@ stmt:
 | RETURN expr SEMI { Return($2) }
 | FOR LPAREN opt_expr SEMI expr SEMI opt_expr RPAREN LBRACE stmt_list RBRACE 
     { ForLoop($3, $5, $7, $10) }
+| IF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { If($3, $6, $8) }
+
+false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
+
+elif:
+ELIF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { [If($3, $6, $8)] }
+
+cf_else:
+ELSE LBRACE stmt_list RBRACE { $3 }
 
 expr:
 | INTLIT { IntLit($1) }
