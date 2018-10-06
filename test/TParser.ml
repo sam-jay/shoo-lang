@@ -13,6 +13,14 @@ let mandatory_semi test_ctxt =
   let f = fun () -> parse "5" in
   assert_raises Parsing.Parse_error f
 
+let common_tests =
+  "Common" >:::
+  [
+    "Should accept empty program" >:: empty_prog;
+    "Should accept int literal" >:: int_lit;
+    "Semicolon should be mandatory" >:: mandatory_semi;
+  ]
+
 let comment_test1 test_ctxt = assert_equal [Expr(IntLit(5)); Expr(IntLit(6))] (parse "5;/* this is a \n5; multiline \n comment */6;")
 
 let comment_test2 test_ctxt = assert_equal [Expr(IntLit(5)); Expr(IntLit(6))] (parse "5;/* this is a /* once \n 5; nested */ multiline \n comment */6;")
@@ -40,8 +48,8 @@ let float_tests =
     "Should accept positive with leading 0 omitted" >:: float_test2;
   ]
 
-let int_dec test_ctxt = assert_equal [VDecl(Int, "x")] (parse "int x;")
-let int_def test_ctxt = assert_equal [VDef(Int, "x", IntLit(5))] (parse "int x = 5;")
+let int_dec test_ctxt = assert_equal [VDecl(Int, "x", None)] (parse "int x;")
+let int_def test_ctxt = assert_equal [VDecl(Int, "x", Some(IntLit(5)))] (parse "int x = 5;")
 let vdec_tests =
   "Variable declarations and definitions" >:::
   [
@@ -73,14 +81,170 @@ let for_tests =
       "Should raise error if no test" >:: for_no_test;
     ]
 
+let struct_declare test_ctxt = assert_equal
+  [StructDef("Point", [
+    (Int, "x", Some(IntLit(0)));
+    (Int, "y", Some(IntLit(0)));
+    (Int, "z", None) ])]
+  (parse "struct Point { int x = 0; int y = 0; int z; }")
+
+let struct_declare_empty test_ctxt = assert_equal
+  [StructDef("Empty", [])]
+  (parse "struct Empty { }")
+
+let struct_def test_ctxt = assert_equal
+  [Expr(Assign("x", StructInit([
+    ("foo", IntLit(2));
+    ("bar", IntLit(5)) ])))]
+  (parse "x = { foo = 2; bar = 5; };")
+  
+let destruct test_ctxt = assert_equal
+  [Expr(Destruct(["x"; "y"; "z"], Id("foo")))]
+  (parse "{ x; y; z; } = foo;")
+
+let struct_tests =
+  "Structs" >:::
+  [
+    "Should handle struct declaration" >::struct_declare;
+    "Should handle empty struct declaration" >::struct_declare_empty;
+    "Should handle struct definition" >::struct_def;
+    "Should handle destructuring assignment" >::destruct;
+  ]
+
+let enhanced_for_id test_ctxt = assert_equal
+  [EnhancedFor(Int, "x", Id("foo"), [Expr(IntLit(5))])]
+  (parse "for (int x in foo) { 5; }")
+let enhanced_for_array_lit test_ctxt = assert_equal
+  [EnhancedFor(Int, "x", ArrayLit([
+    IntLit(1);
+    IntLit(2);
+    IntLit(3);
+    IntLit(4);
+    IntLit(5)
+  ]), [Expr(IntLit(5))])]
+  (parse "for (int x in [1, 2, 3, 4, 5]) { 5; }")
+let enhanced_for_tests =
+  "Enhanced For Loop" >:::
+  [
+    "Should handle by id" >:: enhanced_for_id;
+    "Should handle by array lit" >:: enhanced_for_array_lit
+  ]
+
+let one_intarr_decl test_ctxt = assert_equal [VDecl(Array(Int, Fixed(5)), "x", None)] (parse "array<int>[5] x;")
+let one_intarr_def test_ctxt = assert_equal
+  [VDecl(Array(Int, Fixed(5)), "x", Some(ArrayLit([
+    IntLit(5);
+    IntLit(4);
+    IntLit(3);
+    IntLit(2);
+    IntLit(1)
+  ])))]
+  (parse "array<int>[5] x = [5, 4, 3, 2, 1];")
+let two_intarr_decl test_ctxt = assert_equal [VDecl(Array(Array(Int, Fixed(5)), Fixed(10)), "x", None)] (parse "array< array<int>[5] >[10] x;")
+let two_intarr_def test_ctxt = assert_equal
+  [VDecl(Array(Array(Int, Fixed(5)), Fixed(2)), "x", Some(ArrayLit([
+    ArrayLit([
+      IntLit(1);
+      IntLit(2);
+      IntLit(3);
+      IntLit(4);
+      IntLit(5)
+    ]);
+    ArrayLit([
+      IntLit(5);
+      IntLit(4);
+      IntLit(3);
+      IntLit(2);
+      IntLit(1)
+    ]);
+  ])))]
+  (parse "array< array<int>[5] >[2] x = [[1,2,3,4,5],[5,4,3,2,1]];")
+
+let array_tests =
+  "Arrays" >:::
+  [
+    "One dimensional int array declaration" >::one_intarr_decl;
+    "One dimensional int array definition" >::one_intarr_def;
+    "Two dimensional int array declaration" >::two_intarr_decl;
+    "Two dimensional int array definition" >::two_intarr_def;
+  ]
+
+let prog_one_test test_ctxt = assert_equal
+  [FDecl("sampleProgram1", [], Void, [
+    VDecl(Array(Array(Int, Fixed(10)), Fixed(2)), "tasks", Some(ArrayLit([
+      ArrayLit([
+        IntLit(1); IntLit(2); IntLit(3); IntLit(4); IntLit(5);
+        IntLit(6); IntLit(7); IntLit(8); IntLit(9); IntLit(10);
+      ]);
+      ArrayLit([
+        IntLit(11); IntLit(12); IntLit(13); IntLit(14); IntLit(15);
+        IntLit(16); IntLit(17); IntLit(18); IntLit(19); IntLit(20);
+      ])
+    ])));
+    FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
+      VDecl(Int, "result", None);
+      Return(Id("result"));
+    ]);
+    FDecl("foldl", [(Func, "f"); (Any, "acc"); (Array(Any, Param("S")), "items")], Array(Any, Param("S")), [
+      
+    ]);
+    FDecl("map", [(Func, "f"); (Array(Any, Param("S")), "items")], Array(Any, Param("S")), [
+
+    ]);
+    (*Expr(Assign());
+    FCall();*)
+  ])]
+  (parse "function sampleProgram1() void {
+    array< array<int>[10] >[2] tasks = [
+      [1,2,3,4,5,6,7,8,9,10],
+      [11,12,13,14,15,16,17,18,19,20]
+    ];
+
+    function sum(int x, int y) int {
+      int result;
+      // TODO(sam): calculate result after we have + operator 
+      return result;
+    }
+
+    function foldl(func f, any acc, array<any>[S] items) array<any>[S] {
+      /*if (isEqual(length(items), 0)) {
+        return acc;
+      } else {
+        return foldl(f, f(acc, first(items)), rest(items));
+      }*/
+    }
+
+    function map(func f, array<any>[S] items) array<any>[S] {
+      /*// TODO(sam): turn this into tail recursion
+      if (isEqual(length(items), 0)) {
+        return [];
+      } else {
+        return concat(f(first(items)), map(f, rest(items)));
+      }*/
+    }
+
+    //array<int>[2] results = map(function (task) { return foldl(sum, 0, task); }, tasks);
+
+    //print(string_of_int(foldl(sum, 0, results)))
+
+  }")
+
+let full_prog_tests =
+  "Full Programs" >:::
+  [
+    "Program 1" >:: prog_one_test
+  ]
+
 let tests =
   "Parser" >:::
   [
-    "Should accept empty program" >:: empty_prog;
-    "Should accept int literal" >:: int_lit;
-    "Semicolon should be mandatory" >:: mandatory_semi;
+    common_tests;
     comment_tests;
     float_tests;
     vdec_tests;
     for_tests;
+    struct_tests;
+    enhanced_for_tests;
+    array_tests;
+    full_prog_tests;
   ]

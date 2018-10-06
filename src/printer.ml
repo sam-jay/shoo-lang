@@ -11,7 +11,7 @@ let fmt_list l =
   let items = String.concat ";" l in
   String.concat "" ["["; items; "]"]
 
-let fmt_typ = function
+let rec fmt_typ = function
     Any -> "Any"
   | Void -> "Void"
   | Func -> "Func"
@@ -19,6 +19,10 @@ let fmt_typ = function
   | Float -> "Float"
   | Bool -> "Bool"
   | String -> "String"
+  | Struct(n) -> fmt_one "Struct" n
+  | Array(t, s) -> fmt_two "Array" (fmt_typ t) (match s with 
+                                                  Fixed(n) -> fmt_one "Fixed" (string_of_int n) 
+                                                | Param(s) -> fmt_one "Param" s)
 
 let fmt_params l =
   let fmt_p = function
@@ -35,22 +39,37 @@ let rec fmt_expr = function
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
 | FExpr(p, t, b) -> fmt_three "FExpr" (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
 | NoExpr -> "NoExpr"
+| StructInit(l) -> fmt_one "StructInit" (fmt_init l)
+| ArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_expr l))
+| Destruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_expr e)
+| New(t) -> fmt_one "New" (fmt_typ t)
+
+and fmt_members l =
+  let fmt_m = function
+    (t, n, None) -> fmt_three "" (fmt_typ t) n "None"
+  | (t, n, Some(e)) -> fmt_three "" (fmt_typ t) n (fmt_expr e) in
+  fmt_list (List.map fmt_m l)
+
+and fmt_init l =
+ let fmt_i (n, e) = fmt_two "" n (fmt_expr e) in
+ fmt_list (List.map fmt_i l)
 
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
 | FDecl(n, p, t, b) -> 
   fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
-| VDecl (t, n ) -> fmt_two "VDecl" (fmt_typ t) n
-| VDef (t, n, e) -> fmt_three "VDef" (fmt_typ t) n (fmt_expr e)
+| VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_expr e)
 | ForLoop (e1, e2, e3, s) -> 
   fmt_four "ForLoop" (fmt_expr e1) (fmt_expr e2) 
   (fmt_expr e3) (fmt_stmt_list s)
+| StructDef(n, m) -> fmt_two "StructDef" n (fmt_members m)
+| EnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n (fmt_expr e) (fmt_stmt_list b)
 
 
 and fmt_stmt_list l =
   let stmts = List.map fmt_stmt l in
-  String.concat "" ["["; String.concat ", " stmts; "]"]
+  fmt_list stmts
 
 let fmt_prog program =
   fmt_stmt_list program

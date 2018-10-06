@@ -1,7 +1,8 @@
 %{ open Ast %}
 
 %token EOF SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
-%token FOR COMMA RETURN ANY VOID
+%token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
+%token NEW FUNCTION
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <bool> BOOLLIT
@@ -20,12 +21,17 @@ stmt_list:
 
 stmt:
   expr SEMI { Expr $1 }
-| typ ID ASSIGN expr SEMI { VDef($1, $2, $4) }
-| typ ID SEMI { VDecl($1, $2) }
-| FUNC ID LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE { FDecl($2, $4, $6, $8) }
+| typ ID opt_init SEMI { VDecl($1, $2, $3) }
+| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE { FDecl($2, $4, $6, List.rev $8) }
 | RETURN expr SEMI { Return($2) }
 | FOR LPAREN opt_expr SEMI expr SEMI opt_expr RPAREN LBRACE stmt_list RBRACE 
-    { ForLoop($3, $5, $7, $10) }
+    { ForLoop($3, $5, $7, List.rev $10) }
+| FOR LPAREN typ ID IN expr RPAREN LBRACE stmt_list RBRACE { EnhancedFor($3, $4, $6, List.rev $9) }
+| STRUCT ID LBRACE mems_opt RBRACE { StructDef($2, $4) }
+
+opt_init:
+  { None }
+| ASSIGN expr { Some($2) }
 
 expr:
 | INTLIT { IntLit($1) }
@@ -33,17 +39,28 @@ expr:
 | BOOLLIT { BoolLit($1) }
 | ID { Id($1) }
 | ID ASSIGN expr { Assign($1, $3) }
-| FUNC LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE 
-  { FExpr($3, $5, $7) }
+| NEW LPAREN typ RPAREN { New($3) }
+| LBRACE destruct RBRACE ASSIGN expr { Destruct(List.rev $2, $5) }
+| FUNCTION LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE
+  { FExpr($3, $5, List.rev $7) }
 | ID LPAREN args_opt RPAREN { FCall($1, $3) }
+| LBRACE init_list RBRACE { StructInit(List.rev $2) }
+| LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
+
+opt_items:
+  { [] }
+| item_list { List.rev $1 }
+
+item_list:
+  expr { [$1] }
+| item_list COMMA expr { $3 :: $1 }
 
 opt_expr:
            { NoExpr}
     | expr { $1}
 
 ret_typ:
-  ANY { Any }
-| VOID { Void }
+  VOID { Void }
 | typ { $1 }
 
 typ:
@@ -51,6 +68,13 @@ typ:
 | FLOAT { Float }
 | BOOL { Bool }
 | STRING { String }
+| ARRAY LT typ GT LSQBRACE arr_size RSQBRACE { Array($3, $6) }
+| FUNC { Func }
+| ANY { Any }
+
+arr_size:
+  INTLIT { Fixed($1) }
+| ID { Param($1) }
 
 params_opt:
   { [] }
@@ -67,3 +91,25 @@ args_opt:
 arg_list:
   expr { [$1] }
 | arg_list COMMA expr { $3 :: $1 }
+
+destruct:
+  ID SEMI { [$1] }
+| destruct ID SEMI { $2 :: $1 }
+
+mems_opt:
+  { [] }
+| mem_list { List.rev $1 }
+
+mem_list:
+  member SEMI { [$1] }
+| mem_list member SEMI { $2 :: $1 }
+
+member:
+  typ ID { ($1, $2, None) }
+| typ ID ASSIGN expr { ($1, $2, Some($4)) }
+
+init_list:
+  init SEMI { [$1] }
+| init_list init SEMI { $2 :: $1 }
+
+init: ID ASSIGN expr { ($1, $3) }

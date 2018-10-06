@@ -10,8 +10,14 @@ rule token = parse
 | ')' { RPAREN }
 | '{' { LBRACE }
 | '}' { RBRACE }
+| '[' { LSQBRACE }
+| ']' { RSQBRACE }
+| '<' { LT }
+| '>' { GT }
 | ',' { COMMA }
+| ':' { COLON }
 | "func" { FUNC }
+| "function" { FUNCTION }
 | "int" { INT }
 | "float" { FLOAT }
 | "string" { STRING }
@@ -20,10 +26,14 @@ rule token = parse
 | "void" { VOID }
 | "return" { RETURN }
 | "for" { FOR }
+| "struct" { STRUCT }
+| "array" { ARRAY }
+| "in" { IN }
+| "new" { NEW }
 | "true"|"false" as lxm { BOOLLIT(bool_of_string lxm) }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
 | ['0'-'9']*"."['0'-'9']+ as lxm { FLOATLIT(float_of_string lxm) }
-| ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { ID(lxm) }
+| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { ID(lxm) }
 | eof { EOF }
 
 and comment level = parse
