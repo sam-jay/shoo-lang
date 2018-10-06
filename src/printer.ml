@@ -20,9 +20,7 @@ let rec fmt_typ = function
   | Bool -> "Bool"
   | String -> "String"
   | Struct(n) -> fmt_one "Struct" n
-  | Array(t, s) -> fmt_two "Array" (fmt_typ t) (match s with 
-                                                  Fixed(n) -> fmt_one "Fixed" (string_of_int n) 
-                                                | Param(s) -> fmt_one "Param" s)
+  | Array(t) -> fmt_one "Array" (fmt_typ t)
 
 let fmt_params l =
   let fmt_p = function

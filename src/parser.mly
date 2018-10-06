@@ -79,13 +79,9 @@ typ:
 | FLOAT { Float }
 | BOOL { Bool }
 | STRING { String }
-| ARRAY LT typ GT LSQBRACE arr_size RSQBRACE { Array($3, $6) }
+| ARRAY LT typ GT { Array($3) }
 | FUNC { Func }
 | ANY { Any }
-
-arr_size:
-  INTLIT { Fixed($1) }
-| ID { Param($1) }
 
 params_opt:
   { [] }

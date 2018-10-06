@@ -154,19 +154,19 @@ let enhanced_for_tests =
     "Should handle by array lit" >:: enhanced_for_array_lit
   ]
 
-let one_intarr_decl test_ctxt = assert_equal [VDecl(Array(Int, Fixed(5)), "x", None)] (parse "array<int>[5] x;")
+let one_intarr_decl test_ctxt = assert_equal [VDecl(Array(Int), "x", None)] (parse "array<int> x;")
 let one_intarr_def test_ctxt = assert_equal
-  [VDecl(Array(Int, Fixed(5)), "x", Some(ArrayLit([
+  [VDecl(Array(Int), "x", Some(ArrayLit([
     IntLit(5);
     IntLit(4);
     IntLit(3);
     IntLit(2);
     IntLit(1)
   ])))]
-  (parse "array<int>[5] x = [5, 4, 3, 2, 1];")
-let two_intarr_decl test_ctxt = assert_equal [VDecl(Array(Array(Int, Fixed(5)), Fixed(10)), "x", None)] (parse "array< array<int>[5] >[10] x;")
+  (parse "array<int> x = [5, 4, 3, 2, 1];")
+let two_intarr_decl test_ctxt = assert_equal [VDecl(Array(Array(Int)), "x", None)] (parse "array< array<int> > x;")
 let two_intarr_def test_ctxt = assert_equal
-  [VDecl(Array(Array(Int, Fixed(5)), Fixed(2)), "x", Some(ArrayLit([
+  [VDecl(Array(Array(Int)), "x", Some(ArrayLit([
     ArrayLit([
       IntLit(1);
       IntLit(2);
@@ -182,7 +182,7 @@ let two_intarr_def test_ctxt = assert_equal
       IntLit(1)
     ]);
   ])))]
-  (parse "array< array<int>[5] >[2] x = [[1,2,3,4,5],[5,4,3,2,1]];")
+  (parse "array< array<int> > x = [[1,2,3,4,5],[5,4,3,2,1]];")
 
 let array_tests =
   "Arrays" >:::
@@ -195,7 +195,7 @@ let array_tests =
 
 let prog_one_test test_ctxt = assert_equal
   [FDecl("sampleProgram1", [], Void, [
-    VDecl(Array(Array(Int, Fixed(10)), Fixed(2)), "tasks", Some(ArrayLit([
+    VDecl(Array(Array(Int)), "tasks", Some(ArrayLit([
       ArrayLit([
         IntLit(1); IntLit(2); IntLit(3); IntLit(4); IntLit(5);
         IntLit(6); IntLit(7); IntLit(8); IntLit(9); IntLit(10);
@@ -209,28 +209,28 @@ let prog_one_test test_ctxt = assert_equal
       VDecl(Int, "result", None);
       Return(Id("result"));
     ]);
-    FDecl("foldl", [(Func, "f"); (Any, "acc"); (Array(Any, Param("S")), "items")], Array(Any, Param("S")), [
+    FDecl("foldl", [(Func, "f"); (Any, "acc"); (Array(Any), "items")], Array(Any), [
       If(FCall("isEqual", [FCall("length", [Id("items")]); IntLit(0)]),
         [Return(Id("acc"))],
         [Return(FCall("foldl", [Id("f"); FCall("f", [Id("acc"); FCall("first", [Id("items")])]); FCall("rest", [Id("items")])]))])
     ]);
-    FDecl("map", [(Func, "f"); (Array(Any, Param("S")), "items")], Array(Any, Param("S")), [
+    FDecl("map", [(Func, "f"); (Array(Any), "items")], Array(Any), [
       If(FCall("isEqual", [FCall("length", [Id("items")]); IntLit(0)]),
         [Return(ArrayLit([]))],
         [Return(FCall("concat",[
           FCall("f", [FCall("first", [Id("items")])]);
           FCall("map", [Id("f"); FCall("rest", [Id("items")])])]))])
     ]);
-    VDecl(Array(Int, Fixed(2)), "results", Some(FCall("map", [
-      FExpr([(Array(Int, Fixed(10)), "task")],
-        Array(Int, Fixed(2)),
+    VDecl(Array(Int), "results", Some(FCall("map", [
+      FExpr([(Array(Int), "task")],
+        Array(Int),
         [Return(FCall("foldl", [Id("sum"); IntLit(0); Id("task")]))]);
       Id("tasks")
     ])));
     Expr(FCall("print", [FCall("stringOfInt", [FCall("foldl", [Id("sum"); IntLit(0); Id("results")])])]));
   ])]
   (parse "function sampleProgram1() void {
-    array< array<int>[10] >[2] tasks = [
+    array<array<int>> tasks = [
       [1,2,3,4,5,6,7,8,9,10],
       [11,12,13,14,15,16,17,18,19,20]
     ];
@@ -241,7 +241,7 @@ let prog_one_test test_ctxt = assert_equal
       return result;
     }
 
-    function foldl(func f, any acc, array<any>[S] items) array<any>[S] {
+    function foldl(func f, any acc, array<any> items) array<any> {
       if (isEqual(length(items), 0)) {
         return acc;
       } else {
@@ -249,7 +249,7 @@ let prog_one_test test_ctxt = assert_equal
       }
     }
 
-    function map(func f, array<any>[S] items) array<any>[S] {
+    function map(func f, array<any> items) array<any> {
       // TODO(sam): turn this into tail recursion
       if (isEqual(length(items), 0)) {
         return [];
@@ -258,7 +258,7 @@ let prog_one_test test_ctxt = assert_equal
       }
     }
 
-    array<int>[2] results = map(function (array<int>[10] task) array<int>[2] { return foldl(sum, 0, task); }, tasks);
+    array<int> results = map(function (array<int> task) array<int> { return foldl(sum, 0, task); }, tasks);
 
     print(stringOfInt(foldl(sum, 0, results)));
 

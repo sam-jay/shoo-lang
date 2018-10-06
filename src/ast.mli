@@ -1,6 +1,4 @@
-type size =
-  Fixed of int
-| Param of string
+
 
 type typ =
   Any
@@ -11,7 +9,7 @@ type typ =
 | String
 | Func
 | Struct of string
-| Array of typ * size
+| Array of typ
 
 type expr =
   IntLit of int
