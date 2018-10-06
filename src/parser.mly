@@ -2,11 +2,13 @@
 
 %token EOF SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
 %token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
-%token NEW FUNCTION
+%token NEW FUNCTION IF ELIF ELSE
 %token <int> INTLIT
 %token <float> FLOATLIT
 %token <bool> BOOLLIT
 %token <string> ID
+
+%nonassoc NOELSE
 
 %start program
 %type <Ast.program> program
@@ -28,10 +30,19 @@ stmt:
     { ForLoop($3, $5, $7, List.rev $10) }
 | FOR LPAREN typ ID IN expr RPAREN LBRACE stmt_list RBRACE { EnhancedFor($3, $4, $6, List.rev $9) }
 | STRUCT ID LBRACE mems_opt RBRACE { StructDef($2, $4) }
+| IF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { If($3, $6, $8) }
 
 opt_init:
   { None }
 | ASSIGN expr { Some($2) }
+
+false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
+
+elif:
+ELIF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { [If($3, $6, $8)] }
+
+cf_else:
+ELSE LBRACE stmt_list RBRACE { $3 }
 
 expr:
 | INTLIT { IntLit($1) }

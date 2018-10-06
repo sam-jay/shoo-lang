@@ -33,6 +33,7 @@ and stmt =
 | VDecl of typ * string * expr option
 | Return of expr
 | FDecl of string * (typ * string) list * typ * stmt list
+| If of expr * stmt list * stmt list
 | ForLoop of expr * expr * expr * stmt list
 | StructDef of string * (typ * string * expr option) list
 | EnhancedFor of typ * string * expr * stmt list

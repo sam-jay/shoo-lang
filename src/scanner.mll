@@ -25,6 +25,9 @@ rule token = parse
 | "any" { ANY }
 | "void" { VOID }
 | "return" { RETURN }
+| "elif" { ELIF }
+| "if" { IF }
+| "else" { ELSE }
 | "for" { FOR }
 | "struct" { STRUCT }
 | "array" { ARRAY }
