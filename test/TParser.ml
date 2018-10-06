@@ -210,13 +210,24 @@ let prog_one_test test_ctxt = assert_equal
       Return(Id("result"));
     ]);
     FDecl("foldl", [(Func, "f"); (Any, "acc"); (Array(Any, Param("S")), "items")], Array(Any, Param("S")), [
-      
+      If(FCall("isEqual", [FCall("length", [Id("items")]); IntLit(0)]),
+        [Return(Id("acc"))],
+        [Return(FCall("foldl", [Id("f"); FCall("f", [Id("acc"); FCall("first", [Id("items")])]); FCall("rest", [Id("items")])]))])
     ]);
     FDecl("map", [(Func, "f"); (Array(Any, Param("S")), "items")], Array(Any, Param("S")), [
-
+      If(FCall("isEqual", [FCall("length", [Id("items")]); IntLit(0)]),
+        [Return(ArrayLit([]))],
+        [Return(FCall("concat",[
+          FCall("f", [FCall("first", [Id("items")])]);
+          FCall("map", [Id("f"); FCall("rest", [Id("items")])])]))])
     ]);
-    (*Expr(Assign());
-    FCall();*)
+    VDecl(Array(Int, Fixed(2)), "results", Some(FCall("map", [
+      FExpr([(Array(Int, Fixed(10)), "task")],
+        Array(Int, Fixed(2)),
+        [Return(FCall("foldl", [Id("sum"); IntLit(0); Id("task")]))]);
+      Id("tasks")
+    ])));
+    Expr(FCall("print", [FCall("stringOfInt", [FCall("foldl", [Id("sum"); IntLit(0); Id("results")])])]));
   ])]
   (parse "function sampleProgram1() void {
     array< array<int>[10] >[2] tasks = [
@@ -231,25 +242,25 @@ let prog_one_test test_ctxt = assert_equal
     }
 
     function foldl(func f, any acc, array<any>[S] items) array<any>[S] {
-      /*if (isEqual(length(items), 0)) {
+      if (isEqual(length(items), 0)) {
         return acc;
       } else {
         return foldl(f, f(acc, first(items)), rest(items));
-      }*/
+      }
     }
 
     function map(func f, array<any>[S] items) array<any>[S] {
-      /*// TODO(sam): turn this into tail recursion
+      // TODO(sam): turn this into tail recursion
       if (isEqual(length(items), 0)) {
         return [];
       } else {
         return concat(f(first(items)), map(f, rest(items)));
-      }*/
+      }
     }
 
-    //array<int>[2] results = map(function (task) { return foldl(sum, 0, task); }, tasks);
+    array<int>[2] results = map(function (array<int>[10] task) array<int>[2] { return foldl(sum, 0, task); }, tasks);
 
-    //print(string_of_int(foldl(sum, 0, results)))
+    print(stringOfInt(foldl(sum, 0, results)));
 
   }")
 
