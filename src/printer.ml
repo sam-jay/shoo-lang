@@ -22,6 +22,24 @@ let rec fmt_typ = function
   | Struct(n) -> fmt_one "Struct" n
   | Array(t) -> fmt_one "Array" (fmt_typ t)
 
+let rec fmt_op = function
+    Add -> "+"
+  | Sub -> "-"
+  | Mult -> "*"
+  | Div -> "/"
+  | Equal -> "=="
+  | Neq -> "!="
+  | Less -> "<"
+  | Leq -> "<="
+  | Greater -> ">"
+  | Geq -> ">="
+  | And -> "&&"
+  | Or -> "||"
+
+let rec fmt_uop = function 
+  Neg -> "-"
+| Not -> "!"
+
 let fmt_params l =
   let fmt_p = function
     (t, n) -> String.concat "" ["("; fmt_typ t; ", "; n; ")"] in
@@ -33,6 +51,8 @@ let rec fmt_expr = function
 | StrLit(l) -> fmt_one "StrLit"  l
 | BoolLit(l) -> fmt_one "BoolLit" (string_of_bool l)
 | Id(s) -> fmt_one "Id" s
+| Binop(e1, o, e2) -> fmt_three "Binop" (fmt_expr e1) (fmt_op o) (fmt_expr e2)
+| Unop(uo, e) -> fmt_two "Unop" (fmt_uop uo) (fmt_expr e)
 | Assign(s, e) -> fmt_two "Assign" s (fmt_expr e)
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
 | FExpr(p, t, b) -> fmt_three "FExpr" (fmt_params p) (fmt_typ t) (fmt_stmt_list b)

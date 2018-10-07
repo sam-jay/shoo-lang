@@ -20,6 +20,16 @@ rule token = parse
 | '-' { MINUS }
 | '*' { TIMES }
 | '/' { DIVIDE }
+| '='      { ASSIGN }
+| "=="     { EQ }
+| "!="     { NEQ }
+| '<'      { LT }
+| "<="     { LEQ }
+| ">"      { GT }
+| ">="     { GEQ }
+| "&&"     { AND }
+| "||"     { OR }
+| "!"      { NOT }
 | "func" { FUNC }
 | "function" { FUNCTION }
 | "int" { INT }

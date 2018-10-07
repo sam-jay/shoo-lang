@@ -13,7 +13,23 @@ type typ =
 | Struct of string
 | Array of typ
 
-type op = Add | Sub | Mult | Div
+type op = 
+  Add 
+| Sub 
+| Mult 
+| Div 
+| Equal
+| Neq 
+| Less 
+| Leq 
+| Greater
+| Geq 
+| And 
+| Or
+
+type uop = 
+  Neg 
+| Not
 
 type expr =
   IntLit of int
@@ -23,6 +39,7 @@ type expr =
 | ArrayLit of expr list
 | Id of string
 | Binop of expr * op * expr
+| Unop of uop * expr
 | Assign of string * expr
 | FCall of string * expr list
 | FExpr of (typ * string) list * typ * stmt list
