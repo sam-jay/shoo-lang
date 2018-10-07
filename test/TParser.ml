@@ -13,8 +13,17 @@ let arithmetic_lit_test1 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Add, I
 let arithmetic_lit_test2 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Sub, IntLit(3)))] (parse "82-3;")
 let arithmetic_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Mult, IntLit(3)))] (parse "82*3;")
 let arithmetic_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Div, IntLit(3)))] (parse "82/3;")
-
 let arithmetic_lit_test5 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Add, Binop(IntLit(2), Mult, IntLit(4))))] (parse "82+2*4;")
+
+let arithmetic_tests =
+  "Arithmetic operations" >:::
+  [
+    "Should accept addition" >:: arithmetic_lit_test1;
+    "Should accept subtraction" >:: arithmetic_lit_test2;
+    "Should accept multiplication" >:: arithmetic_lit_test3;
+    "Should accept division" >:: arithmetic_lit_test4;
+    "Should accept combination of operations" >:: arithmetic_lit_test5;
+  ]
 
 let mandatory_semi test_ctxt =
   let f = fun () -> parse "5" in
@@ -280,6 +289,7 @@ let full_prog_tests =
 let tests =
   "Parser" >:::
   [
+    arithmetic_tests;
     common_tests;
     comment_tests;
     float_tests;
