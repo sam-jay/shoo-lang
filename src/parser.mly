@@ -9,6 +9,7 @@
 %token <float> FLOATLIT
 %token <bool> BOOLLIT
 %token <string> ID
+%token <string> STRUCTID
 %token EOF
 
 %nonassoc NOELSE
@@ -41,7 +42,7 @@ stmt:
 | FOR LPAREN opt_expr SEMI expr SEMI opt_expr RPAREN LBRACE stmt_list RBRACE 
     { ForLoop($3, $5, $7, List.rev $10) }
 | FOR LPAREN typ ID IN expr RPAREN LBRACE stmt_list RBRACE { EnhancedFor($3, $4, $6, List.rev $9) }
-| STRUCT ID LBRACE mems_opt RBRACE { StructDef($2, $4) }
+| STRUCT STRUCTID LBRACE mems_opt RBRACE { StructDef($2, $4) }
 | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { If($3, $6, $8) }
 
 opt_init:
@@ -57,7 +58,7 @@ cf_else:
 ELSE LBRACE stmt_list RBRACE { $3 }
 
 expr:
-| INTLIT { IntLit($1) }
+  INTLIT { IntLit($1) }
 | FLOATLIT { FloatLit($1) }
 | BOOLLIT { BoolLit($1) }
 | ID { Id($1) }
@@ -76,7 +77,7 @@ expr:
 | expr OR expr { Binop($1, Or, $3) }
 | MINUS expr %prec NEG { Unop(Neg, $2) }
 | NOT expr { Unop(Not, $2) }
-| NEW LPAREN typ RPAREN { New($3) }
+| NEW LPAREN newable RPAREN { New($3) }
 | LBRACE destruct RBRACE ASSIGN expr { Destruct(List.rev $2, $5) }
 | FUNCTION LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE
   { FExpr($3, $5, List.rev $7) }
@@ -84,6 +85,9 @@ expr:
 | LBRACE init_list RBRACE { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
 
+newable:
+  ARRAY LT typ GT LSQBRACE expr RSQBRACE { NArray($3, $6) }
+| STRUCTID { NStruct($1) }
 
 opt_items:
   { [] }
@@ -109,6 +113,7 @@ typ:
 | ARRAY LT typ GT { Array($3) }
 | FUNC { Func }
 | ANY { Any }
+| STRUCTID { Struct($1) }
 
 params_opt:
   { [] }

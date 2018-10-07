@@ -2,8 +2,8 @@
 
 rule token = parse
   [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
-| "//" { linec lexbuf }
-| "/*" { comment 0 lexbuf } (* Comments *)
+| "//" { linec lexbuf } (* Single-line Comments *)
+| "/*" { comment 0 lexbuf } (* Multi-line Comments *)
 | ';' { SEMI }
 | '=' { ASSIGN }
 | '(' { LPAREN }
@@ -50,7 +50,8 @@ rule token = parse
 | "true"|"false" as lxm { BOOLLIT(bool_of_string lxm) }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
 | ['0'-'9']*"."['0'-'9']+ as lxm { FLOATLIT(float_of_string lxm) }
-| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { ID(lxm) }
+| ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '.']* as lxm { ID(lxm) }
+| ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { STRUCTID(lxm) }
 | eof { EOF }
 
 and comment level = parse
