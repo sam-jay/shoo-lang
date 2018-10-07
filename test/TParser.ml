@@ -33,7 +33,7 @@ let logical_lit_test1 test_ctxt = assert_equal [Expr(Unop(Neg, IntLit(4)))] (par
 
 let logical_lit_test2 test_ctxt = assert_equal [Expr(Binop(IntLit(5), Greater, IntLit(3)))] (parse "5>3;")
 
-let logical_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(1), Or, IntLit(2)))] (parse "1 or 2;")
+let logical_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(1), Or, IntLit(2)))] (parse "1||2;")
 
 let logical_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(6), Leq, IntLit(8)))] (parse "6<=8;")
 
