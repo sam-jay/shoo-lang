@@ -16,6 +16,10 @@ rule token = parse
 | '>' { GT }
 | ',' { COMMA }
 | ':' { COLON }
+| '+' { PLUS }
+| '-' { MINUS }
+| '*' { TIMES }
+| '/' { DIVIDE }
 | "func" { FUNC }
 | "function" { FUNCTION }
 | "int" { INT }

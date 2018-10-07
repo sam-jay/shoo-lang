@@ -9,6 +9,13 @@ let empty_prog test_ctxt = assert_equal [] (parse "")
 
 let int_lit test_ctxt = assert_equal [Expr(IntLit(5))] (parse "5;")
 
+let arithmetic_lit_test1 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Add, IntLit(3)))] (parse "82+3;")
+let arithmetic_lit_test2 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Sub, IntLit(3)))] (parse "82-3;")
+let arithmetic_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Mult, IntLit(3)))] (parse "82*3;")
+let arithmetic_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Div, IntLit(3)))] (parse "82/3;")
+
+let arithmetic_lit_test5 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Add, Binop(IntLit(2), Mult, IntLit(4))))] (parse "82+2*4;")
+
 let mandatory_semi test_ctxt =
   let f = fun () -> parse "5" in
   assert_raises Parsing.Parse_error f

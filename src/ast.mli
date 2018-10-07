@@ -1,4 +1,6 @@
-
+type size =
+  Fixed of int
+| Param of string
 
 type typ =
   Any
@@ -11,6 +13,8 @@ type typ =
 | Struct of string
 | Array of typ
 
+type op = Add | Sub | Mult | Div
+
 type expr =
   IntLit of int
 | FloatLit of float
@@ -18,6 +22,7 @@ type expr =
 | BoolLit of bool
 | ArrayLit of expr list
 | Id of string
+| Binop of expr * op * expr
 | Assign of string * expr
 | FCall of string * expr list
 | FExpr of (typ * string) list * typ * stmt list

@@ -1,6 +1,7 @@
 %{ open Ast %}
 
 %token EOF SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
+%token PLUS MINUS TIMES DIVIDE
 %token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
 %token NEW FUNCTION IF ELIF ELSE
 %token <int> INTLIT
@@ -9,6 +10,10 @@
 %token <string> ID
 
 %nonassoc NOELSE
+%nonassoc ELSE
+%right ASSIGN
+%left PLUS MINUS
+%left TIMES DIVIDE
 
 %start program
 %type <Ast.program> program
@@ -57,6 +62,10 @@ expr:
 | ID LPAREN args_opt RPAREN { FCall($1, $3) }
 | LBRACE init_list RBRACE { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
+| expr PLUS expr { Binop($1, Add, $3) }
+| expr MINUS expr { Binop($1, Sub, $3) } 
+| expr TIMES expr { Binop($1, Mult, $3) } 
+| expr DIVIDE expr { Binop($1, Div, $3) } 
 
 opt_items:
   { [] }
