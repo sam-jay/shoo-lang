@@ -1,4 +1,6 @@
-
+type size =
+  Fixed of int
+| Param of string
 
 type typ =
   Any
@@ -11,6 +13,24 @@ type typ =
 | Struct of string
 | Array of typ
 
+type op = 
+  Add 
+| Sub 
+| Mult 
+| Div 
+| Equal
+| Neq 
+| Less 
+| Leq 
+| Greater
+| Geq 
+| And 
+| Or
+
+type uop = 
+  Neg 
+| Not
+
 type newable =
   NArray of typ * expr
 | NStruct of string
@@ -22,6 +42,8 @@ and expr =
 | BoolLit of bool
 | ArrayLit of expr list
 | Id of string
+| Binop of expr * op * expr
+| Unop of uop * expr
 | Assign of string * expr
 | FCall of string * expr list
 | FExpr of (typ * string) list * typ * stmt list

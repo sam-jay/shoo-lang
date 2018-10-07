@@ -1,6 +1,8 @@
 %{ open Ast %}
 
-%token EOF SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
+%token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
+%token PLUS MINUS TIMES DIVIDE ASSIGN NOT
+%token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
 %token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
 %token NEW FUNCTION IF ELIF ELSE
 %token <int> INTLIT
@@ -8,8 +10,18 @@
 %token <bool> BOOLLIT
 %token <string> ID
 %token <string> STRUCTID
+%token EOF
 
 %nonassoc NOELSE
+%nonassoc ELSE
+%right ASSIGN
+%left OR
+%left AND
+%left EQ NEQ
+%left LT GT LEQ GEQ
+%left PLUS MINUS
+%left TIMES DIVIDE
+%right NOT NEG
 
 %start program
 %type <Ast.program> program
@@ -51,6 +63,20 @@ expr:
 | BOOLLIT { BoolLit($1) }
 | ID { Id($1) }
 | ID ASSIGN expr { Assign($1, $3) }
+| expr PLUS expr { Binop($1, Add, $3) }
+| expr MINUS expr { Binop($1, Sub, $3) }
+| expr TIMES expr { Binop($1, Mult, $3) }
+| expr DIVIDE expr { Binop($1, Div, $3) }
+| expr EQ expr { Binop($1, Equal, $3) }
+| expr NEQ expr { Binop($1, Neq, $3) }
+| expr LT expr { Binop($1, Less, $3) }
+| expr LEQ expr { Binop($1, Leq, $3) }
+| expr GT expr { Binop($1, Greater, $3) }
+| expr GEQ expr { Binop($1, Geq, $3) }
+| expr AND expr { Binop($1, And, $3) }
+| expr OR expr { Binop($1, Or, $3) }
+| MINUS expr %prec NEG { Unop(Neg, $2) }
+| NOT expr { Unop(Not, $2) }
 | NEW LPAREN newable RPAREN { New($3) }
 | LBRACE destruct RBRACE ASSIGN expr { Destruct(List.rev $2, $5) }
 | FUNCTION LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE

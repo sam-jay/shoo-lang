@@ -9,6 +9,46 @@ let empty_prog test_ctxt = assert_equal [] (parse "")
 
 let int_lit test_ctxt = assert_equal [Expr(IntLit(5))] (parse "5;")
 
+let arithmetic_lit_test1 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Add, IntLit(3)))] (parse "82+3;")
+
+let arithmetic_lit_test2 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Sub, IntLit(3)))] (parse "82-3;")
+
+let arithmetic_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Mult, IntLit(3)))] (parse "82*3;")
+
+let arithmetic_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Div, IntLit(3)))] (parse "82/3;")
+
+let arithmetic_lit_test5 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Add, Binop(IntLit(2), Mult, IntLit(4))))] (parse "82+2*4;")
+
+let arithmetic_tests =
+  "Arithmetic operations" >:::
+  [
+    "Should accept addition" >:: arithmetic_lit_test1;
+    "Should accept subtraction" >:: arithmetic_lit_test2;
+    "Should accept multiplication" >:: arithmetic_lit_test3;
+    "Should accept division" >:: arithmetic_lit_test4;
+    "Should accept combination of operations" >:: arithmetic_lit_test5;
+  ]
+
+let logical_lit_test1 test_ctxt = assert_equal [Expr(Unop(Neg, IntLit(4)))] (parse "-4;")
+
+let logical_lit_test2 test_ctxt = assert_equal [Expr(Binop(IntLit(5), Greater, IntLit(3)))] (parse "5>3;")
+
+let logical_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(1), Or, IntLit(2)))] (parse "1||2;")
+
+let logical_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(6), Leq, IntLit(8)))] (parse "6<=8;")
+
+let logical_lit_test5 test_ctxt = assert_equal [Expr(Binop(Binop(IntLit(82), Add, IntLit(3)), Leq, IntLit(90)))] (parse "82+3<=90;")
+
+let logical_tests =
+  "Logical operations" >:::
+  [
+    "Should accept negation" >:: logical_lit_test1;
+    "Should accept greater sign" >:: logical_lit_test2;
+    "Should accept or" >:: logical_lit_test3;
+    "Should accept less than or equal to" >:: logical_lit_test4;
+    "Should accept logical operations in order" >:: logical_lit_test5;
+  ]
+
 let mandatory_semi test_ctxt =
   let f = fun () -> parse "5" in
   assert_raises Parsing.Parse_error f
@@ -307,6 +347,8 @@ let full_prog_tests =
 let tests =
   "Parser" >:::
   [
+    arithmetic_tests;
+    logical_tests;
     common_tests;
     comment_tests;
     float_tests;
