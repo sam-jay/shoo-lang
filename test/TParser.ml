@@ -280,16 +280,15 @@ let prog_one_test test_ctxt = assert_equal
       ])
     ])));
     FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
-      VDecl(Int, "result", None);
-      Return(Id("result"));
+      Return(Binop(Id("x"), Add, Id("y")));
     ]);
     FDecl("foldl", [(Func, "f"); (Any, "acc"); (Array(Any), "items")], Array(Any), [
-      If(FCall("isEqual", [FCall("length", [Id("items")]); IntLit(0)]),
+      If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
         [Return(Id("acc"))],
         [Return(FCall("foldl", [Id("f"); FCall("f", [Id("acc"); FCall("first", [Id("items")])]); FCall("rest", [Id("items")])]))])
     ]);
     FDecl("map", [(Func, "f"); (Array(Any), "items")], Array(Any), [
-      If(FCall("isEqual", [FCall("length", [Id("items")]); IntLit(0)]),
+      If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
         [Return(ArrayLit([]))],
         [Return(FCall("concat",[
           FCall("f", [FCall("first", [Id("items")])]);
@@ -310,13 +309,11 @@ let prog_one_test test_ctxt = assert_equal
     ];
 
     function sum(int x, int y) int {
-      int result;
-      // TODO(sam): calculate result after we have + operator 
-      return result;
+      return x + y;
     }
 
     function foldl(func f, any acc, array<any> items) array<any> {
-      if (isEqual(length(items), 0)) {
+      if (length(items) == 0) {
         return acc;
       } else {
         return foldl(f, f(acc, first(items)), rest(items));
@@ -325,7 +322,7 @@ let prog_one_test test_ctxt = assert_equal
 
     function map(func f, array<any> items) array<any> {
       // TODO(sam): turn this into tail recursion
-      if (isEqual(length(items), 0)) {
+      if (length(items) == 0) {
         return [];
       } else {
         return concat(f(first(items)), map(f, rest(items)));
