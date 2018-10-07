@@ -11,7 +11,11 @@ type typ =
 | Struct of string
 | Array of typ
 
-type expr =
+type newable =
+  NArray of typ * expr
+| NStruct of string
+
+and expr =
   IntLit of int
 | FloatLit of float
 | StrLit of string
@@ -23,7 +27,7 @@ type expr =
 | FExpr of (typ * string) list * typ * stmt list
 | StructInit of (string * expr) list
 | Destruct of string list * expr
-| New of typ
+| New of newable
 | NoExpr
 
 and stmt =

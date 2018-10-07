@@ -40,7 +40,11 @@ let rec fmt_expr = function
 | StructInit(l) -> fmt_one "StructInit" (fmt_init l)
 | ArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_expr l))
 | Destruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_expr e)
-| New(t) -> fmt_one "New" (fmt_typ t)
+| New(t) -> fmt_one "New" (fmt_n t)
+
+and fmt_n = function
+  NArray(t, s) -> fmt_two "NArray" (fmt_typ t) (fmt_expr s)
+| NStruct(n) -> fmt_one "NStruct" n
 
 and fmt_members l =
   let fmt_m = function

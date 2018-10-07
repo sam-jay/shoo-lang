@@ -126,6 +126,26 @@ let destruct test_ctxt = assert_equal
   [Expr(Destruct(["x"; "y"; "z"], Id("foo")))]
   (parse "{ x; y; z; } = foo;")
 
+let get_struct_val test_ctxt = assert_equal
+  [Expr(Id("myStruct.x"))]
+  (parse "myStruct.x;")
+
+let set_struct_val test_ctxt = assert_equal
+  [Expr(Assign("myStruct.x", IntLit(5)))]
+  (parse "myStruct.x = 5;")
+
+let toy_struct_program test_ctxt = assert_equal
+  [
+    StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
+    VDecl(Struct("BankAccount"), "myAccount", Some(New(NStruct("BankAccount"))));
+    Expr(Assign("myAccount.balance", IntLit(0)));
+    Expr(Assign("myAccount.ownerId", IntLit(0)));
+  ]
+  (parse "struct BankAccount { int balance; int ownerId; }
+  BankAccount myAccount = new(BankAccount);
+  myAccount.balance = 0; myAccount.ownerId = 0;
+  ")
+
 let struct_tests =
   "Structs" >:::
   [
@@ -133,6 +153,9 @@ let struct_tests =
     "Should handle empty struct declaration" >::struct_declare_empty;
     "Should handle struct definition" >::struct_def;
     "Should handle destructuring assignment" >::destruct;
+    "Getting struct value" >::get_struct_val;
+    "Setting struct value" >::set_struct_val;
+    "Toy struct program" >::toy_struct_program;
   ]
 
 let enhanced_for_id test_ctxt = assert_equal
@@ -191,6 +214,17 @@ let array_tests =
     "One dimensional int array definition" >::one_intarr_def;
     "Two dimensional int array declaration" >::two_intarr_decl;
     "Two dimensional int array definition" >::two_intarr_def;
+  ]
+
+let new_one_array test_ctxt = assert_equal [Expr(New(NArray(Int, IntLit(5))))] (parse "new(array<int>[5]);")
+let new_struct test_ctxt = assert_equal [Expr(New(NStruct("BankAccount")))] (parse "new(BankAccount);")
+
+
+let new_tests =
+  "New keyword" >:::
+  [
+    "New one dimensional array" >::new_one_array;
+    "New struct" >::new_struct;
   ]
 
 let prog_one_test test_ctxt = assert_equal
@@ -282,5 +316,6 @@ let tests =
     struct_tests;
     enhanced_for_tests;
     array_tests;
+    new_tests;
     full_prog_tests;
   ]
