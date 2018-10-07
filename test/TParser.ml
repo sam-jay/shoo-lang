@@ -341,10 +341,65 @@ let prog_one_test test_ctxt = assert_equal
 
   }")
 
+let prog_two_test test_ctxt = assert_equal
+[FDecl("sampleProgram2", [], Void, [
+
+  StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
+  VDecl(Struct("BankAccount"), "myAccount", Some(New(NStruct("BankAccount"))));
+  Expr(Assign("myAccount.balance", IntLit(0)));
+  Expr(Assign("myAccount.ownerId", IntLit(12345)));
+
+  VDecl(Array(Int), "quantities", Some(ArrayLit([
+      IntLit(500); IntLit(200); IntLit(1400); IntLit(3000); IntLit(1000);
+  ])
+  ));
+  FDecl("deposit", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
+    Expr(Assign("act.balance", Binop(Id("act.balance"), Add, Id("amount"))));
+    Return(Id("act.balance"));
+  ]);
+  FDecl("withdraw", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
+    Expr(Assign("act.balance", Binop(Id("act.balance"), Sub, Id("amount"))));
+    Return(Id("act.balance"));
+  ]);
+  EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("myAccount"); Id("amt")]))]);
+  EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("myAccount"); Id("amt")]))]);
+])]
+
+(parse "function sampleProgram2() void {
+
+  struct BankAccount { int balance; int ownerId; }
+  BankAccount myAccount = new(BankAccount);
+  myAccount.balance = 0; 
+  myAccount.ownerId = 12345;
+
+  array<int> quantities = [500,200,1400,3000,1000];
+
+  function deposit(BankAccount act, int amount) int {
+    act.balance = act.balance + amount;
+    return act.balance;
+  }
+
+  function withdraw(BankAccount act, int amount) int {
+    act.balance = act.balance - amount;
+    return act.balance;
+  }
+  
+  // add all the money
+  for (int amt in quantities) { 
+    deposit(myAccount, amt);
+  }
+
+  // take away all the money
+  for (int amt in quantities) { 
+    withdraw(myAccount, amt);
+  }
+}")
+
 let full_prog_tests =
   "Full Programs" >:::
   [
-    "Program 1" >:: prog_one_test
+    "Program 1" >:: prog_one_test;
+    "Program 2" >:: prog_two_test;
   ]
 
 let tests =
