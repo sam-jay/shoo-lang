@@ -345,14 +345,23 @@ let prog_two_test test_ctxt = assert_equal
 [FDecl("sampleProgram2", [], Void, [
 
   StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
-  VDecl(Struct("BankAccount"), "myAccount", Some(New(NStruct("BankAccount"))));
-  Expr(Assign("myAccount.balance", IntLit(0)));
-  Expr(Assign("myAccount.ownerId", IntLit(12345)));
+  VDecl(Struct("BankAccount"), "aliceAccount", Some(New(NStruct("BankAccount"))));
+  Expr(Assign("aliceAccount.balance", IntLit(0)));
+  Expr(Assign("aliceAccount.ownerId", IntLit(12345)));
+
+  VDecl(Struct("BankAccount"), "bobAccount", Some(New(NStruct("BankAccount"))));
+  Expr(Assign("bobAccount.balance", IntLit(0)));
+  Expr(Assign("bobAccount.ownerId", IntLit(12346)));
 
   VDecl(Array(Int), "quantities", Some(ArrayLit([
       IntLit(500); IntLit(200); IntLit(1400); IntLit(3000); IntLit(1000);
-  ])
-  ));
+  ])));
+  VDecl(Array(Bool), "coinTossHeadsDeposit", Some(ArrayLit([
+    BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(true); BoolLit(false);
+  ])));
+  VDecl(Array(Bool), "coinTossHeadsWithdraw", Some(ArrayLit([
+    BoolLit(false); BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(false);
+  ])));
   FDecl("deposit", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
     Expr(Assign("act.balance", Binop(Id("act.balance"), Add, Id("amount"))));
     Return(Id("act.balance"));
@@ -361,18 +370,40 @@ let prog_two_test test_ctxt = assert_equal
     Expr(Assign("act.balance", Binop(Id("act.balance"), Sub, Id("amount"))));
     Return(Id("act.balance"));
   ]);
-  EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("myAccount"); Id("amt")]))]);
-  EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("myAccount"); Id("amt")]))]);
+  EnhancedFor(Bool, "isAlice", Id("coinTossHeadsDeposit"), 
+    [If(Id("isAlice"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("aliceAccount"); Id("amt")]))])],
+    [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("bobAccount"); Id("amt")]))])])]
+  );
+  EnhancedFor(Bool, "isBob", Id("coinTossHeadsWithdraw"), 
+    [If(Id("isBob"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("bobAccount"); Id("amt")]))])],
+    [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("aliceAccount"); Id("amt")]))])])]
+  );
+  VDecl(Int, "i", None);
+  ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)), Assign("i", Binop(Id("i"), Add, IntLit(1))), 
+    [If(Binop(Id("i"), Equal, IntLit(0)),[Expr(FCall("print", [FCall("stringOfInt", [Id("aliceAccount.balance")])]));],
+    [Expr(FCall("print", [FCall("stringOfInt", [Id("bobAccount.balance")])]));])]);
 ])]
+
 
 (parse "function sampleProgram2() void {
 
   struct BankAccount { int balance; int ownerId; }
-  BankAccount myAccount = new(BankAccount);
-  myAccount.balance = 0; 
-  myAccount.ownerId = 12345;
+
+  BankAccount aliceAccount = new(BankAccount);
+  aliceAccount.balance = 0; 
+  aliceAccount.ownerId = 12345;
+
+  BankAccount bobAccount = new(BankAccount);
+  bobAccount.balance = 0; 
+  bobAccount.ownerId = 12346;
 
   array<int> quantities = [500,200,1400,3000,1000];
+
+  /* for depositing heads will be aliceAccount and tails will be bobAccount */
+  array<bool> coinTossHeadsDeposit = [true,true,false,true,false];
+
+  /* for withdrawal heads will be bobAccount and tails will be aliceAccount */
+  array<bool> coinTossHeadsWithdraw = [false,true,true,false,false];
 
   function deposit(BankAccount act, int amount) int {
     act.balance = act.balance + amount;
@@ -384,14 +415,40 @@ let prog_two_test test_ctxt = assert_equal
     return act.balance;
   }
   
-  // add all the money
-  for (int amt in quantities) { 
-    deposit(myAccount, amt);
+  // add all the quantities to each person per coin flip
+  for (bool isAlice in coinTossHeadsDeposit) {
+    if (isAlice) {
+      for (int amt in quantities) { 
+        deposit(aliceAccount, amt);
+      }    
+    } else {
+      for (int amt in quantities) { 
+        deposit(bobAccount, amt);
+      }    
+    }
   }
 
-  // take away all the money
-  for (int amt in quantities) { 
-    withdraw(myAccount, amt);
+  // add all the quantities to each person per coin flip
+  for (bool isBob in coinTossHeadsWithdraw) {
+    if (isBob) {
+      for (int amt in quantities) { 
+        withdraw(bobAccount, amt);
+      }    
+    } else {
+      for (int amt in quantities) { 
+        withdraw(aliceAccount, amt);
+      }    
+    }
+  }
+  int i;
+
+  // a trivial for loop to print results
+  for (i = 0; i<2 ; i=i+1) {
+    if (i == 0) {
+      print(stringOfInt(aliceAccount.balance));
+    } else {
+      print(stringOfInt(bobAccount.balance));
+    }
   }
 }")
 
