@@ -38,6 +38,7 @@ let logical_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(1), Or, IntLit
 let logical_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(6), Leq, IntLit(8)))] (parse "6<=8;")
 
 let logical_lit_test5 test_ctxt = assert_equal [Expr(Binop(Binop(IntLit(82), Add, IntLit(3)), Leq, IntLit(90)))] (parse "82+3<=90;")
+let logical_lit_test6 test_ctxt = assert_equal [Expr(Binop(IntLit(85), Equal, IntLit(85)))] (parse "85==85;")
 
 let logical_tests =
   "Logical operations" >:::
@@ -47,6 +48,7 @@ let logical_tests =
     "Should accept or" >:: logical_lit_test3;
     "Should accept less than or equal to" >:: logical_lit_test4;
     "Should accept logical operations in order" >:: logical_lit_test5;
+    "Should accept logical equals" >:: logical_lit_test6;
   ]
 
 let mandatory_semi test_ctxt =
@@ -111,6 +113,9 @@ let if_elif1_else text_ctxt =
 let if_elif2_else text_ctxt = 
   assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],[If(BoolLit(false),[VDecl(Int, "y", None)],[If(BoolLit(false),[VDecl(Int, "w", None)],[VDecl(Int, "z", None)])])])] 
   (parse "if(false){int x;}elif(false){int y;}elif(false){int w;}else{int z;}")
+let if_elif2_else_true text_ctxt = 
+  assert_equal [If(BoolLit(true),[VDecl(Int, "x", None)],[If(BoolLit(false),[VDecl(Int, "y", None)],[If(BoolLit(false),[VDecl(Int, "w", None)],[VDecl(Int, "z", None)])])])] 
+  (parse "if(true){int x;}elif(false){int y;}elif(false){int w;}else{int z;}")
 let if_else_tests =
   "If else tests" >:::
   [
@@ -119,6 +124,7 @@ let if_else_tests =
     "Should handle if statement with elif" >:: if_elif1;
     "Should handle if statement with elif and else" >:: if_elif1_else;
     "Should handle if statement with 2 elifs and else" >:: if_elif2_else;
+    "Should handle if statement with 2 elifs and else while true" >:: if_elif2_else_true;
   ]
   
 (* TODO(claire) someone needs to write a test for assignment *)
@@ -335,10 +341,122 @@ let prog_one_test test_ctxt = assert_equal
 
   }")
 
+let prog_two_test test_ctxt = assert_equal
+[FDecl("sampleProgram2", [], Void, [
+
+  StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
+  VDecl(Struct("BankAccount"), "aliceAccount", Some(New(NStruct("BankAccount"))));
+  Expr(Assign("aliceAccount.balance", IntLit(0)));
+  Expr(Assign("aliceAccount.ownerId", IntLit(12345)));
+
+  VDecl(Struct("BankAccount"), "bobAccount", Some(New(NStruct("BankAccount"))));
+  Expr(Assign("bobAccount.balance", IntLit(0)));
+  Expr(Assign("bobAccount.ownerId", IntLit(12346)));
+
+  VDecl(Array(Int), "quantities", Some(ArrayLit([
+      IntLit(500); IntLit(200); IntLit(1400); IntLit(3000); IntLit(1000);
+  ])));
+  VDecl(Array(Bool), "coinTossHeadsDeposit", Some(ArrayLit([
+    BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(true); BoolLit(false);
+  ])));
+  VDecl(Array(Bool), "coinTossHeadsWithdraw", Some(ArrayLit([
+    BoolLit(false); BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(false);
+  ])));
+  FDecl("deposit", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
+    Expr(Assign("act.balance", Binop(Id("act.balance"), Add, Id("amount"))));
+    Return(Id("act.balance"));
+  ]);
+  FDecl("withdraw", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
+    Expr(Assign("act.balance", Binop(Id("act.balance"), Sub, Id("amount"))));
+    Return(Id("act.balance"));
+  ]);
+  EnhancedFor(Bool, "isAlice", Id("coinTossHeadsDeposit"), 
+    [If(Id("isAlice"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("aliceAccount"); Id("amt")]))])],
+    [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("bobAccount"); Id("amt")]))])])]
+  );
+  EnhancedFor(Bool, "isBob", Id("coinTossHeadsWithdraw"), 
+    [If(Id("isBob"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("bobAccount"); Id("amt")]))])],
+    [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("aliceAccount"); Id("amt")]))])])]
+  );
+  VDecl(Int, "i", None);
+  ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)), Assign("i", Binop(Id("i"), Add, IntLit(1))), 
+    [If(Binop(Id("i"), Equal, IntLit(0)),[Expr(FCall("print", [FCall("stringOfInt", [Id("aliceAccount.balance")])]));],
+    [Expr(FCall("print", [FCall("stringOfInt", [Id("bobAccount.balance")])]));])]);
+])]
+
+
+(parse "function sampleProgram2() void {
+
+  struct BankAccount { int balance; int ownerId; }
+
+  BankAccount aliceAccount = new(BankAccount);
+  aliceAccount.balance = 0; 
+  aliceAccount.ownerId = 12345;
+
+  BankAccount bobAccount = new(BankAccount);
+  bobAccount.balance = 0; 
+  bobAccount.ownerId = 12346;
+
+  array<int> quantities = [500,200,1400,3000,1000];
+
+  /* for depositing heads will be aliceAccount and tails will be bobAccount */
+  array<bool> coinTossHeadsDeposit = [true,true,false,true,false];
+
+  /* for withdrawal heads will be bobAccount and tails will be aliceAccount */
+  array<bool> coinTossHeadsWithdraw = [false,true,true,false,false];
+
+  function deposit(BankAccount act, int amount) int {
+    act.balance = act.balance + amount;
+    return act.balance;
+  }
+
+  function withdraw(BankAccount act, int amount) int {
+    act.balance = act.balance - amount;
+    return act.balance;
+  }
+  
+  // add all the quantities to each person per coin flip
+  for (bool isAlice in coinTossHeadsDeposit) {
+    if (isAlice) {
+      for (int amt in quantities) { 
+        deposit(aliceAccount, amt);
+      }    
+    } else {
+      for (int amt in quantities) { 
+        deposit(bobAccount, amt);
+      }    
+    }
+  }
+
+  // add all the quantities to each person per coin flip
+  for (bool isBob in coinTossHeadsWithdraw) {
+    if (isBob) {
+      for (int amt in quantities) { 
+        withdraw(bobAccount, amt);
+      }    
+    } else {
+      for (int amt in quantities) { 
+        withdraw(aliceAccount, amt);
+      }    
+    }
+  }
+  int i;
+
+  // a trivial for loop to print results
+  for (i = 0; i<2 ; i=i+1) {
+    if (i == 0) {
+      print(stringOfInt(aliceAccount.balance));
+    } else {
+      print(stringOfInt(bobAccount.balance));
+    }
+  }
+}")
+
 let full_prog_tests =
   "Full Programs" >:::
   [
-    "Program 1" >:: prog_one_test
+    "Program 1" >:: prog_one_test;
+    "Program 2" >:: prog_two_test;
   ]
 
 let tests =
