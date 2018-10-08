@@ -5,7 +5,6 @@ rule token = parse
 | "//" { linec lexbuf } (* Single-line Comments *)
 | "/*" { comment 0 lexbuf } (* Multi-line Comments *)
 | ';' { SEMI }
-| '=' { ASSIGN }
 | '(' { LPAREN }
 | ')' { RPAREN }
 | '{' { LBRACE }
@@ -20,18 +19,18 @@ rule token = parse
 | '-' { MINUS }
 | '*' { TIMES }
 | '/' { DIVIDE }
-| '='      { ASSIGN }
 | "=="     { EQ }
+| '='      { ASSIGN }
 | "!="     { NEQ }
-| '<'      { LT }
+| "!"      { NOT }
 | "<="     { LEQ }
-| ">"      { GT }
+| '<'      { LT }
 | ">="     { GEQ }
+| ">"      { GT }
 | "&&"     { AND }
 | "||"     { OR }
-| "!"      { NOT }
-| "func" { FUNC }
 | "function" { FUNCTION }
+| "func" { FUNC }
 | "int" { INT }
 | "float" { FLOAT }
 | "string" { STRING }
