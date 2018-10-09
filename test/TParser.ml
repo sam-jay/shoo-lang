@@ -144,22 +144,20 @@ let if_else_tests =
     "Should handle if statement with 2 elifs and else while true" >:: if_elif2_else_true;
   ]
   
-let for_all test_ctxt = assert_equal [ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)), 
-    Assign("i", Binop(Id("i"), Add, IntLit(1))), [Expr(IntLit(5))])]
-    (parse "for (i = 0; i < 2; i = i + 1) { 5; }")
+let for_all test_ctxt = assert_equal [ForLoop(Some(VDecl(Int, "i", Some(IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))), 
+    Some(Assign("i", Binop(Id("i"), Add, IntLit(1)))), [Expr(IntLit(5))])]
+    (parse "for (int i = 0; i < 2; i = i + 1) { 5; }")
  
-let for_no_increment test_ctxt = assert_equal [ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)),
-    NoExpr, [Expr(IntLit(5))])] (parse "for (i = 0; i < 2; ) { 5; }")
+let for_no_increment test_ctxt = assert_equal [ForLoop(Some(VDecl(Int, "i", Some(IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))),
+    None, [Expr(IntLit(5))])] (parse "for (int i = 0; i < 2; ) { 5; }")
     
-let for_no_init test_ctxt = assert_equal [ForLoop(NoExpr, Binop(Id("i"), Less, IntLit(5)),
-    Assign("i", Binop(Id("i"), Add, IntLit(1))), [Expr(IntLit(5))])] (parse "for ( ; i < 5; i = i + 1) { 5; }")
+let for_no_init test_ctxt = assert_equal [ForLoop(None, Some(Binop(Id("i"), Less, IntLit(5))),
+    Some(Assign("i", Binop(Id("i"), Add, IntLit(1)))), [Expr(IntLit(5))])] (parse "for ( ; i < 5; i = i + 1) { 5; }")
 
-let for_no_init_no_imp test_ctxt = assert_equal [ForLoop( NoExpr, Binop(IntLit(3), Less, IntLit(5)), 
-  NoExpr, [Expr(IntLit(5))])] (parse "for ( ; 3 < 5; ) { 5; }") 
+let for_no_init_no_imp test_ctxt = assert_equal [ForLoop(None, Some(Binop(IntLit(3), Less, IntLit(5))), 
+  None, [Expr(IntLit(5))])] (parse "for ( ; 3 < 5; ) { 5; }") 
 
-let for_no_test test_ctxt =
-  let f = fun () -> parse "for (; ; ) {5;}" in
-  assert_raises Parsing.Parse_error f
+let infinite_loop test_ctxt = assert_equal [ForLoop(None, None, None, [Expr(IntLit(5))])] (parse "for (; ; ) {5;}")
 
 let for_tests = 
     "For loops" >:::
@@ -168,7 +166,7 @@ let for_tests =
       "Should handle for with missing initialization" >:: for_no_init;
       "Should handle for with missing increment" >:: for_no_increment;
       "Should handle for loop with missing init and increment" >:: for_no_init_no_imp;
-      "Should raise error if no test" >:: for_no_test;
+      "Infinite loop" >:: infinite_loop;
     ]
 
 (* Tests for enhanced for loops. *)
@@ -300,7 +298,6 @@ let new_tests =
     "New struct" >::new_struct;
   ]
 
-<<<<<<< HEAD
 let string_lit_test test_ctxt = assert_equal [Expr(StrLit("Hello World"))] (parse "\"Hello World\";")
 
 let string_tests =
@@ -308,8 +305,6 @@ let string_tests =
   [
     "Should accept string literal" >::string_lit_test;
   ]
-=======
->>>>>>> 9d96df61e7e69584abef5cdee0a8e8dc6c800338
 
 let prog_one_test test_ctxt = assert_equal
   [FDecl("sampleProgram1", [], Void, [
@@ -417,7 +412,7 @@ let prog_two_test test_ctxt = assert_equal
     [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("aliceAccount"); Id("amt")]))])])]
   );
   VDecl(Int, "i", None);
-  ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)), Assign("i", Binop(Id("i"), Add, IntLit(1))), 
+  ForLoop(Some(Expr(Assign("i", IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))), Some(Assign("i", Binop(Id("i"), Add, IntLit(1)))), 
     [If(Binop(Id("i"), Equal, IntLit(0)),[Expr(FCall("print", [FCall("stringOfInt", [Id("aliceAccount.balance")])]));],
     [Expr(FCall("print", [FCall("stringOfInt", [Id("bobAccount.balance")])]));])]);
 ])]

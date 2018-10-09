@@ -56,7 +56,6 @@ let rec fmt_expr = function
 | Assign(s, e) -> fmt_two "Assign" s (fmt_expr e)
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
 | FExpr(p, t, b) -> fmt_three "FExpr" (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
-| NoExpr -> "NoExpr"
 | StructInit(l) -> fmt_one "StructInit" (fmt_init l)
 | ArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_expr l))
 | Destruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_expr e)
@@ -82,9 +81,11 @@ and fmt_stmt = function
 | FDecl(n, p, t, b) -> 
   fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
 | VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_expr e)
-| ForLoop (e1, e2, e3, s) -> 
-  fmt_four "ForLoop" (fmt_expr e1) (fmt_expr e2) 
-  (fmt_expr e3) (fmt_stmt_list s)
+| ForLoop (init, e2, e3, s) -> 
+  fmt_four "ForLoop" 
+  (match init with None -> "" | Some(s) -> fmt_stmt s)
+  (fmt_opt_expr e2) 
+  (fmt_opt_expr e3) (fmt_stmt_list s)
 | StructDef(n, m) -> fmt_two "StructDef" n (fmt_members m)
 | EnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n (fmt_expr e) (fmt_stmt_list b)
 | If(e, tL, fL) -> fmt_three "If" (fmt_expr e) (fmt_stmt_list tL) (fmt_stmt_list fL)
@@ -92,6 +93,10 @@ and fmt_stmt = function
 and fmt_stmt_list l =
   let stmts = List.map fmt_stmt l in
   fmt_list stmts
+
+and fmt_opt_expr = function
+  None -> ""
+| Some(e) -> fmt_expr e
 
 let fmt_prog program =
   fmt_stmt_list program

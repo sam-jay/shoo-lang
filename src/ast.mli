@@ -50,7 +50,6 @@ and expr =
 | StructInit of (string * expr) list
 | Destruct of string list * expr
 | New of newable
-| NoExpr
 
 and stmt =
   Expr of expr
@@ -58,7 +57,7 @@ and stmt =
 | Return of expr
 | FDecl of string * (typ * string) list * typ * stmt list
 | If of expr * stmt list * stmt list
-| ForLoop of expr * expr * expr * stmt list
+| ForLoop of (stmt option) * (expr option) * (expr option) * stmt list
 | StructDef of string * (typ * string * expr option) list
 | EnhancedFor of typ * string * expr * stmt list
 

@@ -40,7 +40,7 @@ stmt:
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
 | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE { FDecl($2, $4, $6, List.rev $8) }
 | RETURN expr SEMI { Return($2) }
-| FOR LPAREN opt_expr SEMI expr SEMI opt_expr RPAREN LBRACE stmt_list RBRACE 
+| FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACE stmt_list RBRACE 
     { ForLoop($3, $5, $7, List.rev $10) }
 | FOR LPAREN typ ID IN expr RPAREN LBRACE stmt_list RBRACE { EnhancedFor($3, $4, $6, List.rev $9) }
 | STRUCT STRUCTID LBRACE mems_opt RBRACE { StructDef($2, $4) }
@@ -99,9 +99,14 @@ item_list:
   expr { [$1] }
 | item_list COMMA expr { $3 :: $1 }
 
+opt_loop_init:
+  { None }
+| expr { Some(Expr($1)) }
+| typ ID ASSIGN expr { Some(VDecl($1, $2, Some($4))) }
+
 opt_expr:
-           { NoExpr}
-    | expr { $1}
+  { None }
+| expr { Some($1) }
 
 ret_typ:
   VOID { Void }
