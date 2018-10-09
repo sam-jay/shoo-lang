@@ -10,6 +10,7 @@
 %token <bool> BOOLLIT
 %token <string> ID
 %token <string> STRUCTID
+%token <string> STRLIT
 %token EOF
 
 %nonassoc NOELSE
@@ -61,6 +62,7 @@ expr:
   INTLIT { IntLit($1) }
 | FLOATLIT { FloatLit($1) }
 | BOOLLIT { BoolLit($1) }
+| STRLIT { StrLit($1) }
 | ID { Id($1) }
 | ID ASSIGN expr { Assign($1, $3) }
 | expr PLUS expr { Binop($1, Add, $3) }

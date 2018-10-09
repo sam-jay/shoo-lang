@@ -267,6 +267,14 @@ let new_tests =
     "New struct" >::new_struct;
   ]
 
+let string_lit_test test_ctxt = assert_equal [Expr(StrLit("Hello World"))] (parse "\"Hello World\";")
+
+let string_tests =
+  "Strings" >:::
+  [
+    "Should accept string literal" >::string_lit_test;
+  ]
+
 let prog_one_test test_ctxt = assert_equal
   [FDecl("sampleProgram1", [], Void, [
     VDecl(Array(Array(Int)), "tasks", Some(ArrayLit([
@@ -357,4 +365,5 @@ let tests =
     array_tests;
     new_tests;
     full_prog_tests;
+    string_tests;
   ]

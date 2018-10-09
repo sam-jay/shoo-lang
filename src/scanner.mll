@@ -12,8 +12,6 @@ rule token = parse
 | '}' { RBRACE }
 | '[' { LSQBRACE }
 | ']' { RSQBRACE }
-| '<' { LT }
-| '>' { GT }
 | ',' { COMMA }
 | ':' { COLON }
 | '+' { PLUS }
@@ -52,6 +50,7 @@ rule token = parse
 | ['0'-'9']*"."['0'-'9']+ as lxm { FLOATLIT(float_of_string lxm) }
 | ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '.']* as lxm { ID(lxm) }
 | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { STRUCTID(lxm) }
+| '"' { str (Buffer.create 16) lexbuf }
 | eof { EOF }
 
 and comment level = parse
@@ -62,3 +61,7 @@ and comment level = parse
 and linec = parse
   '\n' { token lexbuf }
 | _ { linec lexbuf }
+
+and str buf = parse
+  '"' { STRLIT(Buffer.contents buf) }
+| [^ '"'] { Buffer.add_string buf (Lexing.lexeme lexbuf); str buf lexbuf }
