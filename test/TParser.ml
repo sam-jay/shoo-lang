@@ -90,15 +90,32 @@ let float_tests =
     "Should accept positive with leading 0 omitted" >:: float_test2;
   ]
 
+(* Tests for variable declarations and definitions. *)
 let int_dec test_ctxt = assert_equal [VDecl(Int, "x", None)] (parse "int x;")
 let int_def test_ctxt = assert_equal [VDecl(Int, "x", Some(IntLit(5)))] (parse "int x = 5;")
-let vdec_tests =
+let struct_dec test_ctxt = assert_equal [StructDef("BankAccount", 
+    [(Int, "balance", None); (Int, "ownerId", None)]);
+    VDecl(Struct("BankAccount"), "myAccount", None)] 
+    (parse "struct BankAccount { int balance; int ownerId; }
+         BankAccount myAccount;")
+let struct_def test_ctxt = assert_equal
+  [
+    StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
+    VDecl(Struct("BankAccount"), "myAccount", Some(New(NStruct("BankAccount"))));
+  ]
+  (parse "struct BankAccount { int balance; int ownerId; }
+  BankAccount myAccount = new(BankAccount);")
+
+let variable_tests =
   "Variable declarations and definitions" >:::
   [
     "Should handle declaration of int" >:: int_dec;
     "Should handle definition of int" >:: int_def;
+    "Should handle declaration of struct type" >:: struct_dec;
+    "Should handle definition of struct type" >:: struct_def;
   ]
 
+(* Tests for if/elif/else statements. *)
 let if_only text_ctxt = 
   assert_equal [If(BoolLit(true),[VDecl(Int, "x", None)],[])] (parse "if(true){int x;}")
 let if_else text_ctxt = 
@@ -151,6 +168,27 @@ let for_tests =
       "Should raise error if no test" >:: for_no_test;
     ]
 
+(* Tests for enhanced for loops. *)
+let enhanced_for_id test_ctxt = assert_equal
+  [EnhancedFor(Int, "x", Id("foo"), [Expr(IntLit(5))])]
+  (parse "for (int x in foo) { 5; }")
+let enhanced_for_array_lit test_ctxt = assert_equal
+  [EnhancedFor(Int, "x", ArrayLit([
+    IntLit(1);
+    IntLit(2);
+    IntLit(3);
+    IntLit(4);
+    IntLit(5)
+  ]), [Expr(IntLit(5))])]
+  (parse "for (int x in [1, 2, 3, 4, 5]) { 5; }")
+let enhanced_for_tests =
+  "Enhanced For Loop" >:::
+  [
+    "Should handle by id" >:: enhanced_for_id;
+    "Should handle by array lit" >:: enhanced_for_array_lit
+  ]
+
+(* Tests for struct declaration and definition. *)
 let struct_declare test_ctxt = assert_equal
   [StructDef("Point", [
     (Int, "x", Some(IntLit(0)));
@@ -204,25 +242,7 @@ let struct_tests =
     "Toy struct program" >::toy_struct_program;
   ]
 
-let enhanced_for_id test_ctxt = assert_equal
-  [EnhancedFor(Int, "x", Id("foo"), [Expr(IntLit(5))])]
-  (parse "for (int x in foo) { 5; }")
-let enhanced_for_array_lit test_ctxt = assert_equal
-  [EnhancedFor(Int, "x", ArrayLit([
-    IntLit(1);
-    IntLit(2);
-    IntLit(3);
-    IntLit(4);
-    IntLit(5)
-  ]), [Expr(IntLit(5))])]
-  (parse "for (int x in [1, 2, 3, 4, 5]) { 5; }")
-let enhanced_for_tests =
-  "Enhanced For Loop" >:::
-  [
-    "Should handle by id" >:: enhanced_for_id;
-    "Should handle by array lit" >:: enhanced_for_array_lit
-  ]
-
+(* Tests for array declaration and definition. *)
 let one_intarr_decl test_ctxt = assert_equal [VDecl(Array(Int), "x", None)] (parse "array<int> x;")
 let one_intarr_def test_ctxt = assert_equal
   [VDecl(Array(Int), "x", Some(ArrayLit([
@@ -253,6 +273,10 @@ let two_intarr_def test_ctxt = assert_equal
   ])))]
   (parse "array< array<int> > x = [[1,2,3,4,5],[5,4,3,2,1]];")
 
+let one_intarr_new_def test_ctxt = assert_equal 
+    [VDecl(Array(Int), "x", Some(New(NArray(Int, IntLit(5)))))]
+    (parse "array<int> x = new(array<int>[5]);")
+
 let array_tests =
   "Arrays" >:::
   [
@@ -260,11 +284,11 @@ let array_tests =
     "One dimensional int array definition" >::one_intarr_def;
     "Two dimensional int array declaration" >::two_intarr_decl;
     "Two dimensional int array definition" >::two_intarr_def;
+    "One dimensional int array definition with new" >:: one_intarr_new_def;
   ]
 
 let new_one_array test_ctxt = assert_equal [Expr(New(NArray(Int, IntLit(5))))] (parse "new(array<int>[5]);")
 let new_struct test_ctxt = assert_equal [Expr(New(NStruct("BankAccount")))] (parse "new(BankAccount);")
-
 
 let new_tests =
   "New keyword" >:::
@@ -272,6 +296,7 @@ let new_tests =
     "New one dimensional array" >::new_one_array;
     "New struct" >::new_struct;
   ]
+
 
 let prog_one_test test_ctxt = assert_equal
   [FDecl("sampleProgram1", [], Void, [
@@ -467,7 +492,7 @@ let tests =
     common_tests;
     comment_tests;
     float_tests;
-    vdec_tests;
+    variable_tests;
     if_else_tests;
     for_tests;
     struct_tests;
