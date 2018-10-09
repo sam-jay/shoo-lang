@@ -144,13 +144,18 @@ let if_else_tests =
     "Should handle if statement with 2 elifs and else while true" >:: if_elif2_else_true;
   ]
   
-(* TODO(claire) someone needs to write a test for assignment *)
+let for_all test_ctxt = assert_equal [ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)), 
+    Assign("i", Binop(Id("i"), Add, IntLit(1))), [Expr(IntLit(5))])]
+    (parse "for (i = 0; i < 2; i = i + 1) { 5; }")
+ 
+let for_no_increment test_ctxt = assert_equal [ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)),
+    NoExpr, [Expr(IntLit(5))])] (parse "for (i = 0; i < 2; ) { 5; }")
+    
+let for_no_init test_ctxt = assert_equal [ForLoop(NoExpr, Binop(Id("i"), Less, IntLit(5)),
+    Assign("i", Binop(Id("i"), Add, IntLit(1))), [Expr(IntLit(5))])] (parse "for ( ; i < 5; i = i + 1) { 5; }")
 
-(* TODO(claire) need to implement this once minus is implemented *)
-(*let for_all = assert_equal [ForLoop(VDef(Int, "x", IntLit(0)), true 
-  (* TODO(claire): change this one > and < are implemented *), Assign("x", Expr*)  
-let for_no_init_no_imp test_ctxt = assert_equal [ForLoop( NoExpr, BoolLit(true) (* TODO(claire): change this one once have <> *), 
-  NoExpr, [Expr(IntLit(5))])] (parse "for ( ; true; ) { 5; }") 
+let for_no_init_no_imp test_ctxt = assert_equal [ForLoop( NoExpr, Binop(IntLit(3), Less, IntLit(5)), 
+  NoExpr, [Expr(IntLit(5))])] (parse "for ( ; 3 < 5; ) { 5; }") 
 
 let for_no_test test_ctxt =
   let f = fun () -> parse "for (; ; ) {5;}" in
@@ -159,11 +164,9 @@ let for_no_test test_ctxt =
 let for_tests = 
     "For loops" >:::
     [
-(*      "Should handle for loop with initialization, testing, and increment"
-        >:: for_all;*) (* TODO(claire) impelement this one math is implemented *)
-      (*"Should handle for with missing initialization" >:: for_no_init;
-      "Should handle for with missing increment" >:: for_no_increment;*)
-      (* TODO(claire) ^^^^ implement after math is impelemented *)
+      "Should handle for loop with initialization, testing, and increment" >:: for_all; 
+      "Should handle for with missing initialization" >:: for_no_init;
+      "Should handle for with missing increment" >:: for_no_increment;
       "Should handle for loop with missing init and increment" >:: for_no_init_no_imp;
       "Should raise error if no test" >:: for_no_test;
     ]
