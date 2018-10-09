@@ -38,6 +38,7 @@ let logical_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(1), Or, IntLit
 let logical_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(6), Leq, IntLit(8)))] (parse "6<=8;")
 
 let logical_lit_test5 test_ctxt = assert_equal [Expr(Binop(Binop(IntLit(82), Add, IntLit(3)), Leq, IntLit(90)))] (parse "82+3<=90;")
+let logical_lit_test6 test_ctxt = assert_equal [Expr(Binop(IntLit(85), Equal, IntLit(85)))] (parse "85==85;")
 
 let logical_tests =
   "Logical operations" >:::
@@ -47,6 +48,7 @@ let logical_tests =
     "Should accept or" >:: logical_lit_test3;
     "Should accept less than or equal to" >:: logical_lit_test4;
     "Should accept logical operations in order" >:: logical_lit_test5;
+    "Should accept logical equals" >:: logical_lit_test6;
   ]
 
 let mandatory_semi test_ctxt =
@@ -88,15 +90,32 @@ let float_tests =
     "Should accept positive with leading 0 omitted" >:: float_test2;
   ]
 
+(* Tests for variable declarations and definitions. *)
 let int_dec test_ctxt = assert_equal [VDecl(Int, "x", None)] (parse "int x;")
 let int_def test_ctxt = assert_equal [VDecl(Int, "x", Some(IntLit(5)))] (parse "int x = 5;")
-let vdec_tests =
+let struct_dec test_ctxt = assert_equal [StructDef("BankAccount", 
+    [(Int, "balance", None); (Int, "ownerId", None)]);
+    VDecl(Struct("BankAccount"), "myAccount", None)] 
+    (parse "struct BankAccount { int balance; int ownerId; }
+         BankAccount myAccount;")
+let struct_def test_ctxt = assert_equal
+  [
+    StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
+    VDecl(Struct("BankAccount"), "myAccount", Some(New(NStruct("BankAccount"))));
+  ]
+  (parse "struct BankAccount { int balance; int ownerId; }
+  BankAccount myAccount = new(BankAccount);")
+
+let variable_tests =
   "Variable declarations and definitions" >:::
   [
     "Should handle declaration of int" >:: int_dec;
     "Should handle definition of int" >:: int_def;
+    "Should handle declaration of struct type" >:: struct_dec;
+    "Should handle definition of struct type" >:: struct_def;
   ]
 
+(* Tests for if/elif/else statements. *)
 let if_only text_ctxt = 
   assert_equal [If(BoolLit(true),[VDecl(Int, "x", None)],[])] (parse "if(true){int x;}")
 let if_else text_ctxt = 
@@ -111,6 +130,9 @@ let if_elif1_else text_ctxt =
 let if_elif2_else text_ctxt = 
   assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],[If(BoolLit(false),[VDecl(Int, "y", None)],[If(BoolLit(false),[VDecl(Int, "w", None)],[VDecl(Int, "z", None)])])])] 
   (parse "if(false){int x;}elif(false){int y;}elif(false){int w;}else{int z;}")
+let if_elif2_else_true text_ctxt = 
+  assert_equal [If(BoolLit(true),[VDecl(Int, "x", None)],[If(BoolLit(false),[VDecl(Int, "y", None)],[If(BoolLit(false),[VDecl(Int, "w", None)],[VDecl(Int, "z", None)])])])] 
+  (parse "if(true){int x;}elif(false){int y;}elif(false){int w;}else{int z;}")
 let if_else_tests =
   "If else tests" >:::
   [
@@ -119,15 +141,21 @@ let if_else_tests =
     "Should handle if statement with elif" >:: if_elif1;
     "Should handle if statement with elif and else" >:: if_elif1_else;
     "Should handle if statement with 2 elifs and else" >:: if_elif2_else;
+    "Should handle if statement with 2 elifs and else while true" >:: if_elif2_else_true;
   ]
   
-(* TODO(claire) someone needs to write a test for assignment *)
+let for_all test_ctxt = assert_equal [ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)), 
+    Assign("i", Binop(Id("i"), Add, IntLit(1))), [Expr(IntLit(5))])]
+    (parse "for (i = 0; i < 2; i = i + 1) { 5; }")
+ 
+let for_no_increment test_ctxt = assert_equal [ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)),
+    NoExpr, [Expr(IntLit(5))])] (parse "for (i = 0; i < 2; ) { 5; }")
+    
+let for_no_init test_ctxt = assert_equal [ForLoop(NoExpr, Binop(Id("i"), Less, IntLit(5)),
+    Assign("i", Binop(Id("i"), Add, IntLit(1))), [Expr(IntLit(5))])] (parse "for ( ; i < 5; i = i + 1) { 5; }")
 
-(* TODO(claire) need to implement this once minus is implemented *)
-(*let for_all = assert_equal [ForLoop(VDef(Int, "x", IntLit(0)), true 
-  (* TODO(claire): change this one > and < are implemented *), Assign("x", Expr*)  
-let for_no_init_no_imp test_ctxt = assert_equal [ForLoop( NoExpr, BoolLit(true) (* TODO(claire): change this one once have <> *), 
-  NoExpr, [Expr(IntLit(5))])] (parse "for ( ; true; ) { 5; }") 
+let for_no_init_no_imp test_ctxt = assert_equal [ForLoop( NoExpr, Binop(IntLit(3), Less, IntLit(5)), 
+  NoExpr, [Expr(IntLit(5))])] (parse "for ( ; 3 < 5; ) { 5; }") 
 
 let for_no_test test_ctxt =
   let f = fun () -> parse "for (; ; ) {5;}" in
@@ -136,15 +164,34 @@ let for_no_test test_ctxt =
 let for_tests = 
     "For loops" >:::
     [
-(*      "Should handle for loop with initialization, testing, and increment"
-        >:: for_all;*) (* TODO(claire) impelement this one math is implemented *)
-      (*"Should handle for with missing initialization" >:: for_no_init;
-      "Should handle for with missing increment" >:: for_no_increment;*)
-      (* TODO(claire) ^^^^ implement after math is impelemented *)
+      "Should handle for loop with initialization, testing, and increment" >:: for_all; 
+      "Should handle for with missing initialization" >:: for_no_init;
+      "Should handle for with missing increment" >:: for_no_increment;
       "Should handle for loop with missing init and increment" >:: for_no_init_no_imp;
       "Should raise error if no test" >:: for_no_test;
     ]
 
+(* Tests for enhanced for loops. *)
+let enhanced_for_id test_ctxt = assert_equal
+  [EnhancedFor(Int, "x", Id("foo"), [Expr(IntLit(5))])]
+  (parse "for (int x in foo) { 5; }")
+let enhanced_for_array_lit test_ctxt = assert_equal
+  [EnhancedFor(Int, "x", ArrayLit([
+    IntLit(1);
+    IntLit(2);
+    IntLit(3);
+    IntLit(4);
+    IntLit(5)
+  ]), [Expr(IntLit(5))])]
+  (parse "for (int x in [1, 2, 3, 4, 5]) { 5; }")
+let enhanced_for_tests =
+  "Enhanced For Loop" >:::
+  [
+    "Should handle by id" >:: enhanced_for_id;
+    "Should handle by array lit" >:: enhanced_for_array_lit
+  ]
+
+(* Tests for struct declaration and definition. *)
 let struct_declare test_ctxt = assert_equal
   [StructDef("Point", [
     (Int, "x", Some(IntLit(0)));
@@ -198,25 +245,7 @@ let struct_tests =
     "Toy struct program" >::toy_struct_program;
   ]
 
-let enhanced_for_id test_ctxt = assert_equal
-  [EnhancedFor(Int, "x", Id("foo"), [Expr(IntLit(5))])]
-  (parse "for (int x in foo) { 5; }")
-let enhanced_for_array_lit test_ctxt = assert_equal
-  [EnhancedFor(Int, "x", ArrayLit([
-    IntLit(1);
-    IntLit(2);
-    IntLit(3);
-    IntLit(4);
-    IntLit(5)
-  ]), [Expr(IntLit(5))])]
-  (parse "for (int x in [1, 2, 3, 4, 5]) { 5; }")
-let enhanced_for_tests =
-  "Enhanced For Loop" >:::
-  [
-    "Should handle by id" >:: enhanced_for_id;
-    "Should handle by array lit" >:: enhanced_for_array_lit
-  ]
-
+(* Tests for array declaration and definition. *)
 let one_intarr_decl test_ctxt = assert_equal [VDecl(Array(Int), "x", None)] (parse "array<int> x;")
 let one_intarr_def test_ctxt = assert_equal
   [VDecl(Array(Int), "x", Some(ArrayLit([
@@ -247,6 +276,10 @@ let two_intarr_def test_ctxt = assert_equal
   ])))]
   (parse "array< array<int> > x = [[1,2,3,4,5],[5,4,3,2,1]];")
 
+let one_intarr_new_def test_ctxt = assert_equal 
+    [VDecl(Array(Int), "x", Some(New(NArray(Int, IntLit(5)))))]
+    (parse "array<int> x = new(array<int>[5]);")
+
 let array_tests =
   "Arrays" >:::
   [
@@ -254,11 +287,11 @@ let array_tests =
     "One dimensional int array definition" >::one_intarr_def;
     "Two dimensional int array declaration" >::two_intarr_decl;
     "Two dimensional int array definition" >::two_intarr_def;
+    "One dimensional int array definition with new" >:: one_intarr_new_def;
   ]
 
 let new_one_array test_ctxt = assert_equal [Expr(New(NArray(Int, IntLit(5))))] (parse "new(array<int>[5]);")
 let new_struct test_ctxt = assert_equal [Expr(New(NStruct("BankAccount")))] (parse "new(BankAccount);")
-
 
 let new_tests =
   "New keyword" >:::
@@ -267,6 +300,7 @@ let new_tests =
     "New struct" >::new_struct;
   ]
 
+<<<<<<< HEAD
 let string_lit_test test_ctxt = assert_equal [Expr(StrLit("Hello World"))] (parse "\"Hello World\";")
 
 let string_tests =
@@ -274,6 +308,8 @@ let string_tests =
   [
     "Should accept string literal" >::string_lit_test;
   ]
+=======
+>>>>>>> 9d96df61e7e69584abef5cdee0a8e8dc6c800338
 
 let prog_one_test test_ctxt = assert_equal
   [FDecl("sampleProgram1", [], Void, [
@@ -343,10 +379,122 @@ let prog_one_test test_ctxt = assert_equal
 
   }")
 
+let prog_two_test test_ctxt = assert_equal
+[FDecl("sampleProgram2", [], Void, [
+
+  StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
+  VDecl(Struct("BankAccount"), "aliceAccount", Some(New(NStruct("BankAccount"))));
+  Expr(Assign("aliceAccount.balance", IntLit(0)));
+  Expr(Assign("aliceAccount.ownerId", IntLit(12345)));
+
+  VDecl(Struct("BankAccount"), "bobAccount", Some(New(NStruct("BankAccount"))));
+  Expr(Assign("bobAccount.balance", IntLit(0)));
+  Expr(Assign("bobAccount.ownerId", IntLit(12346)));
+
+  VDecl(Array(Int), "quantities", Some(ArrayLit([
+      IntLit(500); IntLit(200); IntLit(1400); IntLit(3000); IntLit(1000);
+  ])));
+  VDecl(Array(Bool), "coinTossHeadsDeposit", Some(ArrayLit([
+    BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(true); BoolLit(false);
+  ])));
+  VDecl(Array(Bool), "coinTossHeadsWithdraw", Some(ArrayLit([
+    BoolLit(false); BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(false);
+  ])));
+  FDecl("deposit", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
+    Expr(Assign("act.balance", Binop(Id("act.balance"), Add, Id("amount"))));
+    Return(Id("act.balance"));
+  ]);
+  FDecl("withdraw", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
+    Expr(Assign("act.balance", Binop(Id("act.balance"), Sub, Id("amount"))));
+    Return(Id("act.balance"));
+  ]);
+  EnhancedFor(Bool, "isAlice", Id("coinTossHeadsDeposit"), 
+    [If(Id("isAlice"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("aliceAccount"); Id("amt")]))])],
+    [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("bobAccount"); Id("amt")]))])])]
+  );
+  EnhancedFor(Bool, "isBob", Id("coinTossHeadsWithdraw"), 
+    [If(Id("isBob"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("bobAccount"); Id("amt")]))])],
+    [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("aliceAccount"); Id("amt")]))])])]
+  );
+  VDecl(Int, "i", None);
+  ForLoop(Assign("i", IntLit(0)), Binop(Id("i"), Less, IntLit(2)), Assign("i", Binop(Id("i"), Add, IntLit(1))), 
+    [If(Binop(Id("i"), Equal, IntLit(0)),[Expr(FCall("print", [FCall("stringOfInt", [Id("aliceAccount.balance")])]));],
+    [Expr(FCall("print", [FCall("stringOfInt", [Id("bobAccount.balance")])]));])]);
+])]
+
+
+(parse "function sampleProgram2() void {
+
+  struct BankAccount { int balance; int ownerId; }
+
+  BankAccount aliceAccount = new(BankAccount);
+  aliceAccount.balance = 0; 
+  aliceAccount.ownerId = 12345;
+
+  BankAccount bobAccount = new(BankAccount);
+  bobAccount.balance = 0; 
+  bobAccount.ownerId = 12346;
+
+  array<int> quantities = [500,200,1400,3000,1000];
+
+  /* for depositing heads will be aliceAccount and tails will be bobAccount */
+  array<bool> coinTossHeadsDeposit = [true,true,false,true,false];
+
+  /* for withdrawal heads will be bobAccount and tails will be aliceAccount */
+  array<bool> coinTossHeadsWithdraw = [false,true,true,false,false];
+
+  function deposit(BankAccount act, int amount) int {
+    act.balance = act.balance + amount;
+    return act.balance;
+  }
+
+  function withdraw(BankAccount act, int amount) int {
+    act.balance = act.balance - amount;
+    return act.balance;
+  }
+  
+  // add all the quantities to each person per coin flip
+  for (bool isAlice in coinTossHeadsDeposit) {
+    if (isAlice) {
+      for (int amt in quantities) { 
+        deposit(aliceAccount, amt);
+      }    
+    } else {
+      for (int amt in quantities) { 
+        deposit(bobAccount, amt);
+      }    
+    }
+  }
+
+  // add all the quantities to each person per coin flip
+  for (bool isBob in coinTossHeadsWithdraw) {
+    if (isBob) {
+      for (int amt in quantities) { 
+        withdraw(bobAccount, amt);
+      }    
+    } else {
+      for (int amt in quantities) { 
+        withdraw(aliceAccount, amt);
+      }    
+    }
+  }
+  int i;
+
+  // a trivial for loop to print results
+  for (i = 0; i<2 ; i=i+1) {
+    if (i == 0) {
+      print(stringOfInt(aliceAccount.balance));
+    } else {
+      print(stringOfInt(bobAccount.balance));
+    }
+  }
+}")
+
 let full_prog_tests =
   "Full Programs" >:::
   [
-    "Program 1" >:: prog_one_test
+    "Program 1" >:: prog_one_test;
+    "Program 2" >:: prog_two_test;
   ]
 
 let tests =
@@ -357,7 +505,7 @@ let tests =
     common_tests;
     comment_tests;
     float_tests;
-    vdec_tests;
+    variable_tests;
     if_else_tests;
     for_tests;
     struct_tests;
