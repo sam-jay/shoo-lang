@@ -145,14 +145,14 @@ let if_else_tests =
   ]
   
 let for_all test_ctxt = assert_equal [ForLoop(Some(VDecl(Int, "i", Some(IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))), 
-    Some(Assign("i", Binop(Id("i"), Add, IntLit(1)))), [Expr(IntLit(5))])]
+    Some(Assign(Id("i"), Binop(Id("i"), Add, IntLit(1)))), [Expr(IntLit(5))])]
     (parse "for (int i = 0; i < 2; i = i + 1) { 5; }")
  
 let for_no_increment test_ctxt = assert_equal [ForLoop(Some(VDecl(Int, "i", Some(IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))),
     None, [Expr(IntLit(5))])] (parse "for (int i = 0; i < 2; ) { 5; }")
     
 let for_no_init test_ctxt = assert_equal [ForLoop(None, Some(Binop(Id("i"), Less, IntLit(5))),
-    Some(Assign("i", Binop(Id("i"), Add, IntLit(1)))), [Expr(IntLit(5))])] (parse "for ( ; i < 5; i = i + 1) { 5; }")
+    Some(Assign(Id("i"), Binop(Id("i"), Add, IntLit(1)))), [Expr(IntLit(5))])] (parse "for ( ; i < 5; i = i + 1) { 5; }")
 
 let for_no_init_no_imp test_ctxt = assert_equal [ForLoop(None, Some(Binop(IntLit(3), Less, IntLit(5))), 
   None, [Expr(IntLit(5))])] (parse "for ( ; 3 < 5; ) { 5; }") 
@@ -189,7 +189,7 @@ let enhanced_for_tests =
     "Should handle by array lit" >:: enhanced_for_array_lit
   ]
 
-(* Tests for struct declaration and definition. *)
+(* Tests for struct declaration, definition, and dot operator. *)
 let struct_declare test_ctxt = assert_equal
   [StructDef("Point", [
     (Int, "x", Some(IntLit(0)));
@@ -202,7 +202,7 @@ let struct_declare_empty test_ctxt = assert_equal
   (parse "struct Empty { }")
 
 let struct_def test_ctxt = assert_equal
-  [Expr(Assign("x", StructInit([
+  [Expr(Assign(Id("x"), StructInit([
     ("foo", IntLit(2));
     ("bar", IntLit(5)) ])))]
   (parse "x = { foo = 2; bar = 5; };")
@@ -212,19 +212,19 @@ let destruct test_ctxt = assert_equal
   (parse "{ x; y; z; } = foo;")
 
 let get_struct_val test_ctxt = assert_equal
-  [Expr(Id("myStruct.x"))]
+  [Expr(Dot(Id("myStruct"), "x"))]
   (parse "myStruct.x;")
 
 let set_struct_val test_ctxt = assert_equal
-  [Expr(Assign("myStruct.x", IntLit(5)))]
+  [Expr(Assign(Dot(Id("myStruct"), "x"), IntLit(5)))]
   (parse "myStruct.x = 5;")
-
+  
 let toy_struct_program test_ctxt = assert_equal
   [
     StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
     VDecl(Struct("BankAccount"), "myAccount", Some(New(NStruct("BankAccount"))));
-    Expr(Assign("myAccount.balance", IntLit(0)));
-    Expr(Assign("myAccount.ownerId", IntLit(0)));
+    Expr(Assign(Dot(Id("myAccount"), "balance"), IntLit(0)));
+    Expr(Assign(Dot(Id("myAccount"), "ownerId"), IntLit(0)));
   ]
   (parse "struct BankAccount { int balance; int ownerId; }
   BankAccount myAccount = new(BankAccount);
@@ -238,8 +238,8 @@ let struct_tests =
     "Should handle empty struct declaration" >::struct_declare_empty;
     "Should handle struct definition" >::struct_def;
     "Should handle destructuring assignment" >::destruct;
-    "Getting struct value" >::get_struct_val;
-    "Setting struct value" >::set_struct_val;
+    "Getting struct value with dot" >::get_struct_val;
+    "Setting struct value with dot" >::set_struct_val;
     "Toy struct program" >::toy_struct_program;
   ]
 
@@ -288,6 +288,7 @@ let array_tests =
     "One dimensional int array definition with new" >:: one_intarr_new_def;
   ]
 
+(* Tests for creating objects with keyword new. *)
 let new_one_array test_ctxt = assert_equal [Expr(New(NArray(Int, IntLit(5))))] (parse "new(array<int>[5]);")
 let new_struct test_ctxt = assert_equal [Expr(New(NStruct("BankAccount")))] (parse "new(BankAccount);")
 
@@ -379,12 +380,12 @@ let prog_two_test test_ctxt = assert_equal
 
   StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
   VDecl(Struct("BankAccount"), "aliceAccount", Some(New(NStruct("BankAccount"))));
-  Expr(Assign("aliceAccount.balance", IntLit(0)));
-  Expr(Assign("aliceAccount.ownerId", IntLit(12345)));
+  Expr(Assign(Dot(Id("aliceAccount"), "balance"), IntLit(0)));
+  Expr(Assign(Dot(Id("aliceAccount"), "ownerId"), IntLit(12345)));
 
   VDecl(Struct("BankAccount"), "bobAccount", Some(New(NStruct("BankAccount"))));
-  Expr(Assign("bobAccount.balance", IntLit(0)));
-  Expr(Assign("bobAccount.ownerId", IntLit(12346)));
+  Expr(Assign(Dot(Id("bobAccount"), "balance"), IntLit(0)));
+  Expr(Assign(Dot(Id("bobAccount"), "ownerId"), IntLit(12346)));
 
   VDecl(Array(Int), "quantities", Some(ArrayLit([
       IntLit(500); IntLit(200); IntLit(1400); IntLit(3000); IntLit(1000);
@@ -396,12 +397,12 @@ let prog_two_test test_ctxt = assert_equal
     BoolLit(false); BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(false);
   ])));
   FDecl("deposit", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
-    Expr(Assign("act.balance", Binop(Id("act.balance"), Add, Id("amount"))));
-    Return(Id("act.balance"));
+    Expr(Assign(Dot(Id("act"), "balance"), Binop(Dot(Id("act"), "balance"), Add, Id("amount"))));
+    Return(Dot(Id("act"), "balance"));
   ]);
   FDecl("withdraw", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
-    Expr(Assign("act.balance", Binop(Id("act.balance"), Sub, Id("amount"))));
-    Return(Id("act.balance"));
+    Expr(Assign(Dot(Id("act"), "balance"), Binop(Dot(Id("act"), "balance"), Sub, Id("amount"))));
+    Return(Dot(Id("act"), "balance"));
   ]);
   EnhancedFor(Bool, "isAlice", Id("coinTossHeadsDeposit"), 
     [If(Id("isAlice"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("aliceAccount"); Id("amt")]))])],
@@ -412,9 +413,11 @@ let prog_two_test test_ctxt = assert_equal
     [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("aliceAccount"); Id("amt")]))])])]
   );
   VDecl(Int, "i", None);
-  ForLoop(Some(Expr(Assign("i", IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))), Some(Assign("i", Binop(Id("i"), Add, IntLit(1)))), 
-    [If(Binop(Id("i"), Equal, IntLit(0)),[Expr(FCall("print", [FCall("stringOfInt", [Id("aliceAccount.balance")])]));],
-    [Expr(FCall("print", [FCall("stringOfInt", [Id("bobAccount.balance")])]));])]);
+  ForLoop(Some(Expr(Assign(Id("i"), IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))), 
+    Some(Assign(Id("i"), Binop(Id("i"), Add, IntLit(1)))), 
+    [If(Binop(Id("i"), Equal, IntLit(0)),
+    [Expr(FCall("print", [FCall("stringOfInt", [Dot(Id("aliceAccount"), "balance")])]));],
+    [Expr(FCall("print", [FCall("stringOfInt", [Dot(Id("bobAccount"), "balance")])]));])]);
 ])]
 
 
