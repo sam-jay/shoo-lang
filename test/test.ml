@@ -4,6 +4,7 @@ let suite =
   "suite">:::
   [
     TParser.tests;
+    TFullPrograms.tests;
   ];;
 
 let () =
