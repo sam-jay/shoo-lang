@@ -285,6 +285,15 @@ let assign_var_array_access test_ctxt = assert_equal
     [Expr(Assign(Id("myVar"), ArrayAccess("x", IntLit(2))))] 
     (parse "myVar = x[2];")
 
+let array_index_assign test_ctxt = assert_equal
+    [Expr(Assign(ArrayAccess("x", IntLit(2)), IntLit(5)))]
+    (parse "x[2] = 5;")
+
+let array_expr_index test_ctxt = assert_equal
+    [Expr(Assign(ArrayAccess("x", Binop(IntLit(3), Add, IntLit(4))),
+        StrLit("hi")))]
+    (parse "x[3+4] = \"hi\";")
+
 let array_tests =
   "Arrays" >:::
   [
@@ -295,6 +304,8 @@ let array_tests =
     "One dimensional int array definition with new" >:: one_intarr_new_def;
     "Simple array access only" >:: simple_array_access;
     "Set variable to array access" >:: assign_var_array_access;
+    "Set index in array to a value" >:: array_index_assign;
+    "Index array with an expression" >:: array_expr_index;
   ]
 
 (* Tests for creating objects with keyword new. *)
