@@ -1,6 +1,6 @@
 %{ open Ast %}
 
-%token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
+%token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR DOT
 %token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
@@ -39,13 +39,13 @@ stmt_list:
 stmt:
   expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
-| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE { FDecl($2, $4, $6, List.rev $8) }
+| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($2, $4, $6, List.rev $8) }
 | RETURN expr SEMI { Return($2) }
-| FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACE stmt_list RBRACE 
+| FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
-| FOR LPAREN typ ID IN expr RPAREN LBRACE stmt_list RBRACE { EnhancedFor($3, $4, $6, List.rev $9) }
-| STRUCT STRUCTID LBRACE mems_opt RBRACE { StructDef($2, $4) }
-| IF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { If($3, $6, $8) }
+| FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
+| STRUCT STRUCTID LBRACKET mems_opt RBRACKET { StructDef($2, $4) }
+| IF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { If($3, $6, $8) }
 
 opt_init:
   { None }
@@ -54,10 +54,10 @@ opt_init:
 false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
 
 elif:
-ELIF LPAREN expr RPAREN LBRACE stmt_list RBRACE false_branch { [If($3, $6, $8)] }
+ELIF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { [If($3, $6, $8)] }
 
 cf_else:
-ELSE LBRACE stmt_list RBRACE { $3 }
+ELSE LBRACKET stmt_list RBRACKET { $3 }
 
 expr:
   INTLIT { IntLit($1) }
@@ -79,14 +79,15 @@ expr:
 | expr GEQ expr { Binop($1, Geq, $3) }
 | expr AND expr { Binop($1, And, $3) }
 | expr OR expr { Binop($1, Or, $3) }
+| ID LSQBRACE expr RSQBRACE { ArrayAccess($1, $3) }
 | MINUS expr %prec NEG { Unop(Neg, $2) }
 | NOT expr { Unop(Not, $2) }
 | NEW LPAREN newable RPAREN { New($3) }
-| LBRACE destruct RBRACE ASSIGN expr { Destruct(List.rev $2, $5) }
-| FUNCTION LPAREN params_opt RPAREN ret_typ LBRACE stmt_list RBRACE
+| LBRACKET destruct RBRACKET ASSIGN expr { Destruct(List.rev $2, $5) }
+| FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET
   { FExpr($3, $5, List.rev $7) }
 | ID LPAREN args_opt RPAREN { FCall($1, $3) }
-| LBRACE init_list RBRACE { StructInit(List.rev $2) }
+| LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
 
 newable:

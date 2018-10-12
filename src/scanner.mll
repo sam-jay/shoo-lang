@@ -7,8 +7,8 @@ rule token = parse
 | ';' { SEMI }
 | '(' { LPAREN }
 | ')' { RPAREN }
-| '{' { LBRACE }
-| '}' { RBRACE }
+| '{' { LBRACKET }
+| '}' { RBRACKET }
 | '[' { LSQBRACE }
 | ']' { RSQBRACE }
 | '.' { DOT }

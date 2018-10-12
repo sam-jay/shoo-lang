@@ -54,6 +54,7 @@ let rec fmt_expr = function
 | Binop(e1, o, e2) -> fmt_three "Binop" (fmt_expr e1) (fmt_op o) (fmt_expr e2)
 | Unop(uo, e) -> fmt_two "Unop" (fmt_uop uo) (fmt_expr e)
 | Assign(e1, e2) -> fmt_two "Assign" (fmt_expr e1) (fmt_expr e2)
+| ArrayAccess(s, e) -> fmt_two "ArrayAccess" s (fmt_expr e)
 | Dot(e, s) -> fmt_two "Dot" (fmt_expr e) s
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
 | FExpr(p, t, b) -> fmt_three "FExpr" (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
