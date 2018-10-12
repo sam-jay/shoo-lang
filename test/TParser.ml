@@ -243,7 +243,7 @@ let struct_tests =
     "Toy struct program" >::toy_struct_program;
   ]
 
-(* Tests for array declaration and definition. *)
+(* Tests for array declaration, definition, and access. *)
 let one_intarr_decl test_ctxt = assert_equal [VDecl(Array(Int), "x", None)] (parse "array<int> x;")
 let one_intarr_def test_ctxt = assert_equal
   [VDecl(Array(Int), "x", Some(ArrayLit([
@@ -278,6 +278,13 @@ let one_intarr_new_def test_ctxt = assert_equal
     [VDecl(Array(Int), "x", Some(New(NArray(Int, IntLit(5)))))]
     (parse "array<int> x = new(array<int>[5]);")
 
+let simple_array_access test_ctxt = assert_equal
+    [Expr(ArrayAccess("x", IntLit(2)))] (parse "x[2];")
+
+let assign_var_array_access test_ctxt = assert_equal
+    [Expr(Assign(Id("myVar"), ArrayAccess("x", IntLit(2))))] 
+    (parse "myVar = x[2];")
+
 let array_tests =
   "Arrays" >:::
   [
@@ -286,6 +293,8 @@ let array_tests =
     "Two dimensional int array declaration" >::two_intarr_decl;
     "Two dimensional int array definition" >::two_intarr_def;
     "One dimensional int array definition with new" >:: one_intarr_new_def;
+    "Simple array access only" >:: simple_array_access;
+    "Set variable to array access" >:: assign_var_array_access;
   ]
 
 (* Tests for creating objects with keyword new. *)
