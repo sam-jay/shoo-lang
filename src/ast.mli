@@ -49,6 +49,7 @@ and expr =
 | FExpr of (typ * string) list * typ * stmt list
 | StructInit of (string * expr) list
 | Destruct of string list * expr
+| ArrayAccess of string * expr
 | Dot of expr * string
 | New of newable
 
