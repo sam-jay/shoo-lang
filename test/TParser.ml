@@ -9,15 +9,21 @@ let empty_prog test_ctxt = assert_equal [] (parse "")
 
 let int_lit test_ctxt = assert_equal [Expr(IntLit(5))] (parse "5;")
 
-let arithmetic_lit_test1 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Add, IntLit(3)))] (parse "82+3;")
+let arithmetic_lit_test1 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(82), Add, IntLit(3)))] (parse "82+3;")
 
-let arithmetic_lit_test2 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Sub, IntLit(3)))] (parse "82-3;")
+let arithmetic_lit_test2 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(82), Sub, IntLit(3)))] (parse "82-3;")
 
-let arithmetic_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Mult, IntLit(3)))] (parse "82*3;")
+let arithmetic_lit_test3 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(82), Mult, IntLit(3)))] (parse "82*3;")
 
-let arithmetic_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Div, IntLit(3)))] (parse "82/3;")
+let arithmetic_lit_test4 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(82), Div, IntLit(3)))] (parse "82/3;")
 
-let arithmetic_lit_test5 test_ctxt = assert_equal [Expr(Binop(IntLit(82), Add, Binop(IntLit(2), Mult, IntLit(4))))] (parse "82+2*4;")
+let arithmetic_lit_test5 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(82), Add, Binop(IntLit(2), Mult, IntLit(4))))] 
+    (parse "82+2*4;")
 
 let arithmetic_tests =
   "Arithmetic operations" >:::
@@ -29,16 +35,24 @@ let arithmetic_tests =
     "Should accept combination of operations" >:: arithmetic_lit_test5;
   ]
 
-let logical_lit_test1 test_ctxt = assert_equal [Expr(Unop(Neg, IntLit(4)))] (parse "-4;")
+let logical_lit_test1 test_ctxt = assert_equal 
+    [Expr(Unop(Neg, IntLit(4)))] (parse "-4;")
 
-let logical_lit_test2 test_ctxt = assert_equal [Expr(Binop(IntLit(5), Greater, IntLit(3)))] (parse "5>3;")
+let logical_lit_test2 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(5), Greater, IntLit(3)))] (parse "5>3;")
 
-let logical_lit_test3 test_ctxt = assert_equal [Expr(Binop(IntLit(1), Or, IntLit(2)))] (parse "1||2;")
+let logical_lit_test3 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(1), Or, IntLit(2)))] (parse "1||2;")
 
-let logical_lit_test4 test_ctxt = assert_equal [Expr(Binop(IntLit(6), Leq, IntLit(8)))] (parse "6<=8;")
+let logical_lit_test4 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(6), Leq, IntLit(8)))] (parse "6<=8;")
 
-let logical_lit_test5 test_ctxt = assert_equal [Expr(Binop(Binop(IntLit(82), Add, IntLit(3)), Leq, IntLit(90)))] (parse "82+3<=90;")
-let logical_lit_test6 test_ctxt = assert_equal [Expr(Binop(IntLit(85), Equal, IntLit(85)))] (parse "85==85;")
+let logical_lit_test5 test_ctxt = assert_equal 
+    [Expr(Binop(Binop(IntLit(82), Add, IntLit(3)), Leq, IntLit(90)))] 
+    (parse "82+3<=90;")
+
+let logical_lit_test6 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(85), Equal, IntLit(85)))] (parse "85==85;")
 
 let logical_tests =
   "Logical operations" >:::
@@ -117,22 +131,38 @@ let variable_tests =
 
 (* Tests for if/elif/else statements. *)
 let if_only text_ctxt = 
-  assert_equal [If(BoolLit(true),[VDecl(Int, "x", None)],[])] (parse "if(true){int x;}")
+  assert_equal [If(BoolLit(true),
+    [VDecl(Int, "x", None)],[])] (parse "if(true){int x;}")
+
 let if_else text_ctxt = 
-  assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],[VDecl(Int, "y", None)])] 
+  assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],
+    [VDecl(Int, "y", None)])] 
   (parse "if(false){int x;}else{int y;}")
+
 let if_elif1 text_ctxt = 
-  assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],[If(BoolLit(true),[VDecl(Int, "y", None)],[])])] 
+  assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],
+    [If(BoolLit(true),[VDecl(Int, "y", None)],[])])] 
   (parse "if(false){int x;}elif(true){int y;}")
+
 let if_elif1_else text_ctxt = 
-  assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],[If(BoolLit(false),[VDecl(Int, "y", None)],[VDecl(Int, "z", None)])])] 
+  assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],
+    [If(BoolLit(false),[VDecl(Int, "y", None)],[VDecl(Int, "z", None)])])] 
   (parse "if(false){int x;}elif(false){int y;}else{int z;}")
+
 let if_elif2_else text_ctxt = 
-  assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],[If(BoolLit(false),[VDecl(Int, "y", None)],[If(BoolLit(false),[VDecl(Int, "w", None)],[VDecl(Int, "z", None)])])])] 
+  assert_equal [If(BoolLit(false),[VDecl(Int, "x", None)],
+    [If(BoolLit(false),[VDecl(Int, "y", None)],
+    [If(BoolLit(false),[VDecl(Int, "w", None)],
+    [VDecl(Int, "z", None)])])])] 
   (parse "if(false){int x;}elif(false){int y;}elif(false){int w;}else{int z;}")
-let if_elif2_else_true text_ctxt = 
-  assert_equal [If(BoolLit(true),[VDecl(Int, "x", None)],[If(BoolLit(false),[VDecl(Int, "y", None)],[If(BoolLit(false),[VDecl(Int, "w", None)],[VDecl(Int, "z", None)])])])] 
-  (parse "if(true){int x;}elif(false){int y;}elif(false){int w;}else{int z;}")
+
+let if_elif2_else_true text_ctxt = assert_equal 
+    [If(BoolLit(true),[VDecl(Int, "x", None)],
+        [If(BoolLit(false),[VDecl(Int, "y", None)],
+        [If(BoolLit(false),[VDecl(Int, "w", None)],
+        [VDecl(Int, "z", None)])])])] 
+    (parse "if(true){int x;}elif(false){int y;}elif(false){int w;}else{int z;}")
+
 let if_else_tests =
   "If else tests" >:::
   [
@@ -144,12 +174,18 @@ let if_else_tests =
     "Should handle if statement with 2 elifs and else while true" >:: if_elif2_else_true;
   ]
   
-let for_all test_ctxt = assert_equal [ForLoop(Some(VDecl(Int, "i", Some(IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))), 
-    Some(Assign(Id("i"), Binop(Id("i"), Add, IntLit(1)))), [Expr(IntLit(5))])]
+let for_all test_ctxt = assert_equal 
+    [ForLoop(Some(VDecl(Int, "i", Some(IntLit(0)))), 
+        Some(Binop(Id("i"), Less, IntLit(2))), 
+        Some(Assign(Id("i"), Binop(Id("i"), Add, IntLit(1)))), 
+        [Expr(IntLit(5))])]
     (parse "for (int i = 0; i < 2; i = i + 1) { 5; }")
  
-let for_no_increment test_ctxt = assert_equal [ForLoop(Some(VDecl(Int, "i", Some(IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))),
-    None, [Expr(IntLit(5))])] (parse "for (int i = 0; i < 2; ) { 5; }")
+let for_no_increment test_ctxt = assert_equal 
+    [ForLoop(Some(VDecl(Int, "i", Some(IntLit(0)))), 
+        Some(Binop(Id("i"), Less, IntLit(2))),
+        None, [Expr(IntLit(5))])] 
+    (parse "for (int i = 0; i < 2; ) { 5; }")
     
 let for_no_init test_ctxt = assert_equal [ForLoop(None, Some(Binop(Id("i"), Less, IntLit(5))),
     Some(Assign(Id("i"), Binop(Id("i"), Add, IntLit(1)))), [Expr(IntLit(5))])] (parse "for ( ; i < 5; i = i + 1) { 5; }")
@@ -327,194 +363,6 @@ let string_tests =
     "Should accept string literal" >::string_lit_test;
   ]
 
-let prog_one_test test_ctxt = assert_equal
-  [FDecl("sampleProgram1", [], Void, [
-    VDecl(Array(Array(Int)), "tasks", Some(ArrayLit([
-      ArrayLit([
-        IntLit(1); IntLit(2); IntLit(3); IntLit(4); IntLit(5);
-        IntLit(6); IntLit(7); IntLit(8); IntLit(9); IntLit(10);
-      ]);
-      ArrayLit([
-        IntLit(11); IntLit(12); IntLit(13); IntLit(14); IntLit(15);
-        IntLit(16); IntLit(17); IntLit(18); IntLit(19); IntLit(20);
-      ])
-    ])));
-    FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
-      Return(Binop(Id("x"), Add, Id("y")));
-    ]);
-    FDecl("foldl", [(Func, "f"); (Any, "acc"); (Array(Any), "items")], Array(Any), [
-      If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
-        [Return(Id("acc"))],
-        [Return(FCall("foldl", [Id("f"); FCall("f", [Id("acc"); FCall("first", [Id("items")])]); FCall("rest", [Id("items")])]))])
-    ]);
-    FDecl("map", [(Func, "f"); (Array(Any), "items")], Array(Any), [
-      If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
-        [Return(ArrayLit([]))],
-        [Return(FCall("concat",[
-          FCall("f", [FCall("first", [Id("items")])]);
-          FCall("map", [Id("f"); FCall("rest", [Id("items")])])]))])
-    ]);
-    VDecl(Array(Int), "results", Some(FCall("map", [
-      FExpr([(Array(Int), "task")],
-        Array(Int),
-        [Return(FCall("foldl", [Id("sum"); IntLit(0); Id("task")]))]);
-      Id("tasks")
-    ])));
-    Expr(FCall("print", [FCall("stringOfInt", [FCall("foldl", [Id("sum"); IntLit(0); Id("results")])])]));
-  ])]
-  (parse "function sampleProgram1() void {
-    array<array<int>> tasks = [
-      [1,2,3,4,5,6,7,8,9,10],
-      [11,12,13,14,15,16,17,18,19,20]
-    ];
-
-    function sum(int x, int y) int {
-      return x + y;
-    }
-
-    function foldl(func f, any acc, array<any> items) array<any> {
-      if (length(items) == 0) {
-        return acc;
-      } else {
-        return foldl(f, f(acc, first(items)), rest(items));
-      }
-    }
-
-    function map(func f, array<any> items) array<any> {
-      // TODO(sam): turn this into tail recursion
-      if (length(items) == 0) {
-        return [];
-      } else {
-        return concat(f(first(items)), map(f, rest(items)));
-      }
-    }
-
-    array<int> results = map(function (array<int> task) array<int> { return foldl(sum, 0, task); }, tasks);
-
-    print(stringOfInt(foldl(sum, 0, results)));
-
-  }")
-
-let prog_two_test test_ctxt = assert_equal
-[FDecl("sampleProgram2", [], Void, [
-
-  StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
-  VDecl(Struct("BankAccount"), "aliceAccount", Some(New(NStruct("BankAccount"))));
-  Expr(Assign(Dot(Id("aliceAccount"), "balance"), IntLit(0)));
-  Expr(Assign(Dot(Id("aliceAccount"), "ownerId"), IntLit(12345)));
-
-  VDecl(Struct("BankAccount"), "bobAccount", Some(New(NStruct("BankAccount"))));
-  Expr(Assign(Dot(Id("bobAccount"), "balance"), IntLit(0)));
-  Expr(Assign(Dot(Id("bobAccount"), "ownerId"), IntLit(12346)));
-
-  VDecl(Array(Int), "quantities", Some(ArrayLit([
-      IntLit(500); IntLit(200); IntLit(1400); IntLit(3000); IntLit(1000);
-  ])));
-  VDecl(Array(Bool), "coinTossHeadsDeposit", Some(ArrayLit([
-    BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(true); BoolLit(false);
-  ])));
-  VDecl(Array(Bool), "coinTossHeadsWithdraw", Some(ArrayLit([
-    BoolLit(false); BoolLit(true); BoolLit(true); BoolLit(false); BoolLit(false);
-  ])));
-  FDecl("deposit", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
-    Expr(Assign(Dot(Id("act"), "balance"), Binop(Dot(Id("act"), "balance"), Add, Id("amount"))));
-    Return(Dot(Id("act"), "balance"));
-  ]);
-  FDecl("withdraw", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
-    Expr(Assign(Dot(Id("act"), "balance"), Binop(Dot(Id("act"), "balance"), Sub, Id("amount"))));
-    Return(Dot(Id("act"), "balance"));
-  ]);
-  EnhancedFor(Bool, "isAlice", Id("coinTossHeadsDeposit"), 
-    [If(Id("isAlice"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("aliceAccount"); Id("amt")]))])],
-    [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("bobAccount"); Id("amt")]))])])]
-  );
-  EnhancedFor(Bool, "isBob", Id("coinTossHeadsWithdraw"), 
-    [If(Id("isBob"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("bobAccount"); Id("amt")]))])],
-    [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("withdraw", [Id("aliceAccount"); Id("amt")]))])])]
-  );
-  VDecl(Int, "i", None);
-  ForLoop(Some(Expr(Assign(Id("i"), IntLit(0)))), Some(Binop(Id("i"), Less, IntLit(2))), 
-    Some(Assign(Id("i"), Binop(Id("i"), Add, IntLit(1)))), 
-    [If(Binop(Id("i"), Equal, IntLit(0)),
-    [Expr(FCall("print", [FCall("stringOfInt", [Dot(Id("aliceAccount"), "balance")])]));],
-    [Expr(FCall("print", [FCall("stringOfInt", [Dot(Id("bobAccount"), "balance")])]));])]);
-])]
-
-
-(parse "function sampleProgram2() void {
-
-  struct BankAccount { int balance; int ownerId; }
-
-  BankAccount aliceAccount = new(BankAccount);
-  aliceAccount.balance = 0; 
-  aliceAccount.ownerId = 12345;
-
-  BankAccount bobAccount = new(BankAccount);
-  bobAccount.balance = 0; 
-  bobAccount.ownerId = 12346;
-
-  array<int> quantities = [500,200,1400,3000,1000];
-
-  /* for depositing heads will be aliceAccount and tails will be bobAccount */
-  array<bool> coinTossHeadsDeposit = [true,true,false,true,false];
-
-  /* for withdrawal heads will be bobAccount and tails will be aliceAccount */
-  array<bool> coinTossHeadsWithdraw = [false,true,true,false,false];
-
-  function deposit(BankAccount act, int amount) int {
-    act.balance = act.balance + amount;
-    return act.balance;
-  }
-
-  function withdraw(BankAccount act, int amount) int {
-    act.balance = act.balance - amount;
-    return act.balance;
-  }
-  
-  // add all the quantities to each person per coin flip
-  for (bool isAlice in coinTossHeadsDeposit) {
-    if (isAlice) {
-      for (int amt in quantities) { 
-        deposit(aliceAccount, amt);
-      }    
-    } else {
-      for (int amt in quantities) { 
-        deposit(bobAccount, amt);
-      }    
-    }
-  }
-
-  // add all the quantities to each person per coin flip
-  for (bool isBob in coinTossHeadsWithdraw) {
-    if (isBob) {
-      for (int amt in quantities) { 
-        withdraw(bobAccount, amt);
-      }    
-    } else {
-      for (int amt in quantities) { 
-        withdraw(aliceAccount, amt);
-      }    
-    }
-  }
-  int i;
-
-  // a trivial for loop to print results
-  for (i = 0; i<2 ; i=i+1) {
-    if (i == 0) {
-      print(stringOfInt(aliceAccount.balance));
-    } else {
-      print(stringOfInt(bobAccount.balance));
-    }
-  }
-}")
-
-let full_prog_tests =
-  "Full Programs" >:::
-  [
-    "Program 1" >:: prog_one_test;
-    "Program 2" >:: prog_two_test;
-  ]
-
 let tests =
   "Parser" >:::
   [
@@ -530,6 +378,5 @@ let tests =
     enhanced_for_tests;
     array_tests;
     new_tests;
-    full_prog_tests;
     string_tests;
   ]
