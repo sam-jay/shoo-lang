@@ -65,6 +65,23 @@ let logical_tests =
     "Should accept logical equals" >:: logical_lit_test6;
   ]
 
+(* String operations *)
+let concatenate_two_strings test_ctxt = assert_equal
+   [Expr(Binop(StrLit("hi"), Add, StrLit(" world")))]
+   (parse "\"hi\" + \" world\";")
+
+let concatenate_three_strings test_ctxt = assert_equal
+   [Expr(Binop(Binop(StrLit("hi"), Add, StrLit(" world")),
+    Add, StrLit("!")))]
+   (parse "\"hi\" + \" world\" + \"!\";")
+
+let concatenate_strings_tests =
+    "Concatenate Strings" >:::
+    [
+        "Should concatenate two strings" >:: concatenate_two_strings;
+        "Should concatenate three strings" >:: concatenate_three_strings;
+    ]
+
 let mandatory_semi test_ctxt =
   let f = fun () -> parse "5" in
   assert_raises Parsing.Parse_error f
@@ -290,6 +307,17 @@ let one_intarr_def test_ctxt = assert_equal
     IntLit(1)
   ])))]
   (parse "array<int> x = [5, 4, 3, 2, 1];")
+
+let explict_def_after_dec test_ctxt = assert_equal
+    [Expr(Assign(Id("x"), ArrayLit([
+      IntLit(5);
+      IntLit(4);
+      IntLit(3);
+      IntLit(2);
+      IntLit(1)
+    ])))]
+    (parse "x = [5, 4, 3, 2, 1];")
+
 let two_intarr_decl test_ctxt = assert_equal [VDecl(Array(Array(Int)), "x", None)] (parse "array< array<int> > x;")
 let two_intarr_def test_ctxt = assert_equal
   [VDecl(Array(Array(Int)), "x", Some(ArrayLit([
@@ -314,14 +342,21 @@ let one_intarr_new_def test_ctxt = assert_equal
     [VDecl(Array(Int), "x", Some(New(NArray(Int, IntLit(5)))))]
     (parse "array<int> x = new(array<int>[5]);")
 
+let array_of_struct_type test_ctxt = assert_equal
+	[VDecl(Array(Struct("BankAccount")), "x", 
+		Some(New(NArray(Struct("BankAccount"), IntLit(5)))))]
+    (parse "array<BankAccount> x = new(array<BankAccount>[5]);")
+
 let array_tests =
   "Arrays" >:::
   [
     "One dimensional int array declaration" >::one_intarr_decl;
     "One dimensional int array definition" >::one_intarr_def;
+    "Array definition with explict values after declaration" >:: explict_def_after_dec;
     "Two dimensional int array declaration" >::two_intarr_decl;
     "Two dimensional int array definition" >::two_intarr_def;
     "One dimensional int array definition with new" >:: one_intarr_new_def;
+	"Array of a struct type" >:: array_of_struct_type;
   ]
 
 (* Tests for creating objects with keyword new. *)
@@ -348,6 +383,7 @@ let tests =
   [
     arithmetic_tests;
     logical_tests;
+    concatenate_strings_tests;
     common_tests;
     comment_tests;
     float_tests;
