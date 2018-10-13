@@ -11,6 +11,7 @@ rule token = parse
 | '}' { RBRACE }
 | '[' { LSQBRACE }
 | ']' { RSQBRACE }
+| '.' { DOT }
 | ',' { COMMA }
 | ':' { COLON }
 | '+' { PLUS }
@@ -47,7 +48,7 @@ rule token = parse
 | "true"|"false" as lxm { BOOLLIT(bool_of_string lxm) }
 | ['0'-'9']+ as lxm { INTLIT(int_of_string lxm) }
 | ['0'-'9']*"."['0'-'9']+ as lxm { FLOATLIT(float_of_string lxm) }
-| ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9' '.']* as lxm { ID(lxm) }
+| ['a'-'z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { ID(lxm) } (* combine with STRUCTID? *)
 | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { STRUCTID(lxm) }
 | '"' { str (Buffer.create 16) lexbuf }
 | eof { EOF }

@@ -2,7 +2,7 @@
 
 %token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACE RBRACE
 %token PLUS MINUS TIMES DIVIDE ASSIGN NOT
-%token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR
+%token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR DOT
 %token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
 %token NEW FUNCTION IF ELIF ELSE
 %token <int> INTLIT
@@ -22,6 +22,7 @@
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
+%left DOT
 %right NOT NEG
 
 %start program
@@ -64,7 +65,8 @@ expr:
 | BOOLLIT { BoolLit($1) }
 | STRLIT { StrLit($1) }
 | ID { Id($1) }
-| ID ASSIGN expr { Assign($1, $3) }
+| expr ASSIGN expr { Assign($1, $3) }
+| expr DOT ID { Dot($1, $3) }
 | expr PLUS expr { Binop($1, Add, $3) }
 | expr MINUS expr { Binop($1, Sub, $3) }
 | expr TIMES expr { Binop($1, Mult, $3) }
