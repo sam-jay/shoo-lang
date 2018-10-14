@@ -25,6 +25,10 @@ let arithmetic_lit_test5 test_ctxt = assert_equal
     [Expr(Binop(IntLit(82), Add, Binop(IntLit(2), Mult, IntLit(4))))] 
     (parse "82+2*4;")
 
+let float_and_int_add test_ctxt = assert_equal
+    [Expr(Binop(IntLit(5), Add, FloatLit(4.4234)))]
+    (parse "5 + 4.4234;")
+
 let arithmetic_tests =
   "Arithmetic operations" >:::
   [
@@ -33,6 +37,7 @@ let arithmetic_tests =
     "Should accept multiplication" >:: arithmetic_lit_test3;
     "Should accept division" >:: arithmetic_lit_test4;
     "Should accept combination of operations" >:: arithmetic_lit_test5;
+    "Should allow ints and floats to be added" >:: float_and_int_add;
   ]
 
 let logical_lit_test1 test_ctxt = assert_equal 
@@ -398,6 +403,16 @@ let string_tests =
     "Should accept string literal" >::string_lit_test;
   ]
 
+let print_test test_ctxt = assert_equal
+    [Expr(FCall("print", [Id("x")]))]
+    (parse "print(x);")
+
+let function_call =
+    "Function Call" >:::
+    [
+        "Should parse function call" >::print_test
+    ]
+
 let tests =
   "Parser" >:::
   [
@@ -415,4 +430,5 @@ let tests =
     array_tests;
     new_tests;
     string_tests;
+    function_call;
   ]
