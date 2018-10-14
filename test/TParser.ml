@@ -403,15 +403,30 @@ let string_tests =
     "Should accept string literal" >::string_lit_test;
   ]
 
+(* first-class function as variables *)
 let print_test test_ctxt = assert_equal
     [Expr(FCall("print", [Id("x")]))]
     (parse "print(x);")
 
-let function_call =
-    "Function Call" >:::
-    [
-        "Should parse function call" >::print_test
-    ]
+let function_variable test_ctxt = assert_equal 
+  [FDecl("temp",[(Int, "y")],Int,[Return(Binop(Id("y"),Add,IntLit(5)))]);
+  StructDef("Baz",
+    [(Func, "f", Some(Id("temp"))); (Int,"field2", None)])
+]
+(parse "function temp(int y) int {                  
+        return y+5;
+}
+ struct Baz { // has function members
+    func f = temp;
+    int field2;
+}")
+
+let func_tests  =
+  "Functions" >:::
+  [
+    "First-class functions as variables" >::function_variable;
+    "Simple function call" >:: print_test;
+  ]
 
 let tests =
   "Parser" >:::
@@ -430,5 +445,5 @@ let tests =
     array_tests;
     new_tests;
     string_tests;
-    function_call;
+    func_tests;
   ]
