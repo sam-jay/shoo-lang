@@ -53,6 +53,12 @@ let logical_lit_test5 test_ctxt = assert_equal
 
 let logical_lit_test6 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(85), Equal, IntLit(85)))] (parse "85==85;")
+    
+let logical_lit_test7 test_ctxt = assert_equal 
+    [Expr(Pop(IntLit(4), Inc))] (parse "4++;")
+    
+let logical_lit_test8 test_ctxt = assert_equal 
+    [Expr(Pop(IntLit(76), Dec))] (parse "76--;")
 
 let logical_tests =
   "Logical operations" >:::
@@ -63,6 +69,8 @@ let logical_tests =
     "Should accept less than or equal to" >:: logical_lit_test4;
     "Should accept logical operations in order" >:: logical_lit_test5;
     "Should accept logical equals" >:: logical_lit_test6;
+    "Should accept increment sign" >:: logical_lit_test7;
+    "Should accept decrement sign" >:: logical_lit_test8;
   ]
 
 let mandatory_semi test_ctxt =

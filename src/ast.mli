@@ -31,6 +31,10 @@ type uop =
   Neg 
 | Not
 
+type pop = 
+| Dec 
+| Inc
+
 type newable =
   NArray of typ * expr
 | NStruct of string
@@ -44,6 +48,7 @@ and expr =
 | Id of string
 | Binop of expr * op * expr
 | Unop of uop * expr
+| Pop of expr * pop 
 | Assign of expr * expr
 | FCall of string * expr list
 | FExpr of (typ * string) list * typ * stmt list

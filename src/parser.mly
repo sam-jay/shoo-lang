@@ -1,7 +1,7 @@
 %{ open Ast %}
 
 %token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET
-%token PLUS MINUS TIMES DIVIDE ASSIGN NOT
+%token PLUS MINUS TIMES DIVIDE ASSIGN NOT DECREMENT INCREMENT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR DOT
 %token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
 %token NEW FUNCTION IF ELIF ELSE
@@ -22,6 +22,7 @@
 %left LT GT LEQ GEQ
 %left PLUS MINUS
 %left TIMES DIVIDE
+%right INCREMENT DECREMENT
 %left DOT
 %right NOT NEG
 
@@ -65,6 +66,8 @@ expr:
 | BOOLLIT { BoolLit($1) }
 | STRLIT { StrLit($1) }
 | ID { Id($1) }
+| expr INCREMENT { Pop($1, Inc) }
+| expr DECREMENT { Pop($1, Dec) }
 | expr ASSIGN expr { Assign($1, $3) }
 | expr DOT ID { Dot($1, $3) }
 | expr PLUS expr { Binop($1, Add, $3) }
