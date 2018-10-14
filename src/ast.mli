@@ -19,6 +19,7 @@ type op =
 | Mult 
 | Div 
 | Equal
+| Mod
 | Neq 
 | Less 
 | Leq 

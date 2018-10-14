@@ -1,7 +1,7 @@
 %{ open Ast %}
 
 %token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET
-%token PLUS MINUS TIMES DIVIDE ASSIGN NOT
+%token PLUS MINUS TIMES DIVIDE ASSIGN NOT MOD
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR DOT
 %token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
 %token NEW FUNCTION IF ELIF ELSE
@@ -21,7 +21,7 @@
 %left EQ NEQ
 %left LT GT LEQ GEQ
 %left PLUS MINUS
-%left TIMES DIVIDE
+%left TIMES DIVIDE MOD
 %left DOT
 %right NOT NEG
 
@@ -71,6 +71,7 @@ expr:
 | expr MINUS expr { Binop($1, Sub, $3) }
 | expr TIMES expr { Binop($1, Mult, $3) }
 | expr DIVIDE expr { Binop($1, Div, $3) }
+| expr MOD expr { Binop($1, Mod, $3) }
 | expr EQ expr { Binop($1, Equal, $3) }
 | expr NEQ expr { Binop($1, Neq, $3) }
 | expr LT expr { Binop($1, Less, $3) }

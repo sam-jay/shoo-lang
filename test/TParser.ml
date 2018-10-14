@@ -21,6 +21,9 @@ let arithmetic_lit_test3 test_ctxt = assert_equal
 let arithmetic_lit_test4 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(82), Div, IntLit(3)))] (parse "82/3;")
 
+let arithmetic_lit_test_mod test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(14), Mod, IntLit(3)))] (parse "14%3;")
+
 let arithmetic_lit_test5 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(82), Add, Binop(IntLit(2), Mult, IntLit(4))))] 
     (parse "82+2*4;")
@@ -36,6 +39,7 @@ let arithmetic_tests =
     "Should accept subtraction" >:: arithmetic_lit_test2;
     "Should accept multiplication" >:: arithmetic_lit_test3;
     "Should accept division" >:: arithmetic_lit_test4;
+    "Should accept modulo" >:: arithmetic_lit_test_mod;
     "Should accept combination of operations" >:: arithmetic_lit_test5;
     "Should allow ints and floats to be added" >:: float_and_int_add;
   ]

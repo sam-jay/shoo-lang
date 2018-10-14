@@ -18,6 +18,7 @@ rule token = parse
 | '-' { MINUS }
 | '*' { TIMES }
 | '/' { DIVIDE }
+| '%' { MOD }
 | "=="     { EQ }
 | '='      { ASSIGN }
 | "!="     { NEQ }
