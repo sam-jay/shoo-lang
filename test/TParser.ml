@@ -9,6 +9,8 @@ let empty_prog test_ctxt = assert_equal [] (parse "")
 
 let int_lit test_ctxt = assert_equal [Expr(IntLit(5))] (parse "5;")
 
+(* TODO: Test order of operators *)
+
 let arithmetic_lit_test1 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(82), Add, IntLit(3)))] (parse "82+3;")
 
@@ -60,6 +62,9 @@ let logical_lit_test7 test_ctxt = assert_equal
 let logical_lit_test8 test_ctxt = assert_equal 
     [Expr(Pop(IntLit(76), Dec))] (parse "76--;")
 
+let logical_lit_test9 test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(3), Mod, IntLit(6)))] (parse "3%6;")
+
 let logical_tests =
   "Logical operations" >:::
   [
@@ -71,6 +76,7 @@ let logical_tests =
     "Should accept logical equals" >:: logical_lit_test6;
     "Should accept increment sign" >:: logical_lit_test7;
     "Should accept decrement sign" >:: logical_lit_test8;
+    "Should accept mod sign" >:: logical_lit_test9;
   ]
 
 let mandatory_semi test_ctxt =
