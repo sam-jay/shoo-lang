@@ -23,9 +23,16 @@ let arithmetic_lit_test3 test_ctxt = assert_equal
 let arithmetic_lit_test4 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(82), Div, IntLit(3)))] (parse "82/3;")
 
+let arithmetic_lit_test_mod test_ctxt = assert_equal 
+    [Expr(Binop(IntLit(14), Mod, IntLit(3)))] (parse "14%3;")
+
 let arithmetic_lit_test5 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(82), Add, Binop(IntLit(2), Mult, IntLit(4))))] 
     (parse "82+2*4;")
+
+let float_and_int_add test_ctxt = assert_equal
+    [Expr(Binop(IntLit(5), Add, FloatLit(4.4234)))]
+    (parse "5 + 4.4234;")
 
 let arithmetic_tests =
   "Arithmetic operations" >:::
@@ -34,7 +41,9 @@ let arithmetic_tests =
     "Should accept subtraction" >:: arithmetic_lit_test2;
     "Should accept multiplication" >:: arithmetic_lit_test3;
     "Should accept division" >:: arithmetic_lit_test4;
+    "Should accept modulo" >:: arithmetic_lit_test_mod;
     "Should accept combination of operations" >:: arithmetic_lit_test5;
+    "Should allow ints and floats to be added" >:: float_and_int_add;
   ]
 
 let logical_lit_test1 test_ctxt = assert_equal 
@@ -78,6 +87,23 @@ let logical_tests =
     "Should accept decrement sign" >:: logical_lit_test8;
     "Should accept mod sign" >:: logical_lit_test9;
   ]
+
+(* String operations *)
+let concatenate_two_strings test_ctxt = assert_equal
+   [Expr(Binop(StrLit("hi"), Add, StrLit(" world")))]
+   (parse "\"hi\" + \" world\";")
+
+let concatenate_three_strings test_ctxt = assert_equal
+   [Expr(Binop(Binop(StrLit("hi"), Add, StrLit(" world")),
+    Add, StrLit("!")))]
+   (parse "\"hi\" + \" world\" + \"!\";")
+
+let concatenate_strings_tests =
+    "Concatenate Strings" >:::
+    [
+        "Should concatenate two strings" >:: concatenate_two_strings;
+        "Should concatenate three strings" >:: concatenate_three_strings;
+    ]
 
 let mandatory_semi test_ctxt =
   let f = fun () -> parse "5" in
@@ -304,6 +330,17 @@ let one_intarr_def test_ctxt = assert_equal
     IntLit(1)
   ])))]
   (parse "array<int> x = [5, 4, 3, 2, 1];")
+
+let explict_def_after_dec test_ctxt = assert_equal
+    [Expr(Assign(Id("x"), ArrayLit([
+      IntLit(5);
+      IntLit(4);
+      IntLit(3);
+      IntLit(2);
+      IntLit(1)
+    ])))]
+    (parse "x = [5, 4, 3, 2, 1];")
+
 let two_intarr_decl test_ctxt = assert_equal [VDecl(Array(Array(Int)), "x", None)] (parse "array< array<int> > x;")
 let two_intarr_def test_ctxt = assert_equal
   [VDecl(Array(Array(Int)), "x", Some(ArrayLit([
@@ -328,6 +365,11 @@ let one_intarr_new_def test_ctxt = assert_equal
     [VDecl(Array(Int), "x", Some(New(NArray(Int, IntLit(5)))))]
     (parse "array<int> x = new(array<int>[5]);")
 
+let array_of_struct_type test_ctxt = assert_equal
+	[VDecl(Array(Struct("BankAccount")), "x", 
+		Some(New(NArray(Struct("BankAccount"), IntLit(5)))))]
+    (parse "array<BankAccount> x = new(array<BankAccount>[5]);")
+
 let simple_array_access test_ctxt = assert_equal
     [Expr(ArrayAccess("x", IntLit(2)))] (parse "x[2];")
 
@@ -349,9 +391,11 @@ let array_tests =
   [
     "One dimensional int array declaration" >::one_intarr_decl;
     "One dimensional int array definition" >::one_intarr_def;
+    "Array definition with explict values after declaration" >:: explict_def_after_dec;
     "Two dimensional int array declaration" >::two_intarr_decl;
     "Two dimensional int array definition" >::two_intarr_def;
     "One dimensional int array definition with new" >:: one_intarr_new_def;
+	"Array of a struct type" >:: array_of_struct_type;
     "Simple array access only" >:: simple_array_access;
     "Set variable to array access" >:: assign_var_array_access;
     "Set index in array to a value" >:: array_index_assign;
@@ -377,11 +421,37 @@ let string_tests =
     "Should accept string literal" >::string_lit_test;
   ]
 
+(* first-class function as variables *)
+let print_test test_ctxt = assert_equal
+    [Expr(FCall("print", [Id("x")]))]
+    (parse "print(x);")
+
+let function_variable test_ctxt = assert_equal 
+  [FDecl("temp",[(Int, "y")],Int,[Return(Binop(Id("y"),Add,IntLit(5)))]);
+  StructDef("Baz",
+    [(Func, "f", Some(Id("temp"))); (Int,"field2", None)])
+]
+(parse "function temp(int y) int {                  
+        return y+5;
+}
+ struct Baz { // has function members
+    func f = temp;
+    int field2;
+}")
+
+let func_tests  =
+  "Functions" >:::
+  [
+    "First-class functions as variables" >::function_variable;
+    "Simple function call" >:: print_test;
+  ]
+
 let tests =
   "Parser" >:::
   [
     arithmetic_tests;
     logical_tests;
+    concatenate_strings_tests;
     common_tests;
     comment_tests;
     float_tests;
@@ -393,4 +463,5 @@ let tests =
     array_tests;
     new_tests;
     string_tests;
+    func_tests;
   ]
