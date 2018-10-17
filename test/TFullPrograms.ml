@@ -20,12 +20,12 @@ let prog_one_test test_ctxt = assert_equal
     FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
       Return(Binop(Id("x"), Add, Id("y")));
     ]);
-    FDecl("foldl", [(Func, "f"); (Any, "acc"); (Array(Any), "items")], Array(Any), [
+    FDecl("foldl", [(Func, "f"); (Int, "acc"); (Array(Int), "items")], Array(Int), [
       If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
         [Return(Id("acc"))],
         [Return(FCall("foldl", [Id("f"); FCall("f", [Id("acc"); FCall("first", [Id("items")])]); FCall("rest", [Id("items")])]))])
     ]);
-    FDecl("map", [(Func, "f"); (Array(Any), "items")], Array(Any), [
+    FDecl("map", [(Func, "f"); (Array(Int), "items")], Array(Int), [
       If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
         [Return(ArrayLit([]))],
         [Return(FCall("concat",[
@@ -50,7 +50,7 @@ let prog_one_test test_ctxt = assert_equal
       return x + y;
     }
 
-    function foldl(func f, any acc, array<any> items) array<any> {
+    function foldl(func f, int acc, array<int> items) array<int> {
       if (length(items) == 0) {
         return acc;
       } else {
@@ -58,7 +58,7 @@ let prog_one_test test_ctxt = assert_equal
       }
     }
 
-    function map(func f, array<any> items) array<any> {
+    function map(func f, array<int> items) array<int> {
       // TODO(sam): turn this into tail recursion
       if (length(items) == 0) {
         return [];
