@@ -422,6 +422,30 @@ let print_test test_ctxt = assert_equal
     [Expr(FCall("print", [Id("x")]))]
     (parse "print(x);")
 
+let no_rec_function_test test_ctxt = assert_equal
+    [FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
+      Return(Binop(Id("x"), Add, Id("y")));
+    ], false)]
+    (parse "function sum(int x, int y) int {
+      return x + y;
+    }")
+
+let rec_function_test test_ctxt = assert_equal
+    [FDecl("multByTwo",
+      [(Int, "x")],Int,
+      [If(Binop(Id("x"),Equal,IntLit(1)),
+        [Return(IntLit(2))],
+        [Return(Binop(IntLit(2),Add,
+          FCall("multByTwo",[Binop(Id("x"),Sub,IntLit(1))])))])
+      ],true)]
+    (parse "rec function multByTwo(int x) int {
+      if (x==1) {
+          return 2;
+      } else {
+        return 2 + multByTwo(x-1);
+      }
+      }")
+
 let function_variable test_ctxt = assert_equal 
   [FDecl("temp",[(Int, "y")],Int,[Return(Binop(Id("y"),Add,IntLit(5)))], false);
   StructDef("Baz",
@@ -440,10 +464,10 @@ let func_tests  =
   [
     "First-class functions as variables" >::function_variable;
     "Simple function call" >:: print_test;
+    "Using keyword rec for function test" >:: rec_function_test;
+    "Not using keyword rec for function test" >:: no_rec_function_test;
+
   ]
-
-(* TODO: Crystaladd recursive function tests *)
-
 
 let tests =
   "Parser" >:::
