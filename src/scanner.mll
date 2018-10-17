@@ -37,7 +37,6 @@ rule token = parse
 | "float" { FLOAT }
 | "string" { STRING }
 | "bool" { BOOL }
-| "any" { ANY }
 | "void" { VOID }
 | "return" { RETURN }
 | "elif" { ELIF }

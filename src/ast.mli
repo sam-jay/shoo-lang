@@ -3,8 +3,7 @@ type size =
 | Param of string
 
 type typ =
-  Any
-| Void
+Void
 | Int
 | Float
 | Bool

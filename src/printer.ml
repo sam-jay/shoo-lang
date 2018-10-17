@@ -12,8 +12,7 @@ let fmt_list l =
   String.concat "" ["["; items; "]"]
 
 let rec fmt_typ = function
-    Any -> "Any"
-  | Void -> "Void"
+  Void -> "Void"
   | Func -> "Func"
   | Int -> "Int"
   | Float -> "Float"
