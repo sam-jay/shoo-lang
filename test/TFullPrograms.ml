@@ -19,19 +19,19 @@ let prog_one_test test_ctxt = assert_equal
     ])));
     FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
       Return(Binop(Id("x"), Add, Id("y")));
-    ]);
+    ], false);
     FDecl("foldl", [(Func, "f"); (Int, "acc"); (Array(Int), "items")], Array(Int), [
       If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
         [Return(Id("acc"))],
         [Return(FCall("foldl", [Id("f"); FCall("f", [Id("acc"); FCall("first", [Id("items")])]); FCall("rest", [Id("items")])]))])
-    ]);
+    ], false);
     FDecl("map", [(Func, "f"); (Array(Int), "items")], Array(Int), [
       If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
         [Return(ArrayLit([]))],
         [Return(FCall("concat",[
           FCall("f", [FCall("first", [Id("items")])]);
           FCall("map", [Id("f"); FCall("rest", [Id("items")])])]))])
-    ]);
+    ], false);
     VDecl(Array(Int), "results", Some(FCall("map", [
       FExpr([(Array(Int), "task")],
         Array(Int),
@@ -39,7 +39,7 @@ let prog_one_test test_ctxt = assert_equal
       Id("tasks")
     ])));
     Expr(FCall("print", [FCall("stringOfInt", [FCall("foldl", [Id("sum"); IntLit(0); Id("results")])])]));
-  ])]
+  ], false)]
   (parse "function sampleProgram1() void {
     array<array<int>> tasks = [
       [1,2,3,4,5,6,7,8,9,10],
@@ -97,11 +97,11 @@ let prog_two_test test_ctxt = assert_equal
   FDecl("deposit", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
     Expr(Assign(Dot(Id("act"), "balance"), Binop(Dot(Id("act"), "balance"), Add, Id("amount"))));
     Return(Dot(Id("act"), "balance"));
-  ]);
+  ], false);
   FDecl("withdraw", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
     Expr(Assign(Dot(Id("act"), "balance"), Binop(Dot(Id("act"), "balance"), Sub, Id("amount"))));
     Return(Dot(Id("act"), "balance"));
-  ]);
+  ], false);
   EnhancedFor(Bool, "isAlice", Id("coinTossHeadsDeposit"), 
     [If(Id("isAlice"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("aliceAccount"); Id("amt")]))])],
     [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("bobAccount"); Id("amt")]))])])]
@@ -116,7 +116,7 @@ let prog_two_test test_ctxt = assert_equal
     [If(Binop(Id("i"), Equal, IntLit(0)),
     [Expr(FCall("print", [FCall("stringOfInt", [Dot(Id("aliceAccount"), "balance")])]));],
     [Expr(FCall("print", [FCall("stringOfInt", [Dot(Id("bobAccount"), "balance")])]));])]);
-])]
+], false)]
 
 
 (parse "function sampleProgram2() void {

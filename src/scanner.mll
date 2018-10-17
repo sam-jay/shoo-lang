@@ -31,6 +31,7 @@ rule token = parse
 | ">" { GT }
 | "&&" { AND }
 | "||" { OR }
+| "rec" { REC }
 | "function" { FUNCTION }
 | "func" { FUNC }
 | "int" { INT }

@@ -423,7 +423,7 @@ let print_test test_ctxt = assert_equal
     (parse "print(x);")
 
 let function_variable test_ctxt = assert_equal 
-  [FDecl("temp",[(Int, "y")],Int,[Return(Binop(Id("y"),Add,IntLit(5)))]);
+  [FDecl("temp",[(Int, "y")],Int,[Return(Binop(Id("y"),Add,IntLit(5)))], false);
   StructDef("Baz",
     [(Func, "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
@@ -441,6 +441,9 @@ let func_tests  =
     "First-class functions as variables" >::function_variable;
     "Simple function call" >:: print_test;
   ]
+
+(* TODO: Crystaladd recursive function tests *)
+
 
 let tests =
   "Parser" >:::

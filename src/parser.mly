@@ -1,6 +1,6 @@
 %{ open Ast %}
 
-%token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET
+%token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET REC
 %token PLUS MINUS TIMES DIVIDE MOD ASSIGN NOT DECREMENT INCREMENT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR DOT
 %token FOR COMMA RETURN VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
@@ -40,7 +40,8 @@ stmt_list:
 stmt:
   expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
-| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($2, $4, $6, List.rev $8) }
+| REC FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($3, $5, $7, List.rev $9, true) }
+| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($2, $4, $6, List.rev $8, false) }
 | RETURN expr SEMI { Return($2) }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }

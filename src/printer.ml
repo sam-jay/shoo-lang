@@ -6,6 +6,7 @@ let fmt_one name v = String.concat "" [name; "("; v; ")"]
 let fmt_two name v1 v2 = String.concat "" [name; "("; v1; ","; v2; ")"]
 let fmt_three name v1 v2 v3 = String.concat "" [name; "("; v1; ","; v2; ","; v3; ")"]
 let fmt_four name v1 v2 v3 v4 = String.concat "" [name; "("; v1; ","; v2; ","; v3; ","; v4; ")"]
+let fmt_five name v1 v2 v3 v4 v5 = String.concat "" [name; "("; v1; ","; v2; ","; v3; ","; v4; ","; string_of_bool v5; ")"]
 
 let fmt_list l =
   let items = String.concat ";" l in
@@ -85,8 +86,8 @@ and fmt_init l =
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
-| FDecl(n, p, t, b) -> 
-  fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
+| FDecl(n, p, t, b, r) -> 
+  fmt_five "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b) r
 | VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_expr e)
 | ForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 
