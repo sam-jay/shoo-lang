@@ -1,9 +1,10 @@
 %{ open Ast %}
 
 %token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET
+%token REC
 %token PLUS MINUS TIMES DIVIDE MOD ASSIGN NOT DECREMENT INCREMENT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR DOT
-%token FOR COMMA RETURN ANY VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
+%token FOR COMMA RETURN VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
 %token NEW FUNCTION IF ELIF ELSE
 %token <int> INTLIT
 %token <float> FLOATLIT
@@ -40,7 +41,6 @@ stmt_list:
 stmt:
   expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
-/*| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($2, $4, $6, List.rev $8) }*/
 | RETURN expr SEMI { Return($2) }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
@@ -100,9 +100,18 @@ newable:
 | STRUCTID { NStruct($1) }
 
 function_expr:
-    FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    REC FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
     RBRACKET
-    { { name = $2;
+    { { recursive = true;
+        name = $3;
+        params = $5;
+        typ = $7;
+        body = List.rev $9} }
+
+    | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    RBRACKET
+    { { recursive = false;
+        name = $2;
         params = $4;
         typ = $6;
         body = List.rev $8} }
@@ -135,7 +144,6 @@ typ:
 | STRING { String }
 | ARRAY LT typ GT { Array($3) }
 | FUNC { Func }
-| ANY { Any }
 | STRUCTID { Struct($1) }
 
 params_opt:

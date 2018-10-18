@@ -31,13 +31,13 @@ rule token = parse
 | ">" { GT }
 | "&&" { AND }
 | "||" { OR }
+| "rec" { REC }
 | "function" { FUNCTION }
 | "func" { FUNC }
 | "int" { INT }
 | "float" { FLOAT }
 | "string" { STRING }
 | "bool" { BOOL }
-| "any" { ANY }
 | "void" { VOID }
 | "return" { RETURN }
 | "elif" { ELIF }

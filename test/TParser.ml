@@ -422,8 +422,40 @@ let print_test test_ctxt = assert_equal
     [Expr(FCall("print", [Id("x")]))]
     (parse "print(x);")
 
+let no_rec_function_test test_ctxt = assert_equal
+    [Expr(FExpr({
+        recursive = false;
+        name = "sum";
+        params = [(Int, "x"); (Int, "y")];
+        typ = Int;
+        body = [
+            Return(Binop(Id("x"), Add, Id("y")));
+        ];}))] 
+    (parse "function sum(int x, int y) int {
+      return x + y;
+    };")
+
+let rec_function_test test_ctxt = assert_equal
+    [Expr(FExpr({ recursive = true;
+    name = "multByTwo";
+    params = [(Int, "x")];
+    typ = Int;
+    body =
+      [If(Binop(Id("x"),Equal,IntLit(1)),
+        [Return(IntLit(2))],
+        [Return(Binop(IntLit(2),Add,
+          FCall("multByTwo",[Binop(Id("x"),Sub,IntLit(1))])))])
+    ];}))]
+    (parse "rec function multByTwo(int x) int {
+      if (x==1) {
+          return 2;
+      } else {
+        return 2 + multByTwo(x-1);
+      }
+      };")
+
 let function_variable test_ctxt = assert_equal 
-  [Expr(FExpr({name = "temp"; params=[(Int, "y")]; 
+  [Expr(FExpr({recursive = false; name = "temp"; params=[(Int, "y")]; 
     typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
     [(Func, "f", Some(Id("temp"))); (Int,"field2", None)])
@@ -441,6 +473,9 @@ let func_tests  =
   [
     "First-class functions as variables" >::function_variable;
     "Simple function call" >:: print_test;
+    "Using keyword rec for function test" >:: rec_function_test;
+    "Not using keyword rec for function test" >:: no_rec_function_test;
+
   ]
 
 let tests =

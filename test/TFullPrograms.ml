@@ -6,64 +6,64 @@ let parse input =
   Parser.program Scanner.token lexbuf
 
 (*let prog_one_test test_ctxt = assert_equal
-  [
-    FDecl("sampleProgram1", [], Void, [
-        VDecl(Array(Array(Int)), "tasks", Some(ArrayLit([
-            ArrayLit([
-                IntLit(1); IntLit(2); IntLit(3); IntLit(4); IntLit(5);
-                IntLit(6); IntLit(7); IntLit(8); IntLit(9); IntLit(10);
-            ]);
-            ArrayLit([
-                IntLit(11); IntLit(12); IntLit(13); 
-                IntLit(14); IntLit(15);
-                IntLit(16); IntLit(17); IntLit(18); 
-                IntLit(19); IntLit(20);
-            ])
-        ])));
-        FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
-            Return(Binop(Id("x"), Add, Id("y")));
+[
+FDecl("sampleProgram1", [], Void, [
+    VDecl(Array(Array(Int)), "tasks", Some(ArrayLit([
+        ArrayLit([
+            IntLit(1); IntLit(2); IntLit(3); IntLit(4); IntLit(5);
+            IntLit(6); IntLit(7); IntLit(8); IntLit(9); IntLit(10);
         ]);
-        FDecl("foldl", [(Func, "f"); (Any, "acc"); 
-        (Array(Any), "items")], Array(Any), [
-            If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
-                [Return(Id("acc"))],
-                [Return(FCall("foldl", [Id("f"); 
-                    FCall("f", [Id("acc"); FCall("first", 
-                    [Id("items")])]); FCall("rest", [Id("items")])]))])
-        ]);
-        Expr(FExpr({name = "map"; 
-        params = [(Func, "f"); (Array(Any), "items")];
-        typ = Array(Any);
-        body = [
-            If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
-                [Return(ArrayLit([]))],
-                [Return(FCall("concat",[
-                    FCall("f", [FCall("first", [Id("items")])]);
-                    FCall("map", [Id("f"); FCall("rest", [Id("items")])]
-             )]))])
-        ]}));
-        VDecl(Array(Int), "results", Some(FCall("map", [
-            FExpr({name = "anon"; params = [(Array(Int), "task")];
-            typ = Array(Int);
-            body = [Return(FCall("foldl", 
-                [Id("sum"); IntLit(0); Id("task")]))]
-            });
-            Id("tasks")
-        ])));
-        Expr(FCall("print", [FCall("stringOfInt", 
-            [FCall("foldl", [Id("sum"); IntLit(0); Id("results")])])]));
-  ])]
-  (parse "function sampleProgram1() void {
-    array<array<int>> tasks = [
-      [1,2,3,4,5,6,7,8,9,10],
-      [11,12,13,14,15,16,17,18,19,20]
-    ];
+        ArrayLit([
+            IntLit(11); IntLit(12); IntLit(13); 
+            IntLit(14); IntLit(15);
+            IntLit(16); IntLit(17); IntLit(18); 
+            IntLit(19); IntLit(20);
+        ])
+    ])));
+    FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
+        Return(Binop(Id("x"), Add, Id("y")));
+    ]);
+    FDecl("foldl", [(Func, "f"); (Int, "acc"); 
+    (Array(Int), "items")], Array(Int), [
+        If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
+            [Return(Id("acc"))],
+            [Return(FCall("foldl", [Id("f"); 
+                FCall("f", [Id("acc"); FCall("first", 
+                [Id("items")])]); FCall("rest", [Id("items")])]))])
+    ]);
+    Expr(FExpr({name = "map"; 
+    params = [(Func, "f"); (Array(Int), "items")];
+    typ = Array(Int);
+    body = [
+        If(Binop(FCall("length", [Id("items")]), Equal, IntLit(0)),
+            [Return(ArrayLit([]))],
+            [Return(FCall("concat",[
+                FCall("f", [FCall("first", [Id("items")])]);
+                FCall("map", [Id("f"); FCall("rest", [Id("items")])]
+         )]))])
+    ]}));
+    VDecl(Array(Int), "results", Some(FCall("map", [
+        FExpr({name = "anon"; params = [(Array(Int), "task")];
+        typ = Array(Int);
+        body = [Return(FCall("foldl", 
+            [Id("sum"); IntLit(0); Id("task")]))]
+        });
+        Id("tasks")
+    ])));
+    Expr(FCall("print", [FCall("stringOfInt", 
+        [FCall("foldl", [Id("sum"); IntLit(0); Id("results")])])]));
+])]
+(parse "function sampleProgram1() void {
+array<array<int>> tasks = [
+  [1,2,3,4,5,6,7,8,9,10],
+  [11,12,13,14,15,16,17,18,19,20]
+];
 
     function sum(int x, int y) int {
       return x + y;
     }
 
-    function foldl(func f, any acc, array<any> items) array<any> {
+    function foldl(func f, int acc, array<int> items) array<int> {
       if (length(items) == 0) {
         return acc;
       } else {
@@ -71,7 +71,7 @@ let parse input =
       }
     }
 
-    function map(func f, array<any> items) array<any> {
+    function map(func f, array<int> items) array<int> {
       // TODO(sam): turn this into tail recursion
       if (length(items) == 0) {
         return [];
@@ -110,11 +110,11 @@ let prog_two_test test_ctxt = assert_equal
   FDecl("deposit", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
     Expr(Assign(Dot(Id("act"), "balance"), Binop(Dot(Id("act"), "balance"), Add, Id("amount"))));
     Return(Dot(Id("act"), "balance"));
-  ]);
+  ], false);
   FDecl("withdraw", [(Struct("BankAccount"), "act"); (Int, "amount")], Int, [
     Expr(Assign(Dot(Id("act"), "balance"), Binop(Dot(Id("act"), "balance"), Sub, Id("amount"))));
     Return(Dot(Id("act"), "balance"));
-  ]);
+  ], false);
   EnhancedFor(Bool, "isAlice", Id("coinTossHeadsDeposit"), 
     [If(Id("isAlice"),[EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("aliceAccount"); Id("amt")]))])],
     [EnhancedFor(Int, "amt", Id("quantities"), [  Expr(FCall("deposit", [Id("bobAccount"); Id("amt")]))])])]
@@ -129,7 +129,7 @@ let prog_two_test test_ctxt = assert_equal
     [If(Binop(Id("i"), Equal, IntLit(0)),
     [Expr(FCall("print", [FCall("stringOfInt", [Dot(Id("aliceAccount"), "balance")])]));],
     [Expr(FCall("print", [FCall("stringOfInt", [Dot(Id("bobAccount"), "balance")])]));])]);
-])]
+], false)]
 
 
 (parse "function sampleProgram2() void {

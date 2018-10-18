@@ -3,8 +3,7 @@ type size =
 | Param of string
 
 type typ =
-  Any
-| Void
+Void
 | Int
 | Float
 | Bool
@@ -62,6 +61,7 @@ and expr =
 | New of newable
 
 and fexpr = {
+    recursive : bool; 
     name : string;
     typ : typ;
     params: bind list;
@@ -72,7 +72,7 @@ and stmt =
   Expr of expr
 | VDecl of typ * string * expr option
 | Return of expr
-| FDecl of string * (typ * string) list * typ * stmt list
+| FDecl of string * (typ * string) list * typ * stmt list * bool
 | If of expr * stmt list * stmt list
 | ForLoop of (stmt option) * (expr option) * (expr option) * stmt list
 | StructDef of string * (typ * string * expr option) list
