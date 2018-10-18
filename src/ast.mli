@@ -8,9 +8,14 @@ Void
 | Float
 | Bool
 | String
-| Func
+| Func of functyp
 | Struct of string
 | Array of typ
+
+and functyp = {
+    param_typs : typ list;
+    return_typ : typ;
+}
 
 type op = 
   Add 

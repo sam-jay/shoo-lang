@@ -458,13 +458,14 @@ let function_variable test_ctxt = assert_equal
   [Expr(FExpr({recursive = false; name = "temp"; params=[(Int, "y")]; 
     typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
-    [(Func, "f", Some(Id("temp"))); (Int,"field2", None)])
+    [(Func({ param_typs = [Int]; return_typ = Int}), 
+        "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
-(parse "function temp(int y) int {                  
+    (parse "function temp(int y) int {                  
         return y+5;
 };
  struct Baz { // has function members
-    func f = temp;
+    func(int; int) f = temp;
     int field2;
 }")
 
