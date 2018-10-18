@@ -423,37 +423,46 @@ let print_test test_ctxt = assert_equal
     (parse "print(x);")
 
 let no_rec_function_test test_ctxt = assert_equal
-    [FDecl("sum", [(Int, "x"); (Int, "y")], Int, [
-      Return(Binop(Id("x"), Add, Id("y")));
-    ], false)]
+    [Expr(FExpr({
+        recursive = false;
+        name = "sum";
+        params = [(Int, "x"); (Int, "y")];
+        typ = Int;
+        body = [
+            Return(Binop(Id("x"), Add, Id("y")));
+        ];}))] 
     (parse "function sum(int x, int y) int {
       return x + y;
-    }")
+    };")
 
 let rec_function_test test_ctxt = assert_equal
-    [FDecl("multByTwo",
-      [(Int, "x")],Int,
+    [Expr(FExpr({ recursive = true;
+    name = "multByTwo";
+    params = [(Int, "x")];
+    typ = Int;
+    body =
       [If(Binop(Id("x"),Equal,IntLit(1)),
         [Return(IntLit(2))],
         [Return(Binop(IntLit(2),Add,
           FCall("multByTwo",[Binop(Id("x"),Sub,IntLit(1))])))])
-      ],true)]
+    ];}))]
     (parse "rec function multByTwo(int x) int {
       if (x==1) {
           return 2;
       } else {
         return 2 + multByTwo(x-1);
       }
-      }")
+      };")
 
 let function_variable test_ctxt = assert_equal 
-  [FDecl("temp",[(Int, "y")],Int,[Return(Binop(Id("y"),Add,IntLit(5)))], false);
+  [Expr(FExpr({recursive = false; name = "temp"; params=[(Int, "y")]; 
+    typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
     [(Func, "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
 (parse "function temp(int y) int {                  
         return y+5;
-}
+};
  struct Baz { // has function members
     func f = temp;
     int field2;

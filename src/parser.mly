@@ -1,6 +1,7 @@
 %{ open Ast %}
 
-%token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET REC
+%token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET
+%token REC
 %token PLUS MINUS TIMES DIVIDE MOD ASSIGN NOT DECREMENT INCREMENT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR DOT
 %token FOR COMMA RETURN VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
@@ -40,8 +41,6 @@ stmt_list:
 stmt:
   expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
-| REC FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($3, $5, $7, List.rev $9, true) }
-| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($2, $4, $6, List.rev $8, false) }
 | RETURN expr SEMI { Return($2) }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
@@ -89,8 +88,9 @@ expr:
 | NOT expr { Unop(Not, $2) }
 | NEW LPAREN newable RPAREN { New($3) }
 | LBRACKET destruct RBRACKET ASSIGN expr { Destruct(List.rev $2, $5) }
-| FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET
-  { FExpr($3, $5, List.rev $7) }
+/*| FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET
+  { FExpr($3, $5, List.rev $7) }*/
+| function_expr { FExpr($1) }
 | ID LPAREN args_opt RPAREN { FCall($1, $3) }
 | LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
@@ -98,6 +98,23 @@ expr:
 newable:
   ARRAY LT typ GT LSQBRACE expr RSQBRACE { NArray($3, $6) }
 | STRUCTID { NStruct($1) }
+
+function_expr:
+    REC FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    RBRACKET
+    { { recursive = true;
+        name = $3;
+        params = $5;
+        typ = $7;
+        body = List.rev $9} }
+
+    | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    RBRACKET
+    { { recursive = false;
+        name = $2;
+        params = $4;
+        typ = $6;
+        body = List.rev $8} }
 
 opt_items:
   { [] }
