@@ -36,6 +36,8 @@ type pop =
 | Dec 
 | Inc
 
+type bind = typ * string
+
 type newable =
   NArray of typ * expr
 | NStruct of string
@@ -52,12 +54,19 @@ and expr =
 | Pop of expr * pop 
 | Assign of expr * expr
 | FCall of string * expr list
-| FExpr of (typ * string) list * typ * stmt list
+| FExpr of fexpr
 | StructInit of (string * expr) list
 | Destruct of string list * expr
 | ArrayAccess of string * expr
 | Dot of expr * string
 | New of newable
+
+and fexpr = {
+    name : string;
+    typ : typ;
+    params: bind list;
+    body : stmt list
+}
 
 and stmt =
   Expr of expr

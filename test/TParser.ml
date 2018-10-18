@@ -423,13 +423,14 @@ let print_test test_ctxt = assert_equal
     (parse "print(x);")
 
 let function_variable test_ctxt = assert_equal 
-  [FDecl("temp",[(Int, "y")],Int,[Return(Binop(Id("y"),Add,IntLit(5)))]);
+  [Expr(FExpr({name = "temp"; params=[(Int, "y")]; 
+    typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
     [(Func, "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
 (parse "function temp(int y) int {                  
         return y+5;
-}
+};
  struct Baz { // has function members
     func f = temp;
     int field2;

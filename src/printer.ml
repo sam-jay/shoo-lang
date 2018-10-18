@@ -63,7 +63,10 @@ let rec fmt_expr = function
 | ArrayAccess(s, e) -> fmt_two "ArrayAccess" s (fmt_expr e)
 | Dot(e, s) -> fmt_two "Dot" (fmt_expr e) s
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
-| FExpr(p, t, b) -> fmt_three "FExpr" (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
+(* below actually is parsed with {name = e.name; param = e.params;
+ * typ = e.typ; body = e.body}. See test programs for examples. *)
+| FExpr(e) -> fmt_four "FExpr" e.name (fmt_params e.params) 
+        (fmt_typ e.typ) (fmt_stmt_list e.body)
 | StructInit(l) -> fmt_one "StructInit" (fmt_init l)
 | ArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_expr l))
 | Destruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_expr e)

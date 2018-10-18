@@ -40,7 +40,7 @@ stmt_list:
 stmt:
   expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
-| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($2, $4, $6, List.rev $8) }
+/*| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($2, $4, $6, List.rev $8) }*/
 | RETURN expr SEMI { Return($2) }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
@@ -88,8 +88,9 @@ expr:
 | NOT expr { Unop(Not, $2) }
 | NEW LPAREN newable RPAREN { New($3) }
 | LBRACKET destruct RBRACKET ASSIGN expr { Destruct(List.rev $2, $5) }
-| FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET
-  { FExpr($3, $5, List.rev $7) }
+/*| FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET
+  { FExpr($3, $5, List.rev $7) }*/
+| function_expr { FExpr($1) }
 | ID LPAREN args_opt RPAREN { FCall($1, $3) }
 | LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
@@ -97,6 +98,14 @@ expr:
 newable:
   ARRAY LT typ GT LSQBRACE expr RSQBRACE { NArray($3, $6) }
 | STRUCTID { NStruct($1) }
+
+function_expr:
+    FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    RBRACKET
+    { { name = $2;
+        params = $4;
+        typ = $6;
+        body = List.rev $8} }
 
 opt_items:
   { [] }
