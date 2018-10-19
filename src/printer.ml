@@ -14,13 +14,20 @@ let fmt_list l =
 
 let rec fmt_typ = function
   Void -> "Void"
-  | Func -> "Func"
+  | Func(e) -> fmt_three "Func" 
+          (string_of_bool e.recursive) 
+          (fmt_typ_list e.param_typs) 
+          (fmt_typ e.return_typ)
   | Int -> "Int"
   | Float -> "Float"
   | Bool -> "Bool"
   | String -> "String"
   | Struct(n) -> fmt_one "Struct" n
   | Array(t) -> fmt_one "Array" (fmt_typ t)
+
+and fmt_typ_list l =
+  let typs = List.map fmt_typ l in
+  fmt_list typs
 
 let rec fmt_op = function
     Add -> "+"

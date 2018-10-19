@@ -156,6 +156,16 @@ let struct_def test_ctxt = assert_equal
   (parse "struct BankAccount { int balance; int ownerId; }
   BankAccount myAccount = new(BankAccount);")
 
+let func_def test_ctxt = assert_equal
+    [VDecl(Func({ recursive = false; param_typs = [Int; Float];
+        return_typ = String;}), "x", None)]
+    (parse "func(int, float; string) x;")    
+
+let rec_func_def test_ctxt = assert_equal
+    [VDecl(Func({ recursive = true; param_typs = [Int; Float];
+        return_typ = String;}), "x", None)]
+    (parse "func(int, float; string; rec) x;")    
+
 let variable_tests =
   "Variable declarations and definitions" >:::
   [
@@ -163,6 +173,8 @@ let variable_tests =
     "Should handle definition of int" >:: int_def;
     "Should handle declaration of struct type" >:: struct_dec;
     "Should handle definition of struct type" >:: struct_def;
+    "Should handle declaration of func type" >:: func_def;
+    "Should handle declaration of recursive func type" >:: rec_func_def;
   ]
 
 (* Tests for if/elif/else statements. *)
@@ -458,13 +470,14 @@ let function_variable test_ctxt = assert_equal
   [Expr(FExpr({recursive = false; name = "temp"; params=[(Int, "y")]; 
     typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
-    [(Func, "f", Some(Id("temp"))); (Int,"field2", None)])
+    [(Func({ recursive = false; param_typs = [Int]; return_typ = Int}), 
+        "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
-(parse "function temp(int y) int {                  
+    (parse "function temp(int y) int {                  
         return y+5;
 };
  struct Baz { // has function members
-    func f = temp;
+    func(int; int) f = temp;
     int field2;
 }")
 

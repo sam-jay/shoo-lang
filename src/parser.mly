@@ -143,8 +143,29 @@ typ:
 | BOOL { Bool }
 | STRING { String }
 | ARRAY LT typ GT { Array($3) }
-| FUNC { Func }
+| func_type { Func($1) }
 | STRUCTID { Struct($1) }
+
+/* This is the type for Func with the syntax
+func(parameter_type1, parameter_type2; return_type) */
+func_type:
+    FUNC LPAREN typ_opt SEMI ret_typ SEMI REC RPAREN
+    { { param_typs = $3;
+        return_typ = $5; 
+        recursive = true } }
+    | FUNC LPAREN typ_opt SEMI ret_typ RPAREN
+    { { param_typs = $3;
+        return_typ = $5; 
+        recursive = false } }
+
+
+typ_opt:
+  { [] }
+| typ_list { List.rev $1 }
+
+typ_list:
+  typ { [$1] }
+| typ_list COMMA typ { $3 :: $1 }
 
 params_opt:
   { [] }
