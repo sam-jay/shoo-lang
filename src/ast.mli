@@ -13,6 +13,7 @@ Void
 | Array of typ
 
 and functyp = {
+    recursive : bool;
     param_typs : typ list;
     return_typ : typ;
 }

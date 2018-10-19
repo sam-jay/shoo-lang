@@ -14,8 +14,10 @@ let fmt_list l =
 
 let rec fmt_typ = function
   Void -> "Void"
-  | Func(e) -> 
-          fmt_two "Func" (fmt_typ_list e.param_typs) (fmt_typ e.return_typ)
+  | Func(e) -> fmt_three "Func" 
+          (string_of_bool e.recursive) 
+          (fmt_typ_list e.param_typs) 
+          (fmt_typ e.return_typ)
   | Int -> "Int"
   | Float -> "Float"
   | Bool -> "Bool"

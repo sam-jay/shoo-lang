@@ -149,9 +149,15 @@ typ:
 /* This is the type for Func with the syntax
 func(parameter_type1, parameter_type2; return_type) */
 func_type:
-    FUNC LPAREN typ_opt SEMI ret_typ RPAREN
-    { { param_typs = List.rev $3;
-        return_typ = $5 } }
+    FUNC LPAREN typ_opt SEMI ret_typ SEMI REC RPAREN
+    { { param_typs = $3;
+        return_typ = $5; 
+        recursive = true } }
+    | FUNC LPAREN typ_opt SEMI ret_typ RPAREN
+    { { param_typs = $3;
+        return_typ = $5; 
+        recursive = false } }
+
 
 typ_opt:
   { [] }
