@@ -88,8 +88,6 @@ expr:
 | NOT expr { Unop(Not, $2) }
 | NEW LPAREN newable RPAREN { New($3) }
 | LBRACKET destruct RBRACKET ASSIGN expr { Destruct(List.rev $2, $5) }
-/*| FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET
-  { FExpr($3, $5, List.rev $7) }*/
 | function_expr { FExpr($1) }
 | ID LPAREN args_opt RPAREN { FCall($1, $3) }
 | LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
@@ -157,7 +155,6 @@ func_type:
     { { param_typs = $3;
         return_typ = $5; 
         recursive = false } }
-
 
 typ_opt:
   { [] }
