@@ -59,7 +59,7 @@ let fmt_params l =
 
 let rec fmt_expr = function
   IntLit(l) -> fmt_one "IntLit" (string_of_int l)
-| FloatLit(l) -> fmt_one "FloatLit" (string_of_float l)
+| FloatLit(l) -> fmt_one "FloatLit" l
 | StrLit(l) -> fmt_one "StrLit"  l
 | BoolLit(l) -> fmt_one "BoolLit" (string_of_bool l)
 | Id(s) -> fmt_one "Id" s

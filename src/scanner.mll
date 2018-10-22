@@ -55,6 +55,7 @@ rule token = parse
 | ['A'-'Z']['a'-'z' 'A'-'Z' '0'-'9']* as lxm { STRUCTID(lxm) }
 | '"' { str (Buffer.create 16) lexbuf }
 | eof { EOF }
+| _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
 
 and comment level = parse
   "*/" { match level with 0 -> token lexbuf | _ -> comment (level - 1) lexbuf }
