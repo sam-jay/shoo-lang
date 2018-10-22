@@ -7,7 +7,7 @@
 %token FOR COMMA RETURN VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
 %token NEW FUNCTION IF ELIF ELSE
 %token <int> INTLIT
-%token <float> FLOATLIT
+%token <string> FLOATLIT
 %token <bool> BOOLLIT
 %token <string> ID
 %token <string> STRUCTID
@@ -21,11 +21,11 @@
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ
-%left PLUS MINUS
+%left PLUS MINUS  NEG
 %left TIMES DIVIDE MOD
+%right NOT
 %right INCREMENT DECREMENT
 %left DOT
-%right NOT NEG
 
 %start program
 %type <Ast.program> program
@@ -41,7 +41,7 @@ stmt_list:
 stmt:
   expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
-| RETURN expr SEMI { Return($2) }
+| RETURN expr_opt SEMI { Return($2) }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
 | FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
@@ -51,6 +51,10 @@ stmt:
 opt_init:
   { None }
 | ASSIGN expr { Some($2) }
+
+expr_opt:
+    { Noexpr }
+    | expr { $1 }
 
 false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
 
@@ -98,21 +102,21 @@ newable:
 | STRUCTID { NStruct($1) }
 
 function_expr:
-    REC FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    /* TODO(claire) shouldn't you not have an ID for the function 
+        * declaration? */
+    REC FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
     RBRACKET
     { { recursive = true;
-        name = $3;
-        params = $5;
-        typ = $7;
-        body = List.rev $9} }
-
-    | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
-    RBRACKET
-    { { recursive = false;
-        name = $2;
         params = $4;
         typ = $6;
         body = List.rev $8} }
+
+    | FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    RBRACKET
+    { { recursive = false;
+        params = $3;
+        typ = $5;
+        body = List.rev $7} }
 
 opt_items:
   { [] }

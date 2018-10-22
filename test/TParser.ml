@@ -31,7 +31,7 @@ let arithmetic_lit_test5 test_ctxt = assert_equal
     (parse "82+2*4;")
 
 let float_and_int_add test_ctxt = assert_equal
-    [Expr(Binop(IntLit(5), Add, FloatLit(4.4234)))]
+    [Expr(Binop(IntLit(5), Add, FloatLit("4.4234")))]
     (parse "5 + 4.4234;")
 
 let arithmetic_tests =
@@ -59,8 +59,7 @@ let logical_lit_test4 test_ctxt = assert_equal
     [Expr(Binop(IntLit(6), Leq, IntLit(8)))] (parse "6<=8;")
 
 let logical_lit_test5 test_ctxt = assert_equal 
-    [Expr(Binop(Binop(IntLit(82), Add, IntLit(3)), Leq, IntLit(90)))] 
-    (parse "82+3<=90;")
+    [Expr(Binop(IntLit(3), Less, IntLit(90)))] (parse "3<90;")
 
 let logical_lit_test6 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(85), Equal, IntLit(85)))] (parse "85==85;")
@@ -78,10 +77,20 @@ let logical_tests =
     "Should accept greater sign" >:: logical_lit_test2;
     "Should accept or" >:: logical_lit_test3;
     "Should accept less than or equal to" >:: logical_lit_test4;
-    "Should accept logical operations in order" >:: logical_lit_test5;
+    "Should accept less sign" >:: logical_lit_test5;
     "Should accept logical equals" >:: logical_lit_test6;
     "Should accept increment sign" >:: logical_lit_test7;
     "Should accept decrement sign" >:: logical_lit_test8;
+  ]
+
+let operator_order_test1 test_ctxt = assert_equal
+  [Expr(Unop(Neg, Binop(IntLit(5), Mult, IntLit(8))))] 
+    (parse "-5*8;")
+
+let op_order_tests =
+  "Operator Precedence" >:::
+  [
+    "Mult should go before Neg" >:: operator_order_test1;
   ]
 
 (* String operations *)
@@ -130,8 +139,8 @@ let comment_tests =
     "Should handle single line comment" >:: linec_test;
   ]
 
-let float_test1 test_ctxt = assert_equal [Expr(FloatLit(0.1234))] (parse "0.1234;")
-let float_test2 test_ctxt = assert_equal [Expr(FloatLit(0.1234))] (parse ".1234;")
+let float_test1 test_ctxt = assert_equal [Expr(FloatLit("0.1234"))] (parse "0.1234;")
+let float_test2 test_ctxt = assert_equal [Expr(FloatLit(".1234"))] (parse ".1234;")
 
 let float_tests =
   "Floating point numbers" >:::
@@ -166,6 +175,12 @@ let rec_func_def test_ctxt = assert_equal
         return_typ = String;}), "x", None)]
     (parse "func(int, float; string; rec) x;")    
 
+let func_def_no_params test_ctxt = assert_equal
+    [VDecl(Func({ recursive = true; param_typs = [];
+        return_typ = String;}), "x", None)]
+    (parse "func(; string; rec) x;")    
+
+
 let variable_tests =
   "Variable declarations and definitions" >:::
   [
@@ -175,6 +190,8 @@ let variable_tests =
     "Should handle definition of struct type" >:: struct_def;
     "Should handle declaration of func type" >:: func_def;
     "Should handle declaration of recursive func type" >:: rec_func_def;
+    "Should handle declaration of func type with no parameters" >::
+        func_def_no_params;
   ]
 
 (* Tests for if/elif/else statements. *)
@@ -429,6 +446,19 @@ let string_tests =
     "Should accept string literal" >::string_lit_test;
   ]
 
+let return_var test_ctxt = assert_equal
+    [Return(Id("x"))] (parse "return x;")
+
+let return_semi text_ctxt = assert_equal
+    [Return(Noexpr)] (parse "return;")
+
+let return_tests =
+    "Return" >:::
+    [
+        "Should return a variable" >:: return_var;
+        "Should accept return;" >:: return_semi;
+    ]
+
 (* first-class function as variables *)
 let print_test test_ctxt = assert_equal
     [Expr(FCall("print", [Id("x")]))]
@@ -437,19 +467,17 @@ let print_test test_ctxt = assert_equal
 let no_rec_function_test test_ctxt = assert_equal
     [Expr(FExpr({
         recursive = false;
-        name = "sum";
         params = [(Int, "x"); (Int, "y")];
         typ = Int;
         body = [
             Return(Binop(Id("x"), Add, Id("y")));
         ];}))] 
-    (parse "function sum(int x, int y) int {
+    (parse "function (int x, int y) int {
       return x + y;
     };")
 
 let rec_function_test test_ctxt = assert_equal
     [Expr(FExpr({ recursive = true;
-    name = "multByTwo";
     params = [(Int, "x")];
     typ = Int;
     body =
@@ -458,7 +486,7 @@ let rec_function_test test_ctxt = assert_equal
         [Return(Binop(IntLit(2),Add,
           FCall("multByTwo",[Binop(Id("x"),Sub,IntLit(1))])))])
     ];}))]
-    (parse "rec function multByTwo(int x) int {
+    (parse "rec function (int x) int {
       if (x==1) {
           return 2;
       } else {
@@ -467,13 +495,13 @@ let rec_function_test test_ctxt = assert_equal
       };")
 
 let function_variable test_ctxt = assert_equal 
-  [Expr(FExpr({recursive = false; name = "temp"; params=[(Int, "y")]; 
+  [Expr(FExpr({recursive = false; params=[(Int, "y")]; 
     typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
     [(Func({ recursive = false; param_typs = [Int]; return_typ = Int}), 
         "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
-    (parse "function temp(int y) int {                  
+    (parse "function (int y) int {                  
         return y+5;
 };
  struct Baz { // has function members
