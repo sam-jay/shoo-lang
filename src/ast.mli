@@ -65,6 +65,7 @@ and expr =
 | ArrayAccess of string * expr
 | Dot of expr * string
 | New of newable
+| Noexpr
 
 and fexpr = {
     recursive : bool; 

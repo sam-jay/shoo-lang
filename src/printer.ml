@@ -78,6 +78,7 @@ let rec fmt_expr = function
 | ArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_expr l))
 | Destruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_expr e)
 | New(t) -> fmt_one "New" (fmt_n t)
+| Noexpr -> ""
 
 and fmt_n = function
   NArray(t, s) -> fmt_two "NArray" (fmt_typ t) (fmt_expr s)

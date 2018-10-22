@@ -41,7 +41,7 @@ stmt_list:
 stmt:
   expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
-| RETURN expr SEMI { Return($2) }
+| RETURN expr_opt SEMI { Return($2) }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
 | FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
@@ -51,6 +51,10 @@ stmt:
 opt_init:
   { None }
 | ASSIGN expr { Some($2) }
+
+expr_opt:
+    { Noexpr }
+    | expr { $1 }
 
 false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
 

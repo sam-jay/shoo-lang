@@ -437,6 +437,19 @@ let string_tests =
     "Should accept string literal" >::string_lit_test;
   ]
 
+let return_var test_ctxt = assert_equal
+    [Return(Id("x"))] (parse "return x;")
+
+let return_semi text_ctxt = assert_equal
+    [Return(Noexpr)] (parse "return;")
+
+let return_tests =
+    "Return" >:::
+    [
+        "Should return a variable" >:: return_var;
+        "Should accept return;" >:: return_semi;
+    ]
+
 (* first-class function as variables *)
 let print_test test_ctxt = assert_equal
     [Expr(FCall("print", [Id("x")]))]
