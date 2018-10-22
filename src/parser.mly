@@ -21,11 +21,11 @@
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ
-%left PLUS MINUS
+%left PLUS MINUS  NEG
 %left TIMES DIVIDE MOD
+%right NOT
 %right INCREMENT DECREMENT
 %left DOT
-%right NOT NEG
 
 %start program
 %type <Ast.program> program

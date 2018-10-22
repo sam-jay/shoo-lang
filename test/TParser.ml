@@ -59,8 +59,7 @@ let logical_lit_test4 test_ctxt = assert_equal
     [Expr(Binop(IntLit(6), Leq, IntLit(8)))] (parse "6<=8;")
 
 let logical_lit_test5 test_ctxt = assert_equal 
-    [Expr(Binop(Binop(IntLit(82), Add, IntLit(3)), Leq, IntLit(90)))] 
-    (parse "82+3<=90;")
+    [Expr(Binop(IntLit(3), Less, IntLit(90)))] (parse "3<90;")
 
 let logical_lit_test6 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(85), Equal, IntLit(85)))] (parse "85==85;")
@@ -78,10 +77,20 @@ let logical_tests =
     "Should accept greater sign" >:: logical_lit_test2;
     "Should accept or" >:: logical_lit_test3;
     "Should accept less than or equal to" >:: logical_lit_test4;
-    "Should accept logical operations in order" >:: logical_lit_test5;
+    "Should accept less sign" >:: logical_lit_test5;
     "Should accept logical equals" >:: logical_lit_test6;
     "Should accept increment sign" >:: logical_lit_test7;
     "Should accept decrement sign" >:: logical_lit_test8;
+  ]
+
+let operator_order_test1 test_ctxt = assert_equal
+  [Expr(Unop(Neg, Binop(IntLit(5), Mult, IntLit(8))))] 
+    (parse "-5*8;")
+
+let op_order_tests =
+  "Operator Precedence" >:::
+  [
+    "Mult should go before Neg" >:: operator_order_test1;
   ]
 
 (* String operations *)
