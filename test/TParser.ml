@@ -166,6 +166,12 @@ let rec_func_def test_ctxt = assert_equal
         return_typ = String;}), "x", None)]
     (parse "func(int, float; string; rec) x;")    
 
+let func_def_no_params test_ctxt = assert_equal
+    [VDecl(Func({ recursive = true; param_typs = [];
+        return_typ = String;}), "x", None)]
+    (parse "func(; string; rec) x;")    
+
+
 let variable_tests =
   "Variable declarations and definitions" >:::
   [
@@ -175,6 +181,8 @@ let variable_tests =
     "Should handle definition of struct type" >:: struct_def;
     "Should handle declaration of func type" >:: func_def;
     "Should handle declaration of recursive func type" >:: rec_func_def;
+    "Should handle declaration of func type with no parameters" >::
+        func_def_no_params;
   ]
 
 (* Tests for if/elif/else statements. *)
@@ -437,19 +445,17 @@ let print_test test_ctxt = assert_equal
 let no_rec_function_test test_ctxt = assert_equal
     [Expr(FExpr({
         recursive = false;
-        name = "sum";
         params = [(Int, "x"); (Int, "y")];
         typ = Int;
         body = [
             Return(Binop(Id("x"), Add, Id("y")));
         ];}))] 
-    (parse "function sum(int x, int y) int {
+    (parse "function (int x, int y) int {
       return x + y;
     };")
 
 let rec_function_test test_ctxt = assert_equal
     [Expr(FExpr({ recursive = true;
-    name = "multByTwo";
     params = [(Int, "x")];
     typ = Int;
     body =
@@ -458,7 +464,7 @@ let rec_function_test test_ctxt = assert_equal
         [Return(Binop(IntLit(2),Add,
           FCall("multByTwo",[Binop(Id("x"),Sub,IntLit(1))])))])
     ];}))]
-    (parse "rec function multByTwo(int x) int {
+    (parse "rec function (int x) int {
       if (x==1) {
           return 2;
       } else {
@@ -467,13 +473,13 @@ let rec_function_test test_ctxt = assert_equal
       };")
 
 let function_variable test_ctxt = assert_equal 
-  [Expr(FExpr({recursive = false; name = "temp"; params=[(Int, "y")]; 
+  [Expr(FExpr({recursive = false; params=[(Int, "y")]; 
     typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
     [(Func({ recursive = false; param_typs = [Int]; return_typ = Int}), 
         "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
-    (parse "function temp(int y) int {                  
+    (parse "function (int y) int {                  
         return y+5;
 };
  struct Baz { // has function members

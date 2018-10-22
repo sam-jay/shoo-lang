@@ -72,7 +72,7 @@ let rec fmt_expr = function
 | FCall(n, a) -> fmt_two "FCall" n (fmt_list (List.map fmt_expr a))
 (* below actually is parsed with {name = e.name; param = e.params;
  * typ = e.typ; body = e.body}. See test programs for examples. *)
-| FExpr(e) -> fmt_four "FExpr" e.name (fmt_params e.params) 
+| FExpr(e) -> fmt_three "FExpr" (fmt_params e.params) 
         (fmt_typ e.typ) (fmt_stmt_list e.body)
 | StructInit(l) -> fmt_one "StructInit" (fmt_init l)
 | ArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_expr l))
@@ -96,8 +96,8 @@ and fmt_init l =
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
-| FDecl(n, p, t, b, r) -> 
-  fmt_five "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b) r
+| FDecl(p, t, b, r) -> 
+  fmt_four "FDecl" (fmt_params p) (fmt_typ t) (fmt_stmt_list b) (string_of_bool r)
 | VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_expr e)
 | ForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 

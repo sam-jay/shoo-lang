@@ -98,21 +98,21 @@ newable:
 | STRUCTID { NStruct($1) }
 
 function_expr:
-    REC FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    /* TODO(claire) shouldn't you not have an ID for the function 
+        * declaration? */
+    REC FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
     RBRACKET
     { { recursive = true;
-        name = $3;
-        params = $5;
-        typ = $7;
-        body = List.rev $9} }
-
-    | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
-    RBRACKET
-    { { recursive = false;
-        name = $2;
         params = $4;
         typ = $6;
         body = List.rev $8} }
+
+    | FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    RBRACKET
+    { { recursive = false;
+        params = $3;
+        typ = $5;
+        body = List.rev $7} }
 
 opt_items:
   { [] }
