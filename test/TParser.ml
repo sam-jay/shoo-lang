@@ -31,7 +31,7 @@ let arithmetic_lit_test5 test_ctxt = assert_equal
     (parse "82+2*4;")
 
 let float_and_int_add test_ctxt = assert_equal
-    [Expr(Binop(IntLit(5), Add, FloatLit(4.4234)))]
+    [Expr(Binop(IntLit(5), Add, FloatLit("4.4234")))]
     (parse "5 + 4.4234;")
 
 let arithmetic_tests =
@@ -130,8 +130,8 @@ let comment_tests =
     "Should handle single line comment" >:: linec_test;
   ]
 
-let float_test1 test_ctxt = assert_equal [Expr(FloatLit(0.1234))] (parse "0.1234;")
-let float_test2 test_ctxt = assert_equal [Expr(FloatLit(0.1234))] (parse ".1234;")
+let float_test1 test_ctxt = assert_equal [Expr(FloatLit("0.1234"))] (parse "0.1234;")
+let float_test2 test_ctxt = assert_equal [Expr(FloatLit(".1234"))] (parse ".1234;")
 
 let float_tests =
   "Floating point numbers" >:::

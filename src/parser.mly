@@ -7,7 +7,7 @@
 %token FOR COMMA RETURN VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
 %token NEW FUNCTION IF ELIF ELSE
 %token <int> INTLIT
-%token <float> FLOATLIT
+%token <string> FLOATLIT
 %token <bool> BOOLLIT
 %token <string> ID
 %token <string> STRUCTID

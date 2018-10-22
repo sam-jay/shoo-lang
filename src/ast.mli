@@ -49,7 +49,7 @@ type newable =
 
 and expr =
   IntLit of int
-| FloatLit of float
+| FloatLit of string 
 | StrLit of string
 | BoolLit of bool
 | ArrayLit of expr list
