@@ -8,11 +8,11 @@ Void
 | Float
 | Bool
 | String
-| Func of functyp
+| Func of func_typ
 | Struct of string
 | Array of typ
 
-and functyp = {
+and func_typ = {
     recursive : bool;
     param_typs : typ list;
     return_typ : typ;
@@ -49,7 +49,7 @@ type newable =
 
 and expr =
   IntLit of int
-| FloatLit of float
+| FloatLit of string 
 | StrLit of string
 | BoolLit of bool
 | ArrayLit of expr list
@@ -68,7 +68,6 @@ and expr =
 
 and fexpr = {
     recursive : bool; 
-    name : string;
     typ : typ;
     params: bind list;
     body : stmt list
@@ -78,7 +77,7 @@ and stmt =
   Expr of expr
 | VDecl of typ * string * expr option
 | Return of expr
-| FDecl of string * (typ * string) list * typ * stmt list * bool
+| FDecl of (typ * string) list * typ * stmt list * bool
 | If of expr * stmt list * stmt list
 | ForLoop of (stmt option) * (expr option) * (expr option) * stmt list
 | StructDef of string * (typ * string * expr option) list
