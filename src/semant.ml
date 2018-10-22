@@ -5,8 +5,8 @@ module StringMap = Map.Make (String)
 (* READ-THIS!!
 
   ctxt is a list of StringMaps [ StringMap; StringMap; ... ]
-  each StringMap is a map from string:v_name to (type, current_val)
-  current_val is None or Some(v)
+  each StringMap is a map from string:v_name to (type, bool)
+  where bool indicates whether the var is initialized or not.
 
   Whenever we enter a new function scope, we append a new StringMap to
   the FRONT of the ctxt list, and take it off the list when we leave that
