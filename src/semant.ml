@@ -22,23 +22,53 @@ module StringMap = Map.Make (String)
 
  *)
 
-let find_in_ctxt v_name ctxt =
+let add_to_ctxt v_type v_name init ctxt =
+  let map = List.hd ctxt in
+  let initialized = match init with None -> false | Some(_) -> true in
+  let v = (Some(v_type), initialized) in
+  let newMap = StringMap.add v_name v map in
+  newMap::List.tl ctxt
 
-let add_to_ctxt v_type v_name init ctxt = 
+let find_in_ctxt v_name ctxt =
+  let rec helper init = function
+    [] -> (None, init)
+  | hd::tl when StringMap.mem v_name hd ->
+      let (t, _) = StringMap.find v_name hd in
+      (t, init)
+  | _::tl -> helper false tl in
+  helper true ctxt
 
 let rec check_expr ctxt = function
+| IntLit(x) -> (ctxt, Int)
+| FloatLit(x) -> (ctxt, Float)
+| Id(n) -> (match find_in_ctxt n ctxt with
+      (Some(t), _) -> (ctxt, t)
+    | (None, _) -> raise (Failure "undeclared reference"))
+| Assign(e1, e2) ->
+    let (nctxt, t2) = check_expr ctxt e2 in
+    let (nctxt, t1) = check_expr nctxt e1 in
+    if t1 = t2 then (nctxt, t1)
+    else raise (Failure "type mismatch in assignment")
+| _ -> (ctxt, Void)
 
 let rec check_stmt ctxt = function
   Expr(e) -> check_expr ctxt e
-| VDecl(t, n, i) -> 
-  let x = find_in_ctxt n ctxt in
-  (match x with
-    None -> add_to_ctxt t n i ctxt
-  | Some(_) -> raise Failure "already declared")
-| _ -> ctxt
+| VDecl(t, n, i) ->
+  (match find_in_ctxt n ctxt with
+    (None, _) | (Some(_), false) -> (add_to_ctxt t n i ctxt, Void)
+  | (Some(_), true) -> raise (Failure "already declared"))
+| _ -> (ctxt, Void)
 
 let rec check_stmt_list ctxt = function
   [] -> ctxt
 | hd::tl -> 
-  let new_ctxt = check_stmt ctxt hd in
+  let (new_ctxt, t) = check_stmt ctxt hd in
   check_stmt_list new_ctxt tl
+
+let foo = (Some(Int), true)
+let check_program prog = check_stmt_list [StringMap.empty] prog
+
+let _ =
+  let lexbuf = Lexing.from_channel stdin in
+  let program = Parser.program Scanner.token lexbuf in
+  check_program program
