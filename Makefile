@@ -1,3 +1,6 @@
+semant:
+	ocamlbuild -use-ocamlfind src/semant.native
+
 printer:
 	ocamlbuild -use-ocamlfind src/printer.native
 
