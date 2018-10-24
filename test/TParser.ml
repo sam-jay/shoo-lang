@@ -102,8 +102,8 @@ let operator_order_test5 test_ctxt = assert_equal
     (parse "1+ 2 + 4;")
 
 let operator_order_test6 test_ctxt = assert_equal
-  [Expr(Binop(Binop(IntLit(4), Div, IntLit(36)), Mult, IntLit(7)))] 
-    (parse "4/36*7;")
+  [Expr(Binop(Binop(FloatLit("4.5"), Div, IntLit(36)), Mult, IntLit(7)))] 
+    (parse "4.5/36*7;")
 
 let operator_order_test7 test_ctxt = assert_equal
   [Expr(Binop(Binop(IntLit(56), Sub, IntLit(2)), Add, IntLit(8)))] 
