@@ -524,6 +524,7 @@ let tests =
   [
     arithmetic_tests;
     logical_tests;
+    op_order_tests;
     concatenate_strings_tests;
     common_tests;
     comment_tests;
