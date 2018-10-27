@@ -211,13 +211,18 @@ and check_stmt ctxt = function
 | _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 
 let def_ctxt =
-  let printf_t = Func({
-    recurse = false; 
+  let println_t = Func({
+    recurse = false;
     param_typs = [String];
     return_typ = Void
   }) in
-  let init = Some(IntLit(5)) in
-  let ctxt = add_to_ctxt printf_t "printf" init [StringMap.empty] in
+  let init = Some(FExpr({
+    recursive = false; 
+    typ = Void;
+    params = [(String, "x")];
+    body = []
+  })) in
+  let ctxt = add_to_ctxt println_t "println" init [StringMap.empty] in
   ctxt
 
 let check_program prog =
