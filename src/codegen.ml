@@ -9,13 +9,14 @@ let declare_ext_functions context the_module =
   and i8_t       = L.i8_type     context
   and void_t     = L.void_type   context in
 
-  let println_t : L.lltype = 
-    L.function_type void_t [| L.array_type i8_t 6 |] in
-  let println_func : L.llvalue = 
-    L.declare_function "puts" println_t the_module in
-  StringMap.add "puts" println_func StringMap.empty
+  let printf_t : L.lltype = 
+    L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
+  let printf_func : L.llvalue = 
+    L.declare_function "printf" printf_t the_module in
+  StringMap.add "printf" printf_func StringMap.empty
 
 let gen_program context the_module program functions =
+  
   let builder = L.builder context in
 
   (* Get types from the context *)
@@ -23,6 +24,7 @@ let gen_program context the_module program functions =
   and i8_t       = L.i8_type     context
   and i1_t       = L.i1_type     context
   and float_t    = L.double_type context
+  and str_t      = L.pointer_type (L.i8_type context)
   and void_t     = L.void_type   context in
 
   (* Return the LLVM type for a Shoo type *)
@@ -38,7 +40,11 @@ let gen_program context the_module program functions =
     L.position_at_end bb builder;
 
     let rec expr (sx_t, sx) = match sx with
-    | SStrLit s -> L.const_stringz context s
+    | SStrLit s -> L.build_global_stringptr s "str" builder
+    | SFCall("println", [(sx_t, sx)]) ->
+        let string_format_str = L.build_global_stringptr "%s\n" "fmt" builder in
+        let printf_func = StringMap.find "printf" functions in
+        L.build_call printf_func [| string_format_str; (expr (sx_t, sx)); |] "" builder
     | SFCall(n, args) ->
         let func = StringMap.find n functions in
         let llargs = List.rev (List.map expr (List.rev args)) in
