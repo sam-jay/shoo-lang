@@ -1,5 +1,7 @@
 #!/bin/sh
 
+#justin's latex script
+
 TARGET='../latex_compiler.txt'
 
 echo "" > $TARGET
