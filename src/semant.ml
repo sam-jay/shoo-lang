@@ -1,4 +1,5 @@
 open Ast
+open Sast
 
 module StringMap = Map.Make (String)
 
@@ -32,7 +33,7 @@ let add_to_ctxt v_type v_name init ctxt =
 let find_in_ctxt v_name ctxt =
   let rec helper init = function
     [] -> (None, init)
-  | hd::tl when StringMap.mem v_name hd ->
+  | hd::_ when StringMap.mem v_name hd ->
       (Some(StringMap.find v_name hd), init)
   | _::tl -> helper false tl in
   helper true ctxt
@@ -44,76 +45,80 @@ let create_scope list =
  in helper StringMap.empty list
 
 let rec check_expr ctxt = function
-| IntLit(x) -> (ctxt, Int)
-| FloatLit(x) -> (ctxt, Float)
+| IntLit(x) -> (ctxt, (Int, SIntLit x))
+| FloatLit(x) -> (ctxt, (Float, SFloatLit x))
 | Id(n) -> 
-    let (t_opt, local) = find_in_ctxt n ctxt in
+    let (t_opt, _) = find_in_ctxt n ctxt in
     (match t_opt with
       Some((t, i)) ->
       (match i with
-         true -> (ctxt, t)
+         true -> (ctxt, (t, SId n))
        | false -> raise (Failure "uninitialized variable"))
     | None -> raise (Failure "undeclared reference"))
 | Assign(e1, e2) ->
-    let (nctxt, t2) = check_expr ctxt e2 in
-    let (nctxt, t1) = match e1 with
-        Id(n) -> let (t_opt, local) = find_in_ctxt n nctxt in
+    let (nctxt, (t2, se2)) = check_expr ctxt e2 in
+    let (nctxt, (t1, se1)) = match e1 with
+        Id(n) -> let (t_opt, _) = find_in_ctxt n nctxt in
                 (match t_opt with
-                  Some(t, _) -> (nctxt, t)
+                  Some(t, _) -> (nctxt, (t, SId n))
                 | None -> raise (Failure "undeclared reference"))
       | _ -> check_expr nctxt e1 in
-    if t1 = t2 then (nctxt, t1)
+    if t1 = t2 then (nctxt, (t1, SAssign((t1, se1), (t2, se2))))
     else raise (Failure "type mismatch in assignment")
 | Binop(e1, op, e2) ->
-        let (e1ctxt, lt) = check_expr ctxt e1 
-            in let (e2ctxt, rt) = check_expr e1ctxt e2 
-        in
+        let (nctxt, (lt, se1)) = check_expr ctxt e1 in
+        let (nctxt, (rt, se2)) = check_expr nctxt e2 in
+        let sbinop = SBinop((lt, se1), op, (rt, se2)) in
         (match op with
-          Add | Sub | Mult | Div when lt = Int && rt = Int -> (e2ctxt, Int)
-        | Add | Sub | Mult | Div when lt = Float && rt = Float -> (e2ctxt, Float)
+          Add | Sub | Mult | Div when lt = Int && rt = Int -> (nctxt, (Int, sbinop))
+        | Add | Sub | Mult | Div when lt = Float && rt = Float -> (nctxt, (Float, sbinop))
         (* Allow for ints and floats to be used together. *)
         | Add | Sub | Mult | Div when 
             (lt = Float && rt = Int) ||
-            (lt = Int && rt = Float) -> (e2ctxt, Float)
+            (lt = Int && rt = Float) -> (nctxt, (Float, sbinop))
         (* TODO(claire): make sure LRM says that we can compare all
          * expressions of the same type using ==, including functions, strings,
          * structs, arrays? *)
-        | Equal | Neq  when lt = rt -> (e2ctxt, Bool)
+        | Equal | Neq  when lt = rt -> (nctxt, (Bool, sbinop))
         | Equal | Neq  when 
             (lt = Float && rt = Int) ||
-            (lt = Int && rt = Float) -> (e2ctxt, Bool)
-        | Equal | Neq  when lt = Bool && rt = Bool -> (e2ctxt, Bool)
+            (lt = Int && rt = Float) -> (nctxt, (Bool, sbinop))
+        | Equal | Neq  when lt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
         | Less | Leq | Greater | Geq  
                                  when (lt = Int && rt = Int) 
-                                 || (lt = Float || rt = Float) -> (e2ctxt, Bool)
-        | And | Or when rt = Bool && rt = Bool -> (e2ctxt, Bool)
+                                 || (lt = Float || rt = Float) -> (nctxt, (Bool, sbinop))
+        | And | Or when rt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
         | _ -> raise (Failure ("illegal binary operator")))
         (* TODO(claire) need to pretty print error above *)
         (* TODO(claire) need SAST? *)
-| _ -> (ctxt, Void)
+| _ -> (ctxt, (Void, SNoexpr))
 
 let rec check_stmt_list ctxt = function
-  [] -> (ctxt, Void)
+  [] -> (ctxt, Void, [])
 | hd::tl -> 
-  let (new_ctxt, t) = check_stmt ctxt hd in
-  if t = Void then check_stmt_list new_ctxt tl
-  else (new_ctxt, t) (* returned something *)
+  let (nctxt, t, ss) = check_stmt ctxt hd in
+  let (nctxt, t_rest, ssl) = check_stmt_list nctxt tl in
+  let ret = if t = Void then t_rest else t in
+  (nctxt, ret, ss::ssl) (* returned something *)
 
 and check_stmt ctxt = function
-  Expr(e) -> let (nctxt, t) = check_expr ctxt e in (nctxt, Void)
+  Expr(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
 | VDecl(t, n, i) ->
-  let (t_opt, local) = find_in_ctxt n ctxt in
+  let (nctxt, si) = match i with
+    None -> (ctxt, None)
+  | Some(e) -> (let (nctxt, (t_i, si)) = check_expr ctxt e in (nctxt, Some((t_i, si)))) in
+  let (t_opt, local) = find_in_ctxt n nctxt in
   (match t_opt with
-    None -> (add_to_ctxt t n i ctxt, Void) 
-  | Some(_) when not local -> (add_to_ctxt t n i ctxt, Void)
+    None -> (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si)) 
+  | Some(_) when not local -> (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
 | FDecl(params, ret, body, r) ->
   let nctxt = (create_scope params)::ctxt in
-  let (nctxt, t) = check_stmt_list nctxt body in
-  if t = ret then (ctxt, Void)
+  let (nctxt, t, ssl) = check_stmt_list nctxt body in
+  if t = ret then (List.tl nctxt, Void, SFDecl(params, ret, ssl, r))
   else raise (Failure "invalid function return type")
-| Return(e) -> check_expr ctxt e
-| _ -> (ctxt, Void)
+| Return(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, t, SReturn (t, ss))
+| _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 
 let foo = (Some(Int), true)
 let check_program prog = check_stmt_list [StringMap.empty] prog
