@@ -43,3 +43,7 @@ and sstmt =
 | SEnhancedFor of typ * string * sexpr * sstmt list
 
 type sprogram = sstmt list
+
+let string_of_sstmt = function
+| SExpr(_) -> "SExpr"
+| _ -> "Other"

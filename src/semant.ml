@@ -47,6 +47,7 @@ let create_scope list =
 let rec check_expr ctxt = function
 | IntLit(x) -> (ctxt, (Int, SIntLit x))
 | FloatLit(x) -> (ctxt, (Float, SFloatLit x))
+| StrLit(x) -> (ctxt, (String, SStrLit x))
 | Id(n) -> 
     let (t_opt, _) = find_in_ctxt n ctxt in
     (match t_opt with
@@ -91,7 +92,26 @@ let rec check_expr ctxt = function
         | _ -> raise (Failure ("illegal binary operator")))
         (* TODO(claire) need to pretty print error above *)
         (* TODO(claire) need SAST? *)
+| FCall(name, args) ->
+  (match find_in_ctxt name ctxt with
+    (Some((t, true)), _) -> 
+      let (nctxt, sl) = check_args ctxt t args in
+      (nctxt, (t, SFCall(name, sl)))
+  | _ -> raise (Failure ("unknown function")))
 | _ -> (ctxt, (Void, SNoexpr))
+
+and check_args ctxt t args =
+  match t with Func(f_type) ->
+  let rec helper ctxt sl = function
+    ([], []) -> (ctxt, sl)
+  | (p_typ::pl, arg::al) ->
+    let (nctxt, (a_typ, se)) = check_expr ctxt arg in
+    if p_typ = a_typ then helper nctxt ((a_typ, se)::sl) (pl, al)
+    else raise (Failure "argument type mismatch")
+  | _ -> raise (Failure "invalid number of arguments")
+  in
+  helper ctxt [] (f_type.param_typs, args)
+  | _ -> raise (Failure "unknown")
 
 let rec check_stmt_list ctxt = function
   [] -> (ctxt, Void, [])
@@ -120,10 +140,17 @@ and check_stmt ctxt = function
 | Return(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, t, SReturn (t, ss))
 | _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 
-let foo = (Some(Int), true)
-let check_program prog = check_stmt_list [StringMap.empty] prog
+let def_ctxt =
+  let printf_t = Func({
+    param_typs = [String];
+    return_typ = Void;
+    recursive = false 
+  }) in
+  let init = Some(IntLit(5)) in
+  let ctxt = add_to_ctxt printf_t "puts" init [StringMap.empty] in
+  ctxt
 
-let _ =
-  let lexbuf = Lexing.from_channel stdin in
-  let program = Parser.program Scanner.token lexbuf in
-  check_program program
+let check_program prog =
+  (*print_endline(Printer.fmt_prog prog);*)
+  let (_, _, ssl) = check_stmt_list def_ctxt prog in
+  ssl
