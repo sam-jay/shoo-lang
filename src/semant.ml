@@ -37,6 +37,12 @@ let find_in_ctxt v_name ctxt =
   | _::tl -> helper false tl in
   helper true ctxt
 
+let create_scope list = 
+ let rec helper m = function
+   [] -> m
+ | (t, n)::tl -> let new_m = StringMap.add n (t, true) m in helper new_m tl
+ in helper StringMap.empty list
+
 let rec check_expr ctxt = function
 | IntLit(x) -> (ctxt, Int)
 | FloatLit(x) -> (ctxt, Float)
@@ -60,21 +66,28 @@ let rec check_expr ctxt = function
     else raise (Failure "type mismatch in assignment")
 | _ -> (ctxt, Void)
 
-let rec check_stmt ctxt = function
-  Expr(e) -> check_expr ctxt e
+let rec check_stmt_list ctxt = function
+  [] -> (ctxt, Void)
+| hd::tl -> 
+  let (new_ctxt, t) = check_stmt ctxt hd in
+  if t = Void then check_stmt_list new_ctxt tl
+  else (new_ctxt, t) (* returned something *)
+
+and check_stmt ctxt = function
+  Expr(e) -> let (nctxt, t) = check_expr ctxt e in (nctxt, Void)
 | VDecl(t, n, i) ->
   let (t_opt, local) = find_in_ctxt n ctxt in
   (match t_opt with
     None -> (add_to_ctxt t n i ctxt, Void) 
   | Some(_) when not local -> (add_to_ctxt t n i ctxt, Void)
   | Some(_) -> raise (Failure "already declared"))
+| FDecl(params, ret, body, r) ->
+  let nctxt = (create_scope params)::ctxt in
+  let (nctxt, t) = check_stmt_list nctxt body in
+  if t = ret then (ctxt, Void)
+  else raise (Failure "invalid function return type")
+| Return(e) -> check_expr ctxt e
 | _ -> (ctxt, Void)
-
-let rec check_stmt_list ctxt = function
-  [] -> ctxt
-| hd::tl -> 
-  let (new_ctxt, t) = check_stmt ctxt hd in
-  check_stmt_list new_ctxt tl
 
 let foo = (Some(Int), true)
 let check_program prog = check_stmt_list [StringMap.empty] prog
