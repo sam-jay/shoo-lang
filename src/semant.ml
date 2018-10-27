@@ -30,6 +30,9 @@ let add_to_ctxt v_type v_name init ctxt =
   let newMap = StringMap.add v_name v map in
   newMap::List.tl ctxt
 
+(* Returns tuple with None or Some with another tuple that has 
+ * the type and if initalized or not and then if it is 
+ * definited in scope or not. *)
 let find_in_ctxt v_name ctxt =
   let rec helper init = function
     [] -> (None, init)
@@ -44,6 +47,19 @@ let create_scope list =
  | (t, n)::tl -> let new_m = StringMap.add n (t, true) m in helper new_m tl
  in helper StringMap.empty list
 
+(* Check access for Struct fields. *)
+(* TODO(claire) I think we need to do structs before we do this *)
+ (*let resolve_struct_access sname field ctxt =
+    let exists = find_in_ctxt sname ctxt in
+    Some((t, i)) ->  
+    | None -> raise (Failure("Struct " ^ sname ^ "not found"))
+let check_access lhs rhs ctxt = 
+    match lhs with 
+    String s -> resolve_struct_access s rhs ctxt
+    | _ -> raise (Failure(fmt_typ lhs ^ " is not a struct"))
+*)
+(* Returns a tuple with a map and another tuple.
+ * The second tuple has the type and the stype. *)
 let rec check_expr ctxt = function
 | IntLit(x) -> (ctxt, (Int, SIntLit x))
 | FloatLit(x) -> (ctxt, (Float, SFloatLit x))
@@ -66,6 +82,8 @@ let rec check_expr ctxt = function
       | _ -> check_expr nctxt e1 in
     if t1 = t2 then (nctxt, (t1, SAssign((t1, se1), (t2, se2))))
     else raise (Failure "type mismatch in assignment")
+(* TODO(claire) I think we should wait to do this *)
+    (*| Dot(e, field) -> check_access (check_expr e) field *)
 | Binop(e1, op, e2) ->
         let (nctxt, (lt, se1)) = check_expr ctxt e1 in
         let (nctxt, (rt, se2)) = check_expr nctxt e2 in
@@ -100,6 +118,8 @@ let rec check_expr ctxt = function
   | _ -> raise (Failure ("unknown function")))
 | _ -> (ctxt, (Void, SNoexpr))
 
+(* Make sure that types of arguements match the types of
+ * formal parameters when you declare a func variable. *)
 and check_args ctxt t args =
   match t with Func(f_type) ->
   let rec helper ctxt sl = function
@@ -121,6 +141,13 @@ let rec check_stmt_list ctxt = function
   let ret = if t = Void then t_rest else t in
   (nctxt, ret, ss::ssl) (* returned something *)
 
+and check_bool_expr ctxt e = 
+    let (nctxt, (t, st)) = check_expr ctxt e in
+    if (t != Bool) then raise (Failure "expected Boolean expression")
+    (* TODO(claire) add pretty print above *) 
+    else (nctxt, (t, st)) 
+
+(* returns the map, type, stype *)
 and check_stmt ctxt = function
   Expr(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
 | VDecl(t, n, i) ->
@@ -138,16 +165,59 @@ and check_stmt ctxt = function
   if t = ret then (List.tl nctxt, Void, SFDecl(params, ret, ssl, r))
   else raise (Failure "invalid function return type")
 | Return(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, t, SReturn (t, ss))
+| ForLoop (s1, e2, e3, st) -> 
+     let (ctxt1, s1') = match s1 with
+        None -> (ctxt, None)
+        | Some(s1) -> (let (nctxt, _, ns1) = check_stmt ctxt s1 in
+            (nctxt, Some(ns1)))
+     in
+     let (ctxt2, e2') = match e2 with
+        None -> (ctxt1, None)
+        | Some(e2) -> (let (nctxt, (t_i, si)) = 
+            check_expr ctxt1 e2 in (nctxt, Some((t_i, si))))
+     in
+     let (ctxt3, e3') = match e3 with
+        None -> (ctxt, None)
+        | Some(e3) -> (let (nctxt, (t_i, si)) = 
+            check_expr ctxt2 e3 in (nctxt, Some((t_i, si))))
+     in
+     let (ctxt4, _, st') = check_stmt_list ctxt3 st
+     in
+    (*let (ctxt1, s1) = match e1 with 
+        None -> (ctxt, None)
+        (*None -> (ctxt, Void, SExpr((Void, SNoexpr)))*)
+        | Some(e1) -> (let (nctxt, t1', s1') = check_stmt ctxt e1) in
+        (nctxt, Some(s1'))
+    in
+    let (ctxt2, e2') = match e2 with
+        Some(e2) -> check_bool_expr ctxt1 e2
+        | None -> (ctxt1, (Void, SNoexpr))
+    in
+    let (ctxt3, e3') = match e3 with
+        Some(e3) -> check_expr ctxt2 e3
+        | None -> (ctxt2, (Void, SNoexpr))
+    in
+    let (ctxt4, _, sstatemetn) =
+        check_stmt_list ctxt3 st
+    in*)
+    (*let (ctxt1, _, s1) = check_stmt ctxt e1 in
+    let (ctxt2, e2') = check_bool_expr ctxt1 e2 in
+    let (ctxt3, e3') = check_expr ctxt2 e3 in*)
+    (ctxt4, Void, SForLoop(s1', e2', e3', st'))
+    
+    (*(nctxt, Void SFor(check_expr ctxt e1, check_bool_expr ctxt e2,
+        check_expr e3, List.hd sstatement))*)
+
 | _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 
 let def_ctxt =
   let printf_t = Func({
+    recurse = false; 
     param_typs = [String];
-    return_typ = Void;
-    recursive = false 
+    return_typ = Void
   }) in
   let init = Some(IntLit(5)) in
-  let ctxt = add_to_ctxt printf_t "puts" init [StringMap.empty] in
+  let ctxt = add_to_ctxt printf_t "printf" init [StringMap.empty] in
   ctxt
 
 let check_program prog =
