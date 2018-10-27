@@ -1,12 +1,15 @@
 #!/bin/bash
 
+set -e
+
 if [ -z "$1" ]
   then
     echo "No argument supplied"
     exit 1
 fi
-
-cat "$1" | ./shoo.native > "$1.ll"
-llc -relocation-model=pic "$1.ll"
-cc -o "$1" "$1.s"
-"./$1"
+f=$1
+n=${f%.shoo*}
+cat $f | ./shoo.native > "$n.ll"
+llc -relocation-model=pic "$n.ll"
+cc -o "$n" "$n.s"
+"./$n"
