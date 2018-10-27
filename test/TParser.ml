@@ -9,8 +9,6 @@ let empty_prog test_ctxt = assert_equal [] (parse "")
 
 let int_lit test_ctxt = assert_equal [Expr(IntLit(5))] (parse "5;")
 
-(* TODO: Test order of operators *)
-
 let arithmetic_lit_test1 test_ctxt = assert_equal 
     [Expr(Binop(IntLit(82), Add, IntLit(3)))] (parse "82+3;")
 
@@ -86,11 +84,56 @@ let logical_tests =
 let operator_order_test1 test_ctxt = assert_equal
   [Expr(Unop(Neg, Binop(IntLit(5), Mult, IntLit(8))))] 
     (parse "-5*8;")
+    
+let operator_order_test2 test_ctxt = assert_equal
+  [Expr(Binop(IntLit(4), Add, Binop(IntLit(9), Div, IntLit(45))))] 
+    (parse "4+9/45;")
+
+let operator_order_test3 test_ctxt = assert_equal
+  [Expr(Assign(Id("res"), Binop(IntLit(3), Less, IntLit(86))))] 
+    (parse "res = 3 < 86;")
+
+let operator_order_test4 test_ctxt = assert_equal
+  [Expr(Assign(Id("a"), Assign(Id("b"), IntLit(100))))] 
+    (parse "a = b =100;")
+
+let operator_order_test5 test_ctxt = assert_equal
+  [Expr(Binop(Binop(IntLit(1), Add, IntLit(2)), Add, IntLit(4)))] 
+    (parse "1+ 2 + 4;")
+
+let operator_order_test6 test_ctxt = assert_equal
+  [Expr(Binop(Binop(FloatLit("4.5"), Div, IntLit(36)), Mult, IntLit(7)))] 
+    (parse "4.5/36*7;")
+
+let operator_order_test7 test_ctxt = assert_equal
+  [Expr(Binop(Binop(IntLit(56), Sub, IntLit(2)), Add, IntLit(8)))] 
+    (parse "56- 2+ 8;")
+
+let operator_order_test8 test_ctxt = assert_equal
+  [Expr(Assign(Id("c"), Pop(Id("b"), Inc)))] 
+    (parse "c = b++;")
+
+let operator_order_test9 test_ctxt = assert_equal
+  [Expr(Binop(Id("a"), And, Unop(Not, Id("b"))))] 
+    (parse "a && !b;")
+
+let operator_order_test10 test_ctxt = assert_equal
+  [Expr(Binop(Binop(Id("a"), And, Id("b")), Or, Binop(Id("c"), And, Id("d"))))] 
+    (parse "a && b || c && d;")
 
 let op_order_tests =
   "Operator Precedence" >:::
   [
     "Mult should go before Neg" >:: operator_order_test1;
+    "Div should go before Add" >:: operator_order_test2;
+    "Less should go before Assign" >:: operator_order_test3;
+    "Assign is right associative" >:: operator_order_test4;
+    "Add is left associative" >:: operator_order_test5;
+    "Mult and Div have same priority" >:: operator_order_test6;
+    "Add and Sub have same priority" >:: operator_order_test7;
+    "Inc should go before Assign" >:: operator_order_test8;
+    "Not should go before And" >:: operator_order_test9;
+    "And should go before Or" >:: operator_order_test10;
   ]
 
 (* String operations *)
@@ -524,6 +567,7 @@ let tests =
   [
     arithmetic_tests;
     logical_tests;
+    op_order_tests;
     concatenate_strings_tests;
     common_tests;
     comment_tests;

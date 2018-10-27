@@ -64,6 +64,32 @@ let rec check_expr ctxt = function
       | _ -> check_expr nctxt e1 in
     if t1 = t2 then (nctxt, t1)
     else raise (Failure "type mismatch in assignment")
+| Binop(e1, op, e2) ->
+        let (e1ctxt, lt) = check_expr ctxt e1 
+            in let (e2ctxt, rt) = check_expr e1ctxt e2 
+        in
+        (match op with
+          Add | Sub | Mult | Div when lt = Int && rt = Int -> (e2ctxt, Int)
+        | Add | Sub | Mult | Div when lt = Float && rt = Float -> (e2ctxt, Float)
+        (* Allow for ints and floats to be used together. *)
+        | Add | Sub | Mult | Div when 
+            (lt = Float && rt = Int) ||
+            (lt = Int && rt = Float) -> (e2ctxt, Float)
+        (* TODO(claire): make sure LRM says that we can compare all
+         * expressions of the same type using ==, including functions, strings,
+         * structs, arrays? *)
+        | Equal | Neq  when lt = rt -> (e2ctxt, Bool)
+        | Equal | Neq  when 
+            (lt = Float && rt = Int) ||
+            (lt = Int && rt = Float) -> (e2ctxt, Bool)
+        | Equal | Neq  when lt = Bool && rt = Bool -> (e2ctxt, Bool)
+        | Less | Leq | Greater | Geq  
+                                 when (lt = Int && rt = Int) 
+                                 || (lt = Float || rt = Float) -> (e2ctxt, Bool)
+        | And | Or when rt = Bool && rt = Bool -> (e2ctxt, Bool)
+        | _ -> raise (Failure ("illegal binary operator")))
+        (* TODO(claire) need to pretty print error above *)
+        (* TODO(claire) need SAST? *)
 | _ -> (ctxt, Void)
 
 let rec check_stmt_list ctxt = function
