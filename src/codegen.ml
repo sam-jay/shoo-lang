@@ -10,10 +10,10 @@ let declare_ext_functions context the_module =
   and void_t     = L.void_type   context in
 
   let println_t : L.lltype = 
-    L.function_type void_t [| L.array_type i8_t 6 |] in
+    L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let println_func : L.llvalue = 
-    L.declare_function "puts" println_t the_module in
-  StringMap.add "puts" println_func StringMap.empty
+    L.declare_function "printf" println_t the_module in
+  StringMap.add "printf" println_func StringMap.empty
 
 let gen_program context the_module program functions =
   let builder = L.builder context in
@@ -27,7 +27,7 @@ let gen_program context the_module program functions =
 
   (* Return the LLVM type for a Shoo type *)
   let ltype_of_typ = function
-      A.Int   -> i32_t
+      A.Int -> i32_t
     | _  -> void_t
   in
 

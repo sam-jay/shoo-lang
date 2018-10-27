@@ -13,7 +13,7 @@ type typ =
 | Array of typ
 
 and func_typ = {
-    recursive : bool;
+    recurse : bool;
     param_typs : typ list;
     return_typ : typ;
 }
