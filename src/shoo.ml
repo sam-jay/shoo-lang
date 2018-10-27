@@ -28,5 +28,5 @@ let () =
     (*| Sast    -> print_string (Sast.string_of_sprogram sast)*)
     | LLVM_IR -> print_string (Llvm.string_of_llmodule (Codegen.translate sast))
     | Compile -> let m = Codegen.translate sast in
-	Llvm_analysis.assert_valid_module m;
-	print_string (Llvm.string_of_llmodule m)
+      Llvm_analysis.assert_valid_module m;
+      print_string (Llvm.string_of_llmodule m)

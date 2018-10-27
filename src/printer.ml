@@ -119,8 +119,3 @@ and fmt_opt_expr = function
 
 let fmt_prog program =
   fmt_stmt_list program
-
-let _ =
-  let lexbuf = Lexing.from_channel stdin in
-  let program = Parser.program Scanner.token lexbuf in
-  print_endline (fmt_prog program)
