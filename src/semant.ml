@@ -92,6 +92,14 @@ let rec check_expr ctxt = function
         | _ -> raise (Failure ("illegal binary operator")))
         (* TODO(claire) need to pretty print error above *)
         (* TODO(claire) need SAST? *)
+| Unop(op, e) -> 
+        let (nctxt, (t, e)) = check_expr ctxt e in 
+        let sunop = SUnop(op, (t, e)) in
+        (match op with 
+          Neg when t = Int -> (nctxt, (Int, sunop))
+        | Neg when t = Float -> (nctxt, (Float, sunop))
+        | Not when t = Bool -> (nctxt, (Bool, sunop))
+        | _ -> raise (Failure("illegal unary operator")))
 | FCall(name, args) ->
   (match find_in_ctxt name ctxt with
     (Some((t, true)), _) -> 
