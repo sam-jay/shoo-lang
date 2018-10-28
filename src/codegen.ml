@@ -9,11 +9,11 @@ let declare_ext_functions context the_module =
   and i8_t       = L.i8_type     context
   and void_t     = L.void_type   context in
 
-  let printf_t : L.lltype = 
+  let println_t : L.lltype = 
     L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-  let printf_func : L.llvalue = 
-    L.declare_function "printf" printf_t the_module in
-  StringMap.add "printf" printf_func StringMap.empty
+  let println_func : L.llvalue = 
+    L.declare_function "printf" println_t the_module in
+  StringMap.add "printf" println_func StringMap.empty
 
 let gen_program context the_module program functions =
   
@@ -29,7 +29,7 @@ let gen_program context the_module program functions =
 
   (* Return the LLVM type for a Shoo type *)
   let ltype_of_typ = function
-      A.Int   -> i32_t
+      A.Int -> i32_t
     | _  -> void_t
   in
 

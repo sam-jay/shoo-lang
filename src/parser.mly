@@ -154,11 +154,11 @@ func_type:
     FUNC LPAREN typ_opt SEMI ret_typ SEMI REC RPAREN
     { { param_typs = $3;
         return_typ = $5; 
-        recursive = true } }
+        recurse = true } }
     | FUNC LPAREN typ_opt SEMI ret_typ RPAREN
     { { param_typs = $3;
         return_typ = $5; 
-        recursive = false } }
+        recurse = false } }
 
 typ_opt:
   { [] }

@@ -30,6 +30,9 @@ let add_to_ctxt v_type v_name init ctxt =
   let newMap = StringMap.add v_name v map in
   newMap::List.tl ctxt
 
+(* Returns tuple with None or Some with another tuple that has 
+ * the type and if initalized or not and then if it is 
+ * definited in scope or not. *)
 let find_in_ctxt v_name ctxt =
   let rec helper init = function
     [] -> (None, init)
@@ -44,6 +47,8 @@ let create_scope list =
  | (t, n)::tl -> let new_m = StringMap.add n (t, true) m in helper new_m tl
  in helper StringMap.empty list
 
+(* Returns a tuple with a map and another tuple.
+ * The second tuple has the type and the stype. *)
 let rec check_expr ctxt = function
 | IntLit(x) -> (ctxt, (Int, SIntLit x))
 | FloatLit(x) -> (ctxt, (Float, SFloatLit x))
@@ -91,7 +96,6 @@ let rec check_expr ctxt = function
         | And | Or when rt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
         | _ -> raise (Failure ("illegal binary operator")))
         (* TODO(claire) need to pretty print error above *)
-        (* TODO(claire) need SAST? *)
 | Unop(op, e) -> 
         let (nctxt, (t, e)) = check_expr ctxt e in 
         let sunop = SUnop(op, (t, e)) in
@@ -108,6 +112,8 @@ let rec check_expr ctxt = function
   | _ -> raise (Failure ("unknown function")))
 | _ -> (ctxt, (Void, SNoexpr))
 
+(* Make sure that types of arguements match the types of
+ * formal parameters when you declare a func variable. *)
 and check_args ctxt t args =
   match t with Func(f_type) ->
   let rec helper ctxt sl = function
@@ -129,6 +135,13 @@ let rec check_stmt_list ctxt = function
   let ret = if t = Void then t_rest else t in
   (nctxt, ret, ss::ssl) (* returned something *)
 
+and check_bool_expr ctxt e = 
+    let (nctxt, (t, st)) = check_expr ctxt e in
+    if (t != Bool) then raise (Failure "expected Boolean expression")
+    (* TODO(claire) add pretty print above *) 
+    else (nctxt, (t, st)) 
+
+(* returns the map, type, stype *)
 and check_stmt ctxt = function
   Expr(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
 | VDecl(t, n, i) ->
@@ -146,13 +159,33 @@ and check_stmt ctxt = function
   if t = ret then (List.tl nctxt, Void, SFDecl(params, ret, ssl, r))
   else raise (Failure "invalid function return type")
 | Return(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, t, SReturn (t, ss))
+| ForLoop (s1, e2, e3, st) -> 
+     let (ctxt1, s1') = match s1 with
+        None -> (ctxt, None)
+        | Some(s1) -> (let (nctxt, _, ns1) = check_stmt ctxt s1 in
+            (nctxt, Some(ns1)))
+     in
+     let (ctxt2, e2') = match e2 with
+        None -> (ctxt1, None)
+        | Some(e2) -> (let (nctxt, (t_i, si)) = 
+            check_expr ctxt1 e2 in (nctxt, Some((t_i, si))))
+     in
+     let (ctxt3, e3') = match e3 with
+        None -> (ctxt, None)
+        | Some(e3) -> (let (nctxt, (t_i, si)) = 
+            check_expr ctxt2 e3 in (nctxt, Some((t_i, si))))
+     in
+     let (ctxt4, _, st') = check_stmt_list ctxt3 st
+     in
+    (ctxt4, Void, SForLoop(s1', e2', e3', st'))
+    
 | _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 
 let def_ctxt =
   let println_t = Func({
+    recurse = false;
     param_typs = [String];
-    return_typ = Void;
-    recursive = false 
+    return_typ = Void
   }) in
   let init = Some(FExpr({
     recursive = false; 
