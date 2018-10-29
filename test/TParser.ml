@@ -209,17 +209,17 @@ let struct_def test_ctxt = assert_equal
   BankAccount myAccount = new(BankAccount);")
 
 let func_def test_ctxt = assert_equal
-    [VDecl(Func({ recursive = false; param_typs = [Int; Float];
+    [VDecl(Func({ recurse = false; param_typs = [Int; Float];
         return_typ = String;}), "x", None)]
     (parse "func(int, float; string) x;")    
 
 let rec_func_def test_ctxt = assert_equal
-    [VDecl(Func({ recursive = true; param_typs = [Int; Float];
+    [VDecl(Func({ recurse = true; param_typs = [Int; Float];
         return_typ = String;}), "x", None)]
     (parse "func(int, float; string; rec) x;")    
 
 let func_def_no_params test_ctxt = assert_equal
-    [VDecl(Func({ recursive = true; param_typs = [];
+    [VDecl(Func({ recurse = true; param_typs = [];
         return_typ = String;}), "x", None)]
     (parse "func(; string; rec) x;")    
 
@@ -541,7 +541,7 @@ let function_variable test_ctxt = assert_equal
   [Expr(FExpr({recursive = false; params=[(Int, "y")]; 
     typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
-    [(Func({ recursive = false; param_typs = [Int]; return_typ = Int}), 
+    [(Func({ recurse = false; param_typs = [Int]; return_typ = Int}), 
         "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
     (parse "function (int y) int {                  
