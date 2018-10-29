@@ -16,7 +16,7 @@ LLC="llc"
 # Path to the C compiler
 CC="cc"
 
-# Path to the shoo compiler.  Usually "./microc.native"
+# Path to the shoo compiler.  Usually "./shoo.native"
 # Try "_build/shoo.native" if ocamlbuild was unable to create a symbolic link.
 SHOO="./shoo.native"
 #SHOO="_build/shoo.native"
