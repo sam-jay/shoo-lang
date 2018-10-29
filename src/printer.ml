@@ -15,7 +15,7 @@ let fmt_list l =
 let rec fmt_typ = function
   Void -> "Void"
   | Func(e) -> fmt_three "Func" 
-          (string_of_bool e.recursive) 
+          (string_of_bool e.recurse) 
           (fmt_typ_list e.param_typs) 
           (fmt_typ e.return_typ)
   | Int -> "Int"
@@ -29,7 +29,7 @@ and fmt_typ_list l =
   let typs = List.map fmt_typ l in
   fmt_list typs
 
-let rec fmt_op = function
+let fmt_op = function
     Add -> "+"
   | Sub -> "-"
   | Mult -> "*"
@@ -44,7 +44,7 @@ let rec fmt_op = function
   | And -> "&&"
   | Or -> "||"
 
-let rec fmt_uop = function 
+let fmt_uop = function 
   Neg -> "-"
 | Not -> "!"
 
