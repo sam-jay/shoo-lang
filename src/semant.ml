@@ -57,19 +57,20 @@ let rec check_expr ctxt = function
 (* Go through all the items in the square brackets to see if they match *)
 (* TODO(claire) does check_expr ever change the map? no right? *)
 | ArrayLit(x) -> 
-    let (_, (tf, stf)) = check_expr ctxt t in
-    let t = List.fold_left
-    (fun e1 e2 ->
+    (* TODO(claire) need to check if the list is empty *)
+    let (_, (item_type, stf)) = check_expr ctxt List.hd x in
+    let t = List.map
+    (fun e1 ->
         let (_, (t1, st1)) = check_expr ctxt e1 in
-        let (_, (t2, st2)) = check_expr ctxt e2 in
+        (*let (_, (t2, st2)) = check_expr ctxt e2 in*)
         (* TODO(claire) one equal sign?*)
         (* TODO(claire) are st1 and st2 known to be the same? *)
         if t1 = t2 then e1
         else raise (Failure ("Multiple types inside an array"))
         (* TODO(claire) add pretty print for error above *)
-    ) [] (List.tl x)
+    ) x
     in    
-    let (_, (tf, stf)) = check_expr ctxt t in 
+    (*let (_, (tf, stf)) = check_expr ctxt t in*) 
     (ctxt, (tf, SArrayList t))
 | Id(n) -> 
     let (t_opt, _) = find_in_ctxt n ctxt in
