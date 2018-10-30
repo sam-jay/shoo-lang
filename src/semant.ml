@@ -55,23 +55,25 @@ let rec check_expr ctxt = function
 | StrLit(x) -> (ctxt, (String, SStrLit x))
 (* TODO(claire) This doesn't handle arrays of structs I don't think? *)
 (* Go through all the items in the square brackets to see if they match *)
-(* TODO(claire) does check_expr ever change the map? no right? *)
+(* TODO(claire) check_expr never changes the map so we shouldn't pass
+ * it around all the time. Change this so there is a function above that
+ * takes the map and then an nest function that does nothing and doesn't
+ * take the map. *)
 | ArrayLit(x) -> 
-    (* TODO(claire) need to check if the list is empty *)
+    (* TODO(claire) need to check if the list is empty 
+     * TODO(claire) actually we shouldn't allow this to be empty because
+     * then you don't know the type of the array and that is a big mess.
+     * So many in the parser we should add something to reject if they
+     * try to use [] to init an array and [] is empty. They should just
+     * used new instead. *)
     let (_, (item_type, item_s_type)) = check_expr ctxt (List.hd x) in
-    let t = List.map
-    (fun e1 ->
+    let t = List.map (fun e1 ->
         let (_, (t1, st1)) = check_expr ctxt e1 in
-        (*let (_, (t2, st2)) = check_expr ctxt e2 in*)
-        (* TODO(claire) one equal sign?*)
-        (* TODO(claire) are st1 and st2 known to be the same? *)
-        if st1 = item_s_type then (t1, st1)
+        (* TODO(claire) need to check both? *)
+        if t1 = item_type && st1 = item_s_type then (t1, st1)
         else raise (Failure ("Multiple types inside an array"))
         (* TODO(claire) add pretty print for error above *)
-    ) x
-    in    
-    (*let (_, (tf, stf)) = check_expr ctxt t in*) 
-    (ctxt, (item_type, SArrayLit t))
+    ) x in (ctxt, (item_type, SArrayLit t))
 | Id(n) -> 
     let (t_opt, _) = find_in_ctxt n ctxt in
     (match t_opt with
