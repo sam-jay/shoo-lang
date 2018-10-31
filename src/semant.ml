@@ -4,8 +4,8 @@ open Sast
 module StringMap = Map.Make (String)
 
 exception Invalid_assignment of string
-
 exception Undeclared_reference of string
+exception Illegal_binary_operator of string
 
 (* READ-THIS!!
 
@@ -120,7 +120,7 @@ let rec check_expr ctxt = function
                                  when (lt = Int && rt = Int) 
                                  || (lt = Float || rt = Float) -> (nctxt, (Bool, sbinop))
         | And | Or when rt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
-        | _ -> raise (Failure ("illegal binary operator")))
+        | _ -> raise (Illegal_binary_operator "illegal binary operator"))
         (* TODO(claire) need to pretty print error above *)
 | Unop(op, e) -> 
         let (nctxt, (t, e)) = check_expr ctxt e in 

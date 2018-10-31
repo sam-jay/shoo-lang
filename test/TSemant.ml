@@ -26,6 +26,15 @@ let asn_bool_int test_ctxt =
   assert_raises (Semant.Invalid_assignment "type mismatch in assignment") f
 
 
+(* Binary Operators *)
+let binop_int_int test_ctxt = assert_equal "" (check "int x = 1; int y = 2; x + y;")
+
+
+let binop_bool_int test_ctxt =
+  let f = fun () -> check "bool b = true; int x = 3; b + x; " in
+  assert_raises (Semant.Illegal_binary_operator "illegal binary operator") f
+
+
 (* If Statement *)
 
 let if_stat_empty test_ctxt = assert_equal "" (check "if (true) {} ")
@@ -48,6 +57,10 @@ let tests =
     "String to int assignment" >:: asn_int_str;
     "Bool to int assignment" >:: asn_int_bool;
     "Int to bool assignment" >:: asn_bool_int;
+    
+    (* Binary Operators *)
+    "Binop between int and int" >:: binop_int_int;
+    "Binop between bool and int" >:: binop_bool_int;
     
     (* If Statement *)
     "If statement with empty block" >:: if_stat_empty;
