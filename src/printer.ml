@@ -96,8 +96,8 @@ and fmt_init l =
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
-| FDecl(p, t, b, r) -> 
-  fmt_four "FDecl" (fmt_params p) (fmt_typ t) (fmt_stmt_list b) (string_of_bool r)
+| FDecl(n, p, t, b) -> 
+  fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
 | VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_expr e)
 | ForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 

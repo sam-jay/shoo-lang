@@ -12,10 +12,6 @@ let check input =
 let ref_int_undec test_ctxt =
   let f = fun () -> check "int x = 1; x + y;" in
   assert_raises (Semant.Undeclared_reference "undeclared reference") f
-
-let ref_int_uninit test_ctxt =
-  let f = fun () -> check "int x = 1; int y; x + y;" in
-  assert_raises (Semant.Uninitialized_variable "uninitialized variable") f
   
 
 (* Variable Assignment *)
@@ -26,15 +22,15 @@ let asn_str_str test_ctxt = assert_equal "" (check "string s; s = \"abs\";")
 
 let asn_int_str test_ctxt =
   let f = fun () -> check "int x; x = \"foo\";" in
-  assert_raises (Semant.Invalid_assignment "type mismatch in assignment") f
+  assert_raises (Semant.Type_mismatch "type mismatch in assignment") f
 
 let asn_int_bool test_ctxt =
   let f = fun () -> check "int i; i = true;" in
-  assert_raises (Semant.Invalid_assignment "type mismatch in assignment") f
+  assert_raises (Semant.Type_mismatch "type mismatch in assignment") f
 
 let asn_bool_int test_ctxt =
   let f = fun () -> check "bool b; b = 48;" in
-  assert_raises (Semant.Invalid_assignment "type mismatch in assignment") f
+  assert_raises (Semant.Type_mismatch "type mismatch in assignment") f
 
 
 (* Binary Operators *)
@@ -54,16 +50,36 @@ let if_stat_empty_else test_ctxt = assert_equal "" (check "if (false) {} else {}
 
 (* Function Declaration *)
 
-let func_dec_int test_ctxt = assert_equal "" (check "function int main() { return 0; }")
+let func_dec_int test_ctxt = assert_equal "" (check "function foo() int { return 0; }")
 
+let fcall_valid test_ctxt = assert_equal "" (check "function foo() int { return 0; } foo();")
 
+let fcall_invalid test_ctxt =
+  let f = fun () -> check "foo();" in
+  assert_raises (Semant.Undeclared_reference "undeclared function foo") f
+
+let assign_to_global test_ctxt = assert_equal "" (check "
+string x;
+function foo() int {
+  x = \"foo\";
+  return 1;
+}
+foo();
+println(x);")
+
+let shadow_global test_ctxt = assert_equal "" (check "
+int x;
+function foo() int {
+  int x;
+  x = 5;
+  return 1;
+}")
 
 let tests =
   "Semantic checker" >:::
   [
     (* Variable Reference *)
     "Undeclared int" >:: ref_int_undec;
-    "Uninitialized int" >:: ref_int_uninit;
   
     (* Variable Assignment *)
     "Int to int assignment" >:: asn_int_int;
@@ -82,5 +98,11 @@ let tests =
     "If statement with empty block and an else" >:: if_stat_empty_else;
     
     (* Function Declaration *)
-    (* "Function declaration that returns int" >:: func_dec_int; *)
+    "Function declaration that returns int" >:: func_dec_int;
+
+    "Valid function call" >:: fcall_valid;
+    "Missing function call" >:: fcall_invalid;
+
+    "Assign to a global variable inside a function" >:: assign_to_global;
+    "Shadow a global variable inside a function" >:: shadow_global;
   ]

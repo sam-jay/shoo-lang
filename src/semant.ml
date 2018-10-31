@@ -3,8 +3,7 @@ open Sast
 
 module StringMap = Map.Make (String)
 
-exception Invalid_assignment of string
-exception Uninitialized_variable of string
+exception Type_mismatch of string
 exception Undeclared_reference of string
 exception Illegal_binary_operator of string
 
@@ -28,10 +27,9 @@ exception Illegal_binary_operator of string
 
  *)
 
-let add_to_ctxt v_type v_name init ctxt =
+let add_to_ctxt v_type v_name ctxt =
   let map = List.hd ctxt in
-  let initialized = match init with None -> false | Some(_) -> true in
-  let v = (v_type, initialized) in
+  let v = v_type in
   let newMap = StringMap.add v_name v map in
   newMap::List.tl ctxt
 
@@ -49,7 +47,7 @@ let find_in_ctxt v_name ctxt =
 let create_scope list = 
  let rec helper m = function
    [] -> m
- | (t, n)::tl -> let new_m = StringMap.add n (t, true) m in helper new_m tl
+ | (t, n)::tl -> let new_m = StringMap.add n t m in helper new_m tl
  in helper StringMap.empty list
 
 (* Returns a tuple with a map and another tuple.
@@ -83,21 +81,18 @@ let rec check_expr ctxt = function
 | Id(n) -> 
     let (t_opt, _) = find_in_ctxt n ctxt in
     (match t_opt with
-      Some((t, i)) ->
-      (match i with
-         true -> (ctxt, (t, SId n))
-       | false -> raise (Uninitialized_variable "uninitialized variable"))
+      Some(t) -> (ctxt, (t, SId n))
     | None -> raise (Undeclared_reference "undeclared reference"))
 | Assign(e1, e2) ->
     let (nctxt, (t2, se2)) = check_expr ctxt e2 in
     let (nctxt, (t1, se1)) = match e1 with
         Id(n) -> let (t_opt, _) = find_in_ctxt n nctxt in
                 (match t_opt with
-                  Some(t, _) -> (nctxt, (t, SId n))
+                  Some(t) -> (nctxt, (t, SId n))
                 | None -> raise (Undeclared_reference "undeclared reference"))
       | _ -> check_expr nctxt e1 in
     if t1 = t2 then (nctxt, (t1, SAssign((t1, se1), (t2, se2))))
-    else raise (Invalid_assignment "type mismatch in assignment")
+    else raise (Type_mismatch "type mismatch in assignment")
 | Binop(e1, op, e2) ->
         let (nctxt, (lt, se1)) = check_expr ctxt e1 in
         let (nctxt, (rt, se2)) = check_expr nctxt e2 in
@@ -133,10 +128,10 @@ let rec check_expr ctxt = function
         | _ -> raise (Failure("illegal unary operator")))
 | FCall(name, args) ->
   (match find_in_ctxt name ctxt with
-    (Some((t, true)), _) -> 
+    (Some(t), _) -> 
       let (nctxt, sl) = check_args ctxt t args in
       (nctxt, (t, SFCall(name, sl)))
-  | _ -> raise (Failure ("unknown function")))
+  | _ -> raise (Undeclared_reference ("undeclared function " ^ name)))
 | _ -> (ctxt, (Void, SNoexpr))
 
 (* Make sure that types of arguements match the types of
@@ -177,11 +172,21 @@ and check_stmt ctxt = function
   | Some(e) -> (let (nctxt, (t_i, si)) = check_expr ctxt e in (nctxt, Some((t_i, si)))) in
   let (t_opt, local) = find_in_ctxt n nctxt in
   (match t_opt with
-    None -> (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si)) 
-  | Some(_) when not local -> (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
+    None -> (add_to_ctxt t n nctxt, Void, SVDecl(t, n, si)) 
+  | Some(_) when not local -> (add_to_ctxt t n nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
 | FDecl(name, params, ret, body) ->
-  let nctxt = (create_scope params)::ctxt in
+  let f_type = Func({
+    param_typs = List.map (fun (t, _) -> t) params;
+    return_typ = ret;
+  }) in
+  let init = Some(FExpr({
+    typ = ret;
+    params = params;
+    body = []
+  })) in
+  let nctxt = add_to_ctxt f_type name ctxt in
+  let nctxt = (create_scope params)::nctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
   else raise (Failure "invalid function return type")
@@ -213,12 +218,7 @@ let def_ctxt =
     param_typs = [String];
     return_typ = Void
   }) in
-  let init = Some(FExpr({
-    typ = Void;
-    params = [(String, "x")];
-    body = []
-  })) in
-  let ctxt = add_to_ctxt println_t "println" init [StringMap.empty] in
+  let ctxt = add_to_ctxt println_t "println" [StringMap.empty] in
   ctxt
 
 let check_program prog =
