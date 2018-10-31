@@ -55,6 +55,7 @@ let create_scope list =
  * The second tuple has the type and the stype. *)
 let rec check_expr ctxt = function
 | IntLit(x) -> (ctxt, (Int, SIntLit x))
+| BoolLit(x) -> (ctxt, (Bool, SBoolLit x))
 | FloatLit(x) -> (ctxt, (Float, SFloatLit x))
 | StrLit(x) -> (ctxt, (String, SStrLit x))
 (* TODO(claire) This doesn't handle arrays of structs I don't think? *)

@@ -32,7 +32,7 @@ let tests =
   "Semantic checker" >:::
   [
     "Int to int assignment" >:: asn_int_int;
-    (* "Bool to bool assignment" >:: asn_bool_bool; *)
+    "Bool to bool assignment" >:: asn_bool_bool;
     "String to string assignment" >:: asn_str_str;
     
     "String to int assignment" >:: asn_int_str;
