@@ -1,7 +1,6 @@
 %{ open Ast %}
 
 %token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET
-%token REC
 %token PLUS MINUS TIMES DIVIDE MOD ASSIGN NOT DECREMENT INCREMENT
 %token EQ NEQ LT LEQ GT GEQ TRUE FALSE AND OR DOT
 %token FOR COMMA RETURN VOID STRUCT COLON IN ARRAY LT GT LSQBRACE RSQBRACE
@@ -104,17 +103,9 @@ newable:
 function_expr:
     /* TODO(claire) shouldn't you not have an ID for the function 
         * declaration? */
-    REC FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
+    FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
     RBRACKET
-    { { recursive = true;
-        params = $4;
-        typ = $6;
-        body = List.rev $8} }
-
-    | FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
-    RBRACKET
-    { { recursive = false;
-        params = $3;
+    { { params = $3;
         typ = $5;
         body = List.rev $7} }
 
@@ -151,14 +142,9 @@ typ:
 /* This is the type for Func with the syntax
 func(parameter_type1, parameter_type2; return_type) */
 func_type:
-    FUNC LPAREN typ_opt SEMI ret_typ SEMI REC RPAREN
+    FUNC LPAREN typ_opt SEMI ret_typ RPAREN
     { { param_typs = $3;
-        return_typ = $5; 
-        recurse = true } }
-    | FUNC LPAREN typ_opt SEMI ret_typ RPAREN
-    { { param_typs = $3;
-        return_typ = $5; 
-        recurse = false } }
+        return_typ = $5 } }
 
 typ_opt:
   { [] }

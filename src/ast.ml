@@ -13,7 +13,6 @@ type typ =
 | Array of typ
 
 and func_typ = {
-    recurse : bool;
     param_typs : typ list;
     return_typ : typ;
 }
@@ -68,7 +67,6 @@ and expr =
 | Noexpr
 
 and fexpr = {
-    recursive : bool; 
     typ : typ;
     params: bind list;
     body : stmt list

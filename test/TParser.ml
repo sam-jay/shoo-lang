@@ -209,20 +209,15 @@ let struct_def test_ctxt = assert_equal
   BankAccount myAccount = new(BankAccount);")
 
 let func_def test_ctxt = assert_equal
-    [VDecl(Func({ recurse = false; param_typs = [Int; Float];
-        return_typ = String;}), "x", None)]
-    (parse "func(int, float; string) x;")    
-
-let rec_func_def test_ctxt = assert_equal
-    [VDecl(Func({ recurse = true; param_typs = [Int; Float];
-        return_typ = String;}), "x", None)]
-    (parse "func(int, float; string; rec) x;")    
+    [VDecl(Func({ param_typs = [Int; Float];
+        return_typ = String}), "x", None)]
+    (parse "func(int, float; string) x;")
 
 let func_def_no_params test_ctxt = assert_equal
-    [VDecl(Func({ recurse = true; param_typs = [];
-        return_typ = String;}), "x", None)]
-    (parse "func(; string; rec) x;")    
-
+    [VDecl(Func({ param_typs = [];
+        return_typ = String}), "x", None)]
+    (parse "func(; string) x;")
+    
 
 let variable_tests =
   "Variable declarations and definitions" >:::
@@ -232,7 +227,6 @@ let variable_tests =
     "Should handle declaration of struct type" >:: struct_dec;
     "Should handle definition of struct type" >:: struct_def;
     "Should handle declaration of func type" >:: func_def;
-    "Should handle declaration of recursive func type" >:: rec_func_def;
     "Should handle declaration of func type with no parameters" >::
         func_def_no_params;
   ]
@@ -509,7 +503,6 @@ let print_test test_ctxt = assert_equal
 
 let no_rec_function_test test_ctxt = assert_equal
     [Expr(FExpr({
-        recursive = false;
         params = [(Int, "x"); (Int, "y")];
         typ = Int;
         body = [
@@ -520,8 +513,7 @@ let no_rec_function_test test_ctxt = assert_equal
     };")
 
 let rec_function_test test_ctxt = assert_equal
-    [Expr(FExpr({ recursive = true;
-    params = [(Int, "x")];
+    [Expr(FExpr({params = [(Int, "x")];
     typ = Int;
     body =
       [If(Binop(Id("x"),Equal,IntLit(1)),
@@ -529,7 +521,7 @@ let rec_function_test test_ctxt = assert_equal
         [Return(Binop(IntLit(2),Add,
           FCall("multByTwo",[Binop(Id("x"),Sub,IntLit(1))])))])
     ];}))]
-    (parse "rec function (int x) int {
+    (parse "function (int x) int {
       if (x==1) {
           return 2;
       } else {
@@ -538,10 +530,10 @@ let rec_function_test test_ctxt = assert_equal
       };")
 
 let function_variable test_ctxt = assert_equal 
-  [Expr(FExpr({recursive = false; params=[(Int, "y")]; 
+  [Expr(FExpr({ params=[(Int, "y")]; 
     typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
   StructDef("Baz",
-    [(Func({ recurse = false; param_typs = [Int]; return_typ = Int}), 
+    [(Func({ param_typs = [Int]; return_typ = Int}), 
         "f", Some(Id("temp"))); (Int,"field2", None)])
 ]
     (parse "function (int y) int {                  
@@ -559,7 +551,6 @@ let func_tests  =
     "Simple function call" >:: print_test;
     "Using keyword rec for function test" >:: rec_function_test;
     "Not using keyword rec for function test" >:: no_rec_function_test;
-
   ]
 
 let tests =

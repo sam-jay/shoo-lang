@@ -209,12 +209,10 @@ and check_stmt ctxt = function
 
 let def_ctxt =
   let println_t = Func({
-    recurse = false;
     param_typs = [String];
     return_typ = Void
   }) in
   let init = Some(FExpr({
-    recursive = false; 
     typ = Void;
     params = [(String, "x")];
     body = []
