@@ -7,6 +7,17 @@ let check input =
   let _ = Semant.check_program program in
   ""
 
+(* Variable Reference *)
+
+let ref_int_undec test_ctxt =
+  let f = fun () -> check "int x = 1; x + y;" in
+  assert_raises (Semant.Undeclared_reference "undeclared reference") f
+
+let ref_int_uninit test_ctxt =
+  let f = fun () -> check "int x = 1; int y; x + y;" in
+  assert_raises (Semant.Uninitialized_variable "uninitialized variable") f
+  
+
 (* Variable Assignment *)
 
 let asn_int_int test_ctxt = assert_equal "" (check "int x; x = 5;")
@@ -50,6 +61,10 @@ let func_dec_int test_ctxt = assert_equal "" (check "function int main() { retur
 let tests =
   "Semantic checker" >:::
   [
+    (* Variable Reference *)
+    "Undeclared int" >:: ref_int_undec;
+    "Uninitialized int" >:: ref_int_uninit;
+  
     (* Variable Assignment *)
     "Int to int assignment" >:: asn_int_int;
     "Bool to bool assignment" >:: asn_bool_bool;

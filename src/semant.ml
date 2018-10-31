@@ -4,6 +4,7 @@ open Sast
 module StringMap = Map.Make (String)
 
 exception Invalid_assignment of string
+exception Uninitialized_variable of string
 exception Undeclared_reference of string
 exception Illegal_binary_operator of string
 
@@ -85,15 +86,15 @@ let rec check_expr ctxt = function
       Some((t, i)) ->
       (match i with
          true -> (ctxt, (t, SId n))
-       | false -> raise (Failure "uninitialized variable"))
-    | None -> raise (Failure "undeclared reference"))
+       | false -> raise (Uninitialized_variable "uninitialized variable"))
+    | None -> raise (Undeclared_reference "undeclared reference"))
 | Assign(e1, e2) ->
     let (nctxt, (t2, se2)) = check_expr ctxt e2 in
     let (nctxt, (t1, se1)) = match e1 with
         Id(n) -> let (t_opt, _) = find_in_ctxt n nctxt in
                 (match t_opt with
                   Some(t, _) -> (nctxt, (t, SId n))
-                | None -> raise (Failure "undeclared reference"))
+                | None -> raise (Undeclared_reference "undeclared reference"))
       | _ -> check_expr nctxt e1 in
     if t1 = t2 then (nctxt, (t1, SAssign((t1, se1), (t2, se2))))
     else raise (Invalid_assignment "type mismatch in assignment")
