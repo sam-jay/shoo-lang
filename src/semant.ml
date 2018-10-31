@@ -180,10 +180,10 @@ and check_stmt ctxt = function
     None -> (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si)) 
   | Some(_) when not local -> (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
-| FDecl(params, ret, body, r) ->
+| FDecl(name, params, ret, body) ->
   let nctxt = (create_scope params)::ctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
-  if t = ret then (List.tl nctxt, Void, SFDecl(params, ret, ssl, r))
+  if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
   else raise (Failure "invalid function return type")
 | Return(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, t, SReturn (t, ss))
 | ForLoop (s1, e2, e3, st) -> 

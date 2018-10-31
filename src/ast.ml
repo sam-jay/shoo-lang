@@ -76,7 +76,7 @@ and stmt =
   Expr of expr
 | VDecl of typ * string * expr option
 | Return of expr
-| FDecl of (typ * string) list * typ * stmt list * bool
+| FDecl of string * (typ * string) list * typ * stmt list
 | If of expr * stmt list * stmt list
 | ForLoop of (stmt option) * (expr option) * (expr option) * stmt list
 | StructDef of string * (typ * string * expr option) list
