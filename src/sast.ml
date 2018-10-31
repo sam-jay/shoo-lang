@@ -36,7 +36,7 @@ and sstmt =
   SExpr of sexpr
 | SVDecl of typ * string * sexpr option
 | SReturn of sexpr
-| SFDecl of (typ * string) list * typ * sstmt list * bool
+| SFDecl of string * (typ * string) list * typ * sstmt list
 | SIf of sexpr * sstmt list * sstmt list
 | SForLoop of (sstmt option) * (sexpr option) * (sexpr option) * sstmt list
 | SStructDef of string * (typ * string * sexpr option) list
