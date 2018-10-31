@@ -5,6 +5,7 @@ let suite =
   [
     TParser.tests;
     TFullPrograms.tests;
+    TSemant.tests;
   ];;
 
 let () =
