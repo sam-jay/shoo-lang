@@ -3,6 +3,10 @@ open Sast
 
 module StringMap = Map.Make (String)
 
+exception Invalid_assignment of string
+
+exception Undeclared_reference of string
+
 (* READ-THIS!!
 
   ctxt is a list of StringMaps [ StringMap; StringMap; ... ]
@@ -91,7 +95,7 @@ let rec check_expr ctxt = function
                 | None -> raise (Failure "undeclared reference"))
       | _ -> check_expr nctxt e1 in
     if t1 = t2 then (nctxt, (t1, SAssign((t1, se1), (t2, se2))))
-    else raise (Failure "type mismatch in assignment")
+    else raise (Invalid_assignment "type mismatch in assignment")
 | Binop(e1, op, e2) ->
         let (nctxt, (lt, se1)) = check_expr ctxt e1 in
         let (nctxt, (rt, se2)) = check_expr nctxt e2 in
