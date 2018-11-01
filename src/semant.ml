@@ -181,30 +181,32 @@ and check_stmt ctxt = function
           (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
 | StructDef(name, fields) ->
-   (*
-   let (t_opt, local) = find_in_ctxt n ctxt in
-   (match t_opt with 
-   None -> let get_typ (_,_,t) = t in
-           let t = get_typ field in 
-           add_to_ctxt t n i ctxt
-*)
-           
    (* See if the vraiable is already defined *)
    (* TODO(Claire) need to add struct name to the map later *)
-    let init_map = (*StringMap.add name 0*) (*(StructDef, false)*) StringMap.empty in
+    let init_map = StringMap.empty in
     let vdecl_repeats_map = List.fold_left (fun map v_field ->
-        let get_name (_,n,_) = n in
+        let 
+        (*let get_name (_,n,_) = n in
         let v_name = get_name v_field in
-        if StringMap.mem v_name map then
-            raise (Failure "can't repeat variable names in struct")
-        (* value doesn't matter since it is easier and just as 
-         * effcient to do types later *)
-        else
-            let (_, (t_i, stype)) =
-                (* check_expr shouldn't change the map *)
-                check_expr map v_field in (*(t_i, stype)*)
-            (* the value doesn't matter *)
-            StringMap.add v_name (t_i, stype) map) StringMap.empty fields
+        (*if StringMap.mem v_name map then*)
+        if find_in_ctxt v_name [map] then
+                raise (Failure "can't repeat variable names in struct")
+            else
+                (*(let (_, (t_i, stype)) =*)
+                    (* check_expr shouldn't change the map *)
+                 (let get_init (_,_,i) = i in
+                 let v_init = get_init v_field in
+                 let add_map = match v_init with
+                    None -> None
+                    | Some(v_field) -> let (_, (t_i, si)) =
+                        check_expr [map] v_field (*in Some((t_i, si)))*)
+                        in           
+                        (* v_init is true because you are in Some branch *)
+                        (*StringMap.add v_name (t_i, si) map*)
+                        add_to_ctxt t_i v_name v_init in add_map)*)
+
+           ) 
+    StringMap.empty fields
     in
     (* make a list of all the types in the struct *)
     let field_types = List.map (fun s1 -> let (t_i, stype) =
