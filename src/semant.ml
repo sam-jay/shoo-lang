@@ -164,22 +164,60 @@ and check_bool_expr ctxt e =
 
 (* returns the map, type, stype *)
 and check_stmt ctxt = function
-  Expr(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
+  Expr(e) -> let (nctxt, (t, ss)) = 
+      check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
 | VDecl(t, n, i) ->
   let (nctxt, si) = match i with
     None -> (ctxt, None)
-  | Some(e) -> (let (nctxt, (t_i, si)) = check_expr ctxt e in (nctxt, Some((t_i, si)))) in
+  | Some(e) -> (let (nctxt, (t_i, si)) = 
+      check_expr ctxt e in (nctxt, Some((t_i, si)))) in
   let (t_opt, local) = find_in_ctxt n nctxt in
   (match t_opt with
     None -> (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si)) 
-  | Some(_) when not local -> (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
+    (* TODO(claire): so we can have local vars with the 
+     * same name as global vars and the local var wins over the 
+     * global one? need to update LRM with this info abt scoping *)
+  | Some(_) when not local -> 
+          (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
+| StructDef(name, fields) ->
+        (* return error if struct has already been defined.
+         * need to List.fold_left with a tuple of a map and a list
+         * and add the element types to the map while also adding 
+         * them to the list. *)
+  (* go through the fields and get the list of their types 
+   * TODO(claire): I pretty sure (but not completly sure) that
+   * the statements in the struct don't need to be added to the ctxt
+   * because they can't be used on their own. They must be used through
+   * struct access and that can just use the information in the
+   * struct type to know what the fields are called and what their types
+   * are. Therefore, this does not save the map from calling check_stmt
+   * recursivly and I think that is how it should be (?)*)
+   let field_types = List.map (fun s1 -> 
+       (* TODO(claire): I think fields need to change to 
+        * be stmt list instead of (typ * string * sexpr option) list *)
+       let (_, t, st) = check_stmt ctxt s1 in (t, st)) fields in
+  let (t_opt, local) = find_in_ctxt name ctxt in
+    (match t_opt with
+        (* TODO(claire) does it matter if init is false? *)
+        None -> (add_to_ctxt StructDef name false, 
+            Void, SStructDef(name, field_types))
+        | Some(_) when not local ->
+                (add_to_ctxt StructDef name false, 
+                Void, SStructDef(name, field_types))
+        | Some(_) -> raise (Failure "struct already declared"))
+        (* TODO(claire) add pretty print for error above. *)
+        (* TODO TODO finish this --> need to figure out the 
+         * list of types first --> might be able to make
+         * better by failing early if already declared, but that's
+         * not important right now *)
 | FDecl(params, ret, body, r) ->
   let nctxt = (create_scope params)::ctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(params, ret, ssl, r))
   else raise (Failure "invalid function return type")
-| Return(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, t, SReturn (t, ss))
+| Return(e) -> let (nctxt, (t, ss)) = 
+    check_expr ctxt e in (nctxt, t, SReturn (t, ss))
 | ForLoop (s1, e2, e3, st) -> 
      let (ctxt1, s1') = match s1 with
         None -> (ctxt, None)
