@@ -181,43 +181,46 @@ and check_stmt ctxt = function
           (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
 | StructDef(name, fields) ->
-        (* return error if struct has already been defined.
-         * need to List.fold_left with a tuple of a map and a list
-         * and add the element types to the map while also adding 
-         * them to the list. *)
-  (* go through the fields and get the list of their types 
-   * TODO(claire): I pretty sure (but not completly sure) that
-   * the statements in the struct don't need to be added to the ctxt
-   * because they can't be used on their own. They must be used through
-   * struct access and that can just use the information in the
-   * struct type to know what the fields are called and what their types
-   * are. Therefore, this does not save the map from calling check_stmt
-   * recursivly and I think that is how it should be (?)*)
-    (* Check the variable declarations in the map *)
-    let check_vdecl field =
-        (let get_init (_,_,i) = i in
-        let i = get_init field in 
-        let (nctxt, si) = match i with
-        None -> (ctxt, None)
-        | Some(e) -> (let (nctxt, (t_i, si)) = 
-            check_expr ctxt e in (nctxt, Some((t_i, si)))) in
+   (*
+   let (t_opt, local) = find_in_ctxt n ctxt in
+   (match t_opt with 
+   None -> let get_typ (_,_,t) = t in
+           let t = get_typ field in 
+           add_to_ctxt t n i ctxt
+*)
+           
+   (* See if the vraiable is already defined *)
+   (* TODO(Claire) need to add struct name to the map later *)
+    let init_map = (*StringMap.add name 0*) (*(StructDef, false)*) StringMap.empty in
+    let vdecl_repeats_map = List.fold_left (fun map v_field ->
         let get_name (_,n,_) = n in
-        let n = get_name field in
-        let (t_opt, local) = find_in_ctxt n nctxt in
-        (match t_opt with
-        None -> let get_typ (_,_,t) = t in
-            let t = get_typ field in
-            (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si)) 
-        (* TODO(claire): so we can have local vars with the 
-        * same name as global vars and the local var wins over the 
-        * global one? need to update LRM with this info abt scoping *)
-        | Some(_) when not local -> let get_typ (_,_,t) = t in
-            let t = get_typ field in  
-            (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
-        | Some(_) -> raise (Failure "already declared"))) in 
-    let field_types = List.map (fun s1 -> let (_, t, st) = 
-        check_vdecl in (t, st)) fields in
-    let (t_opt, local) = find_in_ctxt name ctxt in
+        let v_name = get_name v_field in
+        if StringMap.mem v_name map then
+            raise (Failure "can't repeat variable names in struct")
+        (* value doesn't matter since it is easier and just as 
+         * effcient to do types later *)
+        else
+            let (_, (t_i, stype)) =
+                (* check_expr shouldn't change the map *)
+                check_expr map v_field in (*(t_i, stype)*)
+            (* the value doesn't matter *)
+            StringMap.add v_name (t_i, stype) map) StringMap.empty fields
+    in
+    (* make a list of all the types in the struct *)
+    let field_types = List.map (fun s1 -> let (t_i, stype) =
+                (* TODO(claire) will this map cause problems in
+                * check_expr? *) 
+                check_expr vdecl_repeats_map s1 
+                (*in Some((t_i, stype)))*)
+        in (t_i, stype)) fields 
+    in 
+    if StringMap.mem name vdecl_repeats_map then
+        raise (Failure "recursive struct def")
+    else 
+    (add_to_ctxt StructDef(field_types) name false ctxt, Void,
+        SStructDef(name, field_types))
+
+    (*let (t_opt, local) = find_in_ctxt name ctxt in
         (match t_opt with
             (* TODO(claire) does it matter if init is false? *)
             None -> (add_to_ctxt StructDef name false, 
@@ -225,7 +228,7 @@ and check_stmt ctxt = function
             | Some(_) when not local ->
                 (add_to_ctxt StructDef name false, 
                     Void, SStructDef(name, field_types))
-            | Some(_) -> raise (Failure "struct already declared"))
+            | Some(_) -> raise (Failure "struct already declared"))*)
         (* TODO(claire) add pretty print for error above. *)
         (* TODO TODO finish this --> need to figure out the 
          * list of types first --> might be able to make
