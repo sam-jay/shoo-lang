@@ -78,6 +78,11 @@ let rec check_expr ctxt = function
         else raise (Failure ("Multiple types inside an array"))
         (* TODO(claire) add pretty print for error above *)
     ) x in (ctxt, (item_type, SArrayLit t))
+| ArrayAccess(arr_name, int_expr) ->
+        let (nctxt, (t1, se1)) = check_expr ctxt int_expr 
+        in
+        if t1 = Int then (nctxt, (t1, SArrayAccess(arr_name, (t1, se1))))
+        else raise (Failure ("can't access array with non-integer type"))
 | Id(n) -> 
     let (t_opt, _) = find_in_ctxt n ctxt in
     (match t_opt with
