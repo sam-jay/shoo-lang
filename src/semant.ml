@@ -193,19 +193,39 @@ and check_stmt ctxt = function
    * struct type to know what the fields are called and what their types
    * are. Therefore, this does not save the map from calling check_stmt
    * recursivly and I think that is how it should be (?)*)
-   let field_types = List.map (fun s1 -> 
-       (* TODO(claire): I think fields need to change to 
-        * be stmt list instead of (typ * string * sexpr option) list *)
-       let (_, t, st) = check_stmt ctxt s1 in (t, st)) fields in
-  let (t_opt, local) = find_in_ctxt name ctxt in
-    (match t_opt with
-        (* TODO(claire) does it matter if init is false? *)
-        None -> (add_to_ctxt StructDef name false, 
-            Void, SStructDef(name, field_types))
-        | Some(_) when not local ->
-                (add_to_ctxt StructDef name false, 
+    (* Check the variable declarations in the map *)
+    let check_vdecl field =
+        (let get_init (_,_,i) = i in
+        let i = get_init field in 
+        let (nctxt, si) = match i with
+        None -> (ctxt, None)
+        | Some(e) -> (let (nctxt, (t_i, si)) = 
+            check_expr ctxt e in (nctxt, Some((t_i, si)))) in
+        let get_name (_,n,_) = n in
+        let n = get_name field in
+        let (t_opt, local) = find_in_ctxt n nctxt in
+        (match t_opt with
+        None -> let get_typ (_,_,t) = t in
+            let t = get_typ field in
+            (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si)) 
+        (* TODO(claire): so we can have local vars with the 
+        * same name as global vars and the local var wins over the 
+        * global one? need to update LRM with this info abt scoping *)
+        | Some(_) when not local -> let get_typ (_,_,t) = t in
+            let t = get_typ field in  
+            (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
+        | Some(_) -> raise (Failure "already declared"))) in 
+    let field_types = List.map (fun s1 -> let (_, t, st) = 
+        check_vdecl in (t, st)) fields in
+    let (t_opt, local) = find_in_ctxt name ctxt in
+        (match t_opt with
+            (* TODO(claire) does it matter if init is false? *)
+            None -> (add_to_ctxt StructDef name false, 
                 Void, SStructDef(name, field_types))
-        | Some(_) -> raise (Failure "struct already declared"))
+            | Some(_) when not local ->
+                (add_to_ctxt StructDef name false, 
+                    Void, SStructDef(name, field_types))
+            | Some(_) -> raise (Failure "struct already declared"))
         (* TODO(claire) add pretty print for error above. *)
         (* TODO TODO finish this --> need to figure out the 
          * list of types first --> might be able to make
