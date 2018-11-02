@@ -132,7 +132,7 @@ let rec check_expr ctxt = function
           Neg when t = Int -> (nctxt, (Int, sunop))
         | Neg when t = Float -> (nctxt, (Float, sunop))
         | Not when t = Bool -> (nctxt, (Bool, sunop))
-        | _ -> raise (Failure("illegal unary operator")))
+        | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
 | FCall(name, args) ->
   (match find_in_ctxt name ctxt with
     (Some(t), _) -> 
