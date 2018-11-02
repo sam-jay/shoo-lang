@@ -39,7 +39,7 @@ let binop_int_int test_ctxt = assert_equal "" (check "int x = 1; int y = 2; x + 
 
 let binop_bool_int test_ctxt =
   let f = fun () -> check "bool b = true; int x = 3; b + x; " in
-  assert_raises (Semant.Illegal_binary_operator "illegal binary operator") f
+  assert_raises (Semant.Type_mismatch "Type mismatch across binary operator") f
 
 
 (* If Statement *)
