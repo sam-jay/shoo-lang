@@ -246,6 +246,15 @@ and check_stmt ctxt = function
     in 
     (* Make sure that none of the variables in the struct 
      * have the same name as the struct. *)
+     (* TODO(claire) need to fix this --> this is just checking that
+     none of the variables in the struct have the same name as the struct
+     (not the struct variable), which can never happen because the struct name
+     is uppercase and variable names have to start with lower case.
+     Ask about recursive struct def being infinite or not. If end up not
+     wanting them, change this to go through all the types of the
+     fields in the structs and compare them to the type of the struct
+     (Struct(name)) to see if there is a recursive def. Also need to
+     consider how to unwrap mutually recursive struct def....*)
     (let (_, i) = find_in_ctxt name vdecl_repeats_map in
          match i with
          false -> raise (Failure "recursive struct def")
