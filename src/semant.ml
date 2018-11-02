@@ -40,16 +40,21 @@ let add_to_ctxt (v_type, v_member_map) v_name ctxt =
   let newMap = StringMap.add v_name (v, v_member_map) map in
   newMap::List.tl ctxt
 
-(* Returns tuple with None or Some with another tuple that has 
- * the type and if initalized or not and then if it is 
- * definited in scope or not. *)
+(* Returns a tuple with the type and the map and if
+ * the variable is initalized or not. The type and
+ * map are optional. *)
 let find_in_ctxt v_name ctxt =
   let rec helper init = function
     [] -> ((None, None), init)
   | hd::_ when StringMap.mem v_name hd ->
      (* TODO(claire) need to change this to give the map
       * only if the type is struct *) 
-     ((Some(fst (StringMap.find v_name hd)), None), init)
+    (* See if there is a map, meaning that you have a 
+     * struct type. *)
+    let (v_type, v_map) = StringMap.find v_name hd in
+    (match v_map with
+        None -> ((Some(v_type), None), init)
+        | Some(m) -> ((Some(v_type), Some(m)), init)) 
   | _::tl -> helper false tl in
   helper true ctxt
 
