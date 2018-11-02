@@ -36,11 +36,30 @@ let asn_bool_int test_ctxt =
 (* Binary Operators *)
 let binop_int_int test_ctxt = assert_equal "" (check "int x = 1; int y = 2; x + y;")
 
-
 let binop_bool_int test_ctxt =
   let f = fun () -> check "bool b = true; int x = 3; b + x; " in
-  assert_raises (Semant.Illegal_binary_operator "illegal binary operator") f
+  assert_raises (Semant.Type_mismatch "Type mismatch across binary operator") f
 
+
+(* Unary Operators *)
+let unop_neg_int test_ctxt = assert_equal "" (check "int x = 1; int y = -x;")
+let unop_not_bool test_ctxt = assert_equal "" (check "bool x = true; bool y = !x;")
+
+let unop_not_int test_ctxt =
+  let f = fun () -> check "int x = 1; int y = !x; " in
+  assert_raises (Semant.Type_mismatch "Type mismatch for unary operator") f
+  
+let unop_neg_str test_ctxt =
+  let f = fun () -> check "string x = \"str\"; bool y = -x; " in
+  assert_raises (Semant.Type_mismatch "Type mismatch for unary operator") f
+
+(* Postfix Unary Operators *)
+let unop_inc_int test_ctxt = assert_equal "" (check "int x = 1; int y = 3 + x++;")
+
+let unop_dec_str test_ctxt =
+  let f = fun () -> check "string x = \"str\"; bool y = x--; " in
+  assert_raises (Semant.Type_mismatch "Type mismatch for unary operator") f
+  
 
 (* If Statement *)
 
@@ -92,6 +111,16 @@ let tests =
     (* Binary Operators *)
     "Binop between int and int" >:: binop_int_int;
     "Binop between bool and int" >:: binop_bool_int;
+    
+    (* Unary Operators *)
+    "Unop for int negation" >:: unop_neg_int;
+    "Unop for bool negation" >:: unop_not_bool;
+    "Unop for not int" >:: unop_not_int;
+    "Unop for string negation" >:: unop_neg_str;
+    
+    (* Postfix Unary Operators *)
+    "Unop for int increment" >:: unop_inc_int;
+    "Unop for string decrement" >:: unop_dec_str;
     
     (* If Statement *)
     "If statement with empty block" >:: if_stat_empty;

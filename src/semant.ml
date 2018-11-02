@@ -5,7 +5,6 @@ module StringMap = Map.Make (String)
 
 exception Type_mismatch of string
 exception Undeclared_reference of string
-exception Illegal_binary_operator of string
 
 (* READ-THIS!!
 
@@ -124,7 +123,7 @@ let rec check_expr ctxt = function
                                  when (lt = Int && rt = Int) 
                                  || (lt = Float || rt = Float) -> (nctxt, (Bool, sbinop))
         | And | Or when rt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
-        | _ -> raise (Illegal_binary_operator "illegal binary operator"))
+        | _ -> raise (Type_mismatch "Type mismatch across binary operator"))
         (* TODO(claire) need to pretty print error above *)
 | Unop(op, e) -> 
         let (nctxt, (t, e)) = check_expr ctxt e in 
@@ -133,7 +132,14 @@ let rec check_expr ctxt = function
           Neg when t = Int -> (nctxt, (Int, sunop))
         | Neg when t = Float -> (nctxt, (Float, sunop))
         | Not when t = Bool -> (nctxt, (Bool, sunop))
-        | _ -> raise (Failure("illegal unary operator")))
+        | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
+| Pop(e, op) ->
+        let (nctxt, (t, e)) = check_expr ctxt e in 
+        let spop = SPop((t, e), op) in
+        (match op with 
+          Inc when t = Int -> (nctxt, (Int, spop))
+        | Dec when t = Int -> (nctxt, (Int, spop))
+        | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
 | FCall(name, args) ->
   (match find_in_ctxt name ctxt with
     (Some(t), _) -> 
@@ -253,6 +259,15 @@ and check_stmt ctxt = function
     in 
     (* Make sure that none of the variables in the struct 
      * have the same name as the struct. *)
+     (* TODO(claire) need to fix this --> this is just checking that
+     none of the variables in the struct have the same name as the struct
+     (not the struct variable), which can never happen because the struct name
+     is uppercase and variable names have to start with lower case.
+     Ask about recursive struct def being infinite or not. If end up not
+     wanting them, change this to go through all the types of the
+     fields in the structs and compare them to the type of the struct
+     (Struct(name)) to see if there is a recursive def. Also need to
+     consider how to unwrap mutually recursive struct def....*)
     (let (_, i) = find_in_ctxt name vdecl_repeats_map in
          match i with
          false -> raise (Failure "recursive struct def")
