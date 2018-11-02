@@ -52,6 +52,13 @@ let unop_not_int test_ctxt =
 let unop_neg_str test_ctxt =
   let f = fun () -> check "string x = \"str\"; bool y = -x; " in
   assert_raises (Semant.Type_mismatch "Type mismatch for unary operator") f
+
+(* Postfix Unary Operators *)
+let unop_inc_int test_ctxt = assert_equal "" (check "int x = 1; int y = 3 + x++;")
+
+let unop_dec_str test_ctxt =
+  let f = fun () -> check "string x = \"str\"; bool y = x--; " in
+  assert_raises (Semant.Type_mismatch "Type mismatch for unary operator") f
   
 
 (* If Statement *)
@@ -110,6 +117,10 @@ let tests =
     "Unop for bool negation" >:: unop_not_bool;
     "Unop for not int" >:: unop_not_int;
     "Unop for string negation" >:: unop_neg_str;
+    
+    (* Postfix Unary Operators *)
+    "Unop for int increment" >:: unop_inc_int;
+    "Unop for string decrement" >:: unop_dec_str;
     
     (* If Statement *)
     "If statement with empty block" >:: if_stat_empty;
