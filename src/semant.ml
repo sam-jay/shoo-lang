@@ -80,6 +80,21 @@ let create_scope list =
                  in helper new_m tl
  in helper StringMap.empty list
 
+let get_members_if_struct v_type ctxt =
+        try let get_struct_name (Struct(n)) = n in
+            let struct_name = get_struct_name v_type in
+            let ((t,m), _) = find_in_ctxt struct_name ctxt
+            in (v_type,m)
+        with Not_found -> 
+            (* Not a struct so shouldn't have a members map *)
+            (v_type, None)
+        (*if v_type = Struct(_) then 
+            let get_struct_name Struct(n) = n in
+            let struct_name = get_struct_name v_type in
+            (* The struct name is the name stored in the ctxt *) 
+            let ((t, m), _) = find_in_ctxt struct_name ctxt
+        in (v_type, m)*)
+
 (* Returns a tuple with a map and another tuple.
  * The second tuple has the type and the stype. *)
 let rec check_expr ctxt = function
@@ -293,9 +308,17 @@ and check_stmt ctxt = function
     in 
     (add_to_ctxt (Struct(name), None) name ctxt, Void,
                 SStructDef(name, field_types))
-(*| FDecl(name, params, ret, body) ->
+| FDecl(name, params, ret, body) ->
   let f_type = Func({
-    param_typs = List.map (fun (t, _) -> t) params;
+    param_typs = List.map (fun (t, _) -> 
+        (* TODO(claire) leave this as is for now and change
+         * create_scope to call get_members_if_struct itself *)
+        (* Get the member map from the ctxt if you have
+         * a struct type *)
+        (*let (v_type, v_map) =
+            if v_type = Struct() *)
+    (*    let (v_type, v_map) = get_members_if_struct t ctxt 
+            in (v_type, v_map)*) t) params;
     return_typ = ret;
   }) in
   (* TODO(claire) why is this here? It gives unusd variable warnings
@@ -310,7 +333,7 @@ and check_stmt ctxt = function
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
   else raise (Failure "invalid function return type")
-*)| Return(e) -> let (nctxt, (t, ss)) = 
+| Return(e) -> let (nctxt, (t, ss)) = 
     check_expr ctxt e in (nctxt, t, SReturn (t, ss))
 | ForLoop (s1, e2, e3, st) -> 
      let (ctxt1, s1') = match s1 with
