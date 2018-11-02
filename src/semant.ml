@@ -68,7 +68,15 @@ let create_scope list =
   * function is being declared. I am not sure how the
   * nested scopes work, but it should also allow you do use
   * struct types declared in the outer scopes. *)
- | (t, n)::tl -> let new_m = StringMap.add n (t, None) m 
+ | ((t, members), n)::tl -> 
+         (*(match members with
+         Some(members) ->
+            let new_m = StringMap.add n (t, members) m 
+                 in helper new_m tl
+         | None ->
+            let new_m = StringMap.add n (t, None) m 
+                 in helper new_m tl)*)
+            let new_m = StringMap.add n (t, members) m 
                  in helper new_m tl
  in helper StringMap.empty list
 
@@ -285,7 +293,7 @@ and check_stmt ctxt = function
     in 
     (add_to_ctxt (Struct(name), None) name ctxt, Void,
                 SStructDef(name, field_types))
-| FDecl(name, params, ret, body) ->
+(*| FDecl(name, params, ret, body) ->
   let f_type = Func({
     param_typs = List.map (fun (t, _) -> t) params;
     return_typ = ret;
@@ -302,7 +310,7 @@ and check_stmt ctxt = function
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
   else raise (Failure "invalid function return type")
-| Return(e) -> let (nctxt, (t, ss)) = 
+*)| Return(e) -> let (nctxt, (t, ss)) = 
     check_expr ctxt e in (nctxt, t, SReturn (t, ss))
 | ForLoop (s1, e2, e3, st) -> 
      let (ctxt1, s1') = match s1 with
