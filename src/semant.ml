@@ -198,6 +198,8 @@ and check_stmt ctxt = function
    (* See if there are repeat variables. *)
    (* TODO(claire): need to add this map to the ctxt as another optional
     * field to track the variables in a struct. *)
+    (* TODO(claire): need to figure out how to detect mutually 
+     * recursive struct defs *)
     let vdecl_repeats_map = List.fold_left (fun map v_field ->
         let get_name (_,n,_) = n in
         let v_name = get_name v_field in
@@ -215,6 +217,8 @@ and check_stmt ctxt = function
                  (* Check the type to ensure there isn't a recusrive
                   * definition. *)
                  let v_type = 
+                     (* See if there is a recursive struct def by
+                      * comparing the variable type and the struct type *)
                      if field_type = Struct(name) then
                         raise (Failure "can't have recursive struct def")
                      else field_type in 
@@ -257,23 +261,8 @@ and check_stmt ctxt = function
         (v_type, v_name, find_expression_type)
         ) (* end of function*) fields 
     in 
-    (* Make sure that none of the variables in the struct 
-     * have the same name as the struct. *)
-     (* TODO(claire) need to fix this --> this is just checking that
-     none of the variables in the struct have the same name as the struct
-     (not the struct variable), which can never happen because the struct name
-     is uppercase and variable names have to start with lower case.
-     Ask about recursive struct def being infinite or not. If end up not
-     wanting them, change this to go through all the types of the
-     fields in the structs and compare them to the type of the struct
-     (Struct(name)) to see if there is a recursive def. Also need to
-     consider how to unwrap mutually recursive struct def....*)
-    (let (_, i) = find_in_ctxt name vdecl_repeats_map in
-         match i with
-         false -> raise (Failure "recursive struct def")
-         | true ->
-            (add_to_ctxt (Struct(name)) name ctxt, Void,
-                SStructDef(name, field_types)))
+    (add_to_ctxt (Struct(name)) name ctxt, Void,
+                SStructDef(name, field_types))
 | FDecl(name, params, ret, body) ->
   let f_type = Func({
     param_typs = List.map (fun (t, _) -> t) params;
