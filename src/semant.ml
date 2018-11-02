@@ -184,7 +184,9 @@ and check_stmt ctxt = function
           (add_to_ctxt t n i nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
 | StructDef(name, fields) ->
-   (* See if the variable is already defined *)
+   (* See if there are repeat variables. *)
+   (* TODO(claire): need to add this map to the ctxt as another optional
+    * field to track the variables in a struct. *)
     let vdecl_repeats_map = List.fold_left (fun map v_field ->
         let get_name (_,n,_) = n in
         let v_name = get_name v_field in
@@ -204,10 +206,11 @@ and check_stmt ctxt = function
                     None -> (add_to_ctxt v_type v_name v_init map)
                     | Some(e) -> let (_, (t_i, _)) =
                         (* check_expr doesn't change the map *)
-                        (* see if the expression matches the given type *)
                         check_expr map e 
                         in           
                         let matching_type = 
+                            (* see if the expression matches 
+                             * the given type *)
                             check_assign v_type t_i
                             (Failure ("illegal assignment in struct"))
                         in
@@ -234,21 +237,17 @@ and check_stmt ctxt = function
         in 
         let get_type (t,_,_) = t in
         let v_type = get_type v_field in
-        (*let (t_opt, _) = find_in_ctxt v_name vdecl_repeats_map in
-        (match t_opt with
-            None -> (v_type, v_name, find_expression_type)
-            | Some(_) -> (v_type, v_name, find_expression_type)
-         )*)
         (v_type, v_name, find_expression_type)
         ) (* end of function*) fields 
     in 
+    (* Make sure that none of the variables in the struct 
+     * have the same name as the struct. *)
     (let (t_opt, i) = find_in_ctxt name vdecl_repeats_map in
          match i with
          false -> raise (Failure "recursive struct def")
          | true ->
-    (add_to_ctxt (Struct(name)) name t_opt ctxt, Void,
-        SStructDef(name, field_types)))
-
+            (add_to_ctxt (Struct(name)) name t_opt ctxt, Void,
+                SStructDef(name, field_types)))
 | FDecl(params, ret, body, r) ->
   let nctxt = (create_scope params)::ctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
