@@ -221,17 +221,42 @@ and check_stmt ctxt = function
     [StringMap.empty] fields
     in
     (* make a list of all the types in the struct *)
-    let field_types = List.map (fun s1 -> let (t_i, stype) =
-                (* TODO(claire) will this map cause problems in
-                * check_expr? *) 
+    let field_types = List.map (fun v_field -> 
+        let get_name (_,n,_) = n in
+        let v_name = get_name v_field in
+        (*if StringMap.mem v_name map then*)
+        (let (t_opt, i) = find_in_ctxt v_name vdecl_repeats_map in
+        let find_type = match i with
+         false -> (t_opt, v_name, None)
+         | true -> (
+             let get_expr (_,_,e) = e in
+             let v_expr = get_expr e in
+             let (_, (t_i, si)) =
+             check_expr vdecl_repeats_map v_expr in
+             (t_opt, v_name, si)) in find_type))
+        (*match t_opt with
+            Some((t,i)) -> 
+                
+            | None ->
+                raise (Failure "unknown error - this shouldn't happen")
+                (*if find_in_ctxt v_name map then
+                raise (Failure "can't repeat variable names in struct")
+            else*)
+                (*(let (_, (t_i, stype)) =*)
+                    (* check_expr shouldn't change the map *)
+
+         let (t_i, stype) = 
+            StringMap.find field_name (List.hd vdecl_repeats_map) in 
+                (t_i, field_name, stype))
+        (*let (t_i, stype) =
                 check_expr vdecl_repeats_map s1 
                 (*in Some((t_i, stype)))*)
-        in (t_i, stype)) fields 
+        in (t_i, stype))*)*) fields 
     in 
-    if StringMap.mem name vdecl_repeats_map then
+    if StringMap.mem name (List.hd vdecl_repeats_map) then
         raise (Failure "recursive struct def")
     else 
-    (add_to_ctxt StructDef(field_types) name false ctxt, Void,
+    (add_to_ctxt (StructDef(name, field_types)) name false ctxt, Void,
         SStructDef(name, field_types))
 
     (*let (t_opt, local) = find_in_ctxt name ctxt in
