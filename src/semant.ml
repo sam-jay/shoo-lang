@@ -58,7 +58,22 @@ let find_in_ctxt v_name ctxt =
   | _::tl -> helper false tl in
   helper true ctxt
 
-let create_scope list = 
+let get_members_if_struct v_type ctxt =
+        try let get_struct_name (Struct(n)) = n in
+            let struct_name = get_struct_name v_type in
+            let ((t,m), _) = find_in_ctxt struct_name ctxt
+            in (*(v_type,m)*) m
+        with Not_found -> 
+            (* Not a struct so shouldn't have a members map *)
+            (*(v_type, None)*) None
+        (*if v_type = Struct(_) then 
+            let get_struct_name Struct(n) = n in
+            let struct_name = get_struct_name v_type in
+            (* The struct name is the name stored in the ctxt *) 
+            let ((t, m), _) = find_in_ctxt struct_name ctxt
+        in (v_type, m)*)
+
+let create_scope list ctxt = 
  let rec helper m = function
    [] -> m
  (* TODO(claire) need to change this so it added the map
@@ -68,7 +83,9 @@ let create_scope list =
   * function is being declared. I am not sure how the
   * nested scopes work, but it should also allow you do use
   * struct types declared in the outer scopes. *)
- | ((t, members), n)::tl -> 
+ | (t, n)::tl -> 
+         (* TODO TODO TODO change this to call get_members_if_struct
+          * instead of asking to already have the members *)
          (*(match members with
          Some(members) ->
             let new_m = StringMap.add n (t, members) m 
@@ -76,24 +93,11 @@ let create_scope list =
          | None ->
             let new_m = StringMap.add n (t, None) m 
                  in helper new_m tl)*)
+         (* TODO(claire) what ctxt should this take? *)
+            let members = get_members_if_struct t ctxt in
             let new_m = StringMap.add n (t, members) m 
                  in helper new_m tl
  in helper StringMap.empty list
-
-let get_members_if_struct v_type ctxt =
-        try let get_struct_name (Struct(n)) = n in
-            let struct_name = get_struct_name v_type in
-            let ((t,m), _) = find_in_ctxt struct_name ctxt
-            in (v_type,m)
-        with Not_found -> 
-            (* Not a struct so shouldn't have a members map *)
-            (v_type, None)
-        (*if v_type = Struct(_) then 
-            let get_struct_name Struct(n) = n in
-            let struct_name = get_struct_name v_type in
-            (* The struct name is the name stored in the ctxt *) 
-            let ((t, m), _) = find_in_ctxt struct_name ctxt
-        in (v_type, m)*)
 
 (* Returns a tuple with a map and another tuple.
  * The second tuple has the type and the stype. *)
@@ -329,7 +333,7 @@ and check_stmt ctxt = function
     body = []
   })) in
   let nctxt = add_to_ctxt (f_type, None) name ctxt in
-  let nctxt = (create_scope params)::nctxt in
+  let nctxt = (create_scope params nctxt)::nctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
   else raise (Failure "invalid function return type")
