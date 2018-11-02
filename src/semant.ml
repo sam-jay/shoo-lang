@@ -27,6 +27,9 @@ exception Illegal_binary_operator of string
 
  *)
 
+let check_assign lvaluet rvaluet err =
+    if lvaluet = rvaluet then lvaluet else raise err
+
 let add_to_ctxt v_type v_name ctxt =
   let map = List.hd ctxt in
   let v = v_type in
@@ -170,21 +173,93 @@ and check_bool_expr ctxt e =
 
 (* returns the map, type, stype *)
 and check_stmt ctxt = function
-  Expr(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
+  Expr(e) -> let (nctxt, (t, ss)) = 
+      check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
 | VDecl(t, n, i) ->
   let (nctxt, si) = match i with
     None -> (ctxt, None)
-  | Some(e) -> (let (nctxt, (t_i, si)) = check_expr ctxt e in (nctxt, Some((t_i, si)))) in
+  | Some(e) -> (let (nctxt, (t_i, si)) = 
+      check_expr ctxt e in (nctxt, Some((t_i, si)))) in
   let (t_opt, local) = find_in_ctxt n nctxt in
   (match t_opt with
     None -> (add_to_ctxt t n nctxt, Void, SVDecl(t, n, si)) 
+   (* TODO(claire): so we can have local vars with the 
+     * same name as global vars and the local var wins over the 
+     * global one? need to update LRM with this info abt scoping *)
   | Some(_) when not local -> (add_to_ctxt t n nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
+| StructDef(name, fields) ->
+   (* See if there are repeat variables. *)
+   (* TODO(claire): need to add this map to the ctxt as another optional
+    * field to track the variables in a struct. *)
+    let vdecl_repeats_map = List.fold_left (fun map v_field ->
+        let get_name (_,n,_) = n in
+        let v_name = get_name v_field in
+        (* If the variable is in the map, it is a repeat and will have 
+         * a type. *)
+        (let (t_opt, _) = find_in_ctxt v_name map in
+        match t_opt with
+            Some(_) -> 
+                raise (Failure "can't repeat variable names in structs")
+            | None ->
+                 (let get_init (_,_,i) = i in
+                 let v_init = get_init v_field in
+                 let get_type (t,_,_) = t in
+                 let v_type = get_type v_field in
+                 (* add the expression to the map *)
+                 let add_map = match v_init with
+                    None -> (add_to_ctxt v_type v_name map)
+                    | Some(e) -> let (_, (t_i, _)) =
+                        (* check_expr doesn't change the map *)
+                        check_expr map e 
+                        in           
+                        let matching_type = 
+                            (* see if the expression matches 
+                             * the given type *)
+                            check_assign v_type t_i
+                            (Failure ("illegal assignment in struct"))
+                        in
+                            (* TODO(claire) pretty print error above *)
+                        add_to_ctxt matching_type v_name map 
+                  in add_map))
+           ) (* end of function *) [StringMap.empty] fields
+    in
+    (* make a list of all the types in the struct *)
+    let field_types = List.map (fun v_field -> 
+        let get_name (_,n,_) = n in
+        let v_name = get_name v_field in
+        let get_init (_,_,i) = i in
+        let v_init = get_init v_field in
+        (* If there is an expression, get the type of the expression.
+         * Above should have handled the case where the given type and
+         * the expression types don't match. *)
+        let find_expression_type = (match v_init with
+            None -> None
+            | Some(e) ->
+             (let (_, (t_i, si)) =
+             check_expr vdecl_repeats_map e in
+             Some((t_i, si))))
+        in 
+        let get_type (t,_,_) = t in
+        let v_type = get_type v_field in
+        (v_type, v_name, find_expression_type)
+        ) (* end of function*) fields 
+    in 
+    (* Make sure that none of the variables in the struct 
+     * have the same name as the struct. *)
+    (let (_, i) = find_in_ctxt name vdecl_repeats_map in
+         match i with
+         false -> raise (Failure "recursive struct def")
+         | true ->
+            (add_to_ctxt (Struct(name)) name ctxt, Void,
+                SStructDef(name, field_types)))
 | FDecl(name, params, ret, body) ->
   let f_type = Func({
     param_typs = List.map (fun (t, _) -> t) params;
     return_typ = ret;
   }) in
+  (* TODO(claire) why is this here? It gives unusd variable warnings
+   * because of this. *)
   let init = Some(FExpr({
     typ = ret;
     params = params;
@@ -195,7 +270,8 @@ and check_stmt ctxt = function
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
   else raise (Failure "invalid function return type")
-| Return(e) -> let (nctxt, (t, ss)) = check_expr ctxt e in (nctxt, t, SReturn (t, ss))
+| Return(e) -> let (nctxt, (t, ss)) = 
+    check_expr ctxt e in (nctxt, t, SReturn (t, ss))
 | ForLoop (s1, e2, e3, st) -> 
      let (ctxt1, s1') = match s1 with
         None -> (ctxt, None)
