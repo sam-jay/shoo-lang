@@ -29,10 +29,15 @@ exception Undeclared_reference of string
 let check_assign lvaluet rvaluet err =
     if lvaluet = rvaluet then lvaluet else raise err
 
-let add_to_ctxt v_type v_name ctxt =
+(* This function takes a tuple with the type and the map 
+ * as well as the variable name and the context map.
+ * The map in the tuple is used for the member fields
+ * in structs. *)    
+let add_to_ctxt (v_type, v_member_map) v_name ctxt =
   let map = List.hd ctxt in
+  (* TODO(claire): why rename v_type to v? *)
   let v = v_type in
-  let newMap = StringMap.add v_name v map in
+  let newMap = StringMap.add v_name (v, v_member_map) map in
   newMap::List.tl ctxt
 
 (* Returns tuple with None or Some with another tuple that has 
@@ -40,16 +45,26 @@ let add_to_ctxt v_type v_name ctxt =
  * definited in scope or not. *)
 let find_in_ctxt v_name ctxt =
   let rec helper init = function
-    [] -> (None, init)
+    [] -> ((None, None), init)
   | hd::_ when StringMap.mem v_name hd ->
-      (Some(StringMap.find v_name hd), init)
+     (* TODO(claire) need to change this to give the map
+      * only if the type is struct *) 
+     ((Some(fst (StringMap.find v_name hd)), None), init)
   | _::tl -> helper false tl in
   helper true ctxt
 
 let create_scope list = 
  let rec helper m = function
    [] -> m
- | (t, n)::tl -> let new_m = StringMap.add n t m in helper new_m tl
+ (* TODO(claire) need to change this so it added the map
+  * if the type is struct. The map will be in the ctxt
+  * because the struct will already have to be defined.
+  * This function now has to take the ctxt in which the
+  * function is being declared. I am not sure how the
+  * nested scopes work, but it should also allow you do use
+  * struct types declared in the outer scopes. *)
+ | (t, n)::tl -> let new_m = StringMap.add n (t, None) m 
+                 in helper new_m tl
  in helper StringMap.empty list
 
 (* Returns a tuple with a map and another tuple.
@@ -86,14 +101,14 @@ let rec check_expr ctxt = function
         if t1 = Int then (nctxt, (t1, SArrayAccess(arr_name, (t1, se1))))
         else raise (Failure ("can't access array with non-integer type"))
 | Id(n) -> 
-    let (t_opt, _) = find_in_ctxt n ctxt in
+    let ((t_opt, _), _) = find_in_ctxt n ctxt in
     (match t_opt with
       Some(t) -> (ctxt, (t, SId n))
     | None -> raise (Undeclared_reference "undeclared reference"))
 | Assign(e1, e2) ->
     let (nctxt, (t2, se2)) = check_expr ctxt e2 in
     let (nctxt, (t1, se1)) = match e1 with
-        Id(n) -> let (t_opt, _) = find_in_ctxt n nctxt in
+        Id(n) -> let ((t_opt,_), _) = find_in_ctxt n nctxt in
                 (match t_opt with
                   Some(t) -> (nctxt, (t, SId n))
                 | None -> raise (Undeclared_reference "undeclared reference"))
@@ -141,8 +156,9 @@ let rec check_expr ctxt = function
         | Dec when t = Int -> (nctxt, (Int, spop))
         | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
 | FCall(name, args) ->
-  (match find_in_ctxt name ctxt with
-    (Some(t), _) -> 
+  let ((t_opt, _), _) = find_in_ctxt name ctxt in
+  (match t_opt with
+    Some(t) -> 
       let (nctxt, sl) = check_args ctxt t args in
       (nctxt, (t, SFCall(name, sl)))
   | _ -> raise (Undeclared_reference ("undeclared function " ^ name)))
@@ -186,13 +202,14 @@ and check_stmt ctxt = function
     None -> (ctxt, None)
   | Some(e) -> (let (nctxt, (t_i, si)) = 
       check_expr ctxt e in (nctxt, Some((t_i, si)))) in
-  let (t_opt, local) = find_in_ctxt n nctxt in
+  let ((t_opt, _), local) = find_in_ctxt n nctxt in
   (match t_opt with
-    None -> (add_to_ctxt t n nctxt, Void, SVDecl(t, n, si)) 
+    None -> (add_to_ctxt (t, None) n nctxt, Void, SVDecl(t, n, si)) 
    (* TODO(claire): so we can have local vars with the 
      * same name as global vars and the local var wins over the 
      * global one? need to update LRM with this info abt scoping *)
-  | Some(_) when not local -> (add_to_ctxt t n nctxt, Void, SVDecl(t, n, si))
+  | Some(_) when not local -> (add_to_ctxt (t, None) n nctxt, 
+            Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
 | StructDef(name, fields) ->
    (* See if there are repeat variables. *)
@@ -205,7 +222,7 @@ and check_stmt ctxt = function
         let v_name = get_name v_field in
         (* If the variable is in the map, it is a repeat and will have 
          * a type. *)
-        (let (t_opt, _) = find_in_ctxt v_name map in
+        (let ((t_opt,_), _) = find_in_ctxt v_name map in
         match t_opt with
             Some(_) -> 
                 raise (Failure "can't repeat variable names in structs")
@@ -224,7 +241,7 @@ and check_stmt ctxt = function
                      else field_type in 
                  (* add the expression to the map *)
                  let add_map = match v_init with
-                    None -> (add_to_ctxt v_type v_name map)
+                    None -> (add_to_ctxt (v_type, None) v_name map)
                     | Some(e) -> let (_, (t_i, _)) =
                         (* check_expr doesn't change the map *)
                         check_expr map e 
@@ -236,7 +253,7 @@ and check_stmt ctxt = function
                             (Failure ("illegal assignment in struct"))
                         in
                             (* TODO(claire) pretty print error above *)
-                        add_to_ctxt matching_type v_name map 
+                        add_to_ctxt (matching_type, None) v_name map 
                   in add_map))
            ) (* end of function *) [StringMap.empty] fields
     in
@@ -261,7 +278,7 @@ and check_stmt ctxt = function
         (v_type, v_name, find_expression_type)
         ) (* end of function*) fields 
     in 
-    (add_to_ctxt (Struct(name)) name ctxt, Void,
+    (add_to_ctxt (Struct(name), None) name ctxt, Void,
                 SStructDef(name, field_types))
 | FDecl(name, params, ret, body) ->
   let f_type = Func({
@@ -275,7 +292,7 @@ and check_stmt ctxt = function
     params = params;
     body = []
   })) in
-  let nctxt = add_to_ctxt f_type name ctxt in
+  let nctxt = add_to_ctxt (f_type, None) name ctxt in
   let nctxt = (create_scope params)::nctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
@@ -309,7 +326,7 @@ let def_ctxt =
     param_typs = [String];
     return_typ = Void
   }) in
-  let ctxt = add_to_ctxt println_t "println" [StringMap.empty] in
+  let ctxt = add_to_ctxt (println_t, None) "println" [StringMap.empty] in
   ctxt
 
 let check_program prog =
