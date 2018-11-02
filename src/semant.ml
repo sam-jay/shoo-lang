@@ -225,15 +225,35 @@ and check_stmt ctxt = function
         let get_name (_,n,_) = n in
         let v_name = get_name v_field in
         (*if StringMap.mem v_name map then*)
-        (let (t_opt, i) = find_in_ctxt v_name vdecl_repeats_map in
+        let get_init (_,_,i) = i in
+        let v_init = get_init v_field in
+        (*let (t_opt,_) = find_in_ctxt v_name vdecl_repeats_map in*)
+        let find_type = (match v_init with
+            None -> None
+            | Some(e) ->
+
+        (*(let (t_opt, i) = find_in_ctxt v_name vdecl_repeats_map in
         let find_type = match i with
          false -> (t_opt, v_name, None)
-         | true -> (
-             let get_expr (_,_,e) = e in
-             let v_expr = get_expr e in
-             let (_, (t_i, si)) =
-             check_expr vdecl_repeats_map v_expr in
-             (t_opt, v_name, si)) in find_type))
+         | true -> *)
+             (*let get_expr (_,_,e) = e in
+             let v_expr = get_expr v_field in*)
+             (let (_, (t_i, si)) =
+             check_expr vdecl_repeats_map e in
+             Some((t_i, si))))
+            (*let get_expr (_,_,e) = e in
+            let v_expr = get _expr v_field in
+            Some(v_expr)))*)
+             (*Some((t_i, si))))*)
+        in 
+        let get_type (t,_,_) = t in
+        let v_type = get_type v_field in
+        let (t_opt, _) = find_in_ctxt v_name vdecl_repeats_map in
+        (match t_opt with
+            None -> (v_type, v_name, None)
+            (*| Some(_) -> (v_type, v_name, find_type)) *)
+            | Some(_) -> (v_type, v_name, find_type))
+         )
         (*match t_opt with
             Some((t,i)) -> 
                 
@@ -253,11 +273,17 @@ and check_stmt ctxt = function
                 (*in Some((t_i, stype)))*)
         in (t_i, stype))*)*) fields 
     in 
-    if StringMap.mem name (List.hd vdecl_repeats_map) then
+    (let (t_opt, i) = find_in_ctxt name vdecl_repeats_map in
+         match i with
+         false -> raise (Failure "recursive struct def")
+         | true ->
+             (*(*let get_expr (_,_,e) = e in
+             let v_expr = get_expr v_field in*)
+         if StringMap.mem name (List.hd vdecl_repeats_map) then
         raise (Failure "recursive struct def")
-    else 
-    (add_to_ctxt (StructDef(name, field_types)) name false ctxt, Void,
-        SStructDef(name, field_types))
+    else *)
+    (add_to_ctxt (*(StructDef(name, fields))*) (Struct(name)) name t_opt ctxt, Void,
+        SStructDef(name, field_types)))
 
     (*let (t_opt, local) = find_in_ctxt name ctxt in
         (match t_opt with
