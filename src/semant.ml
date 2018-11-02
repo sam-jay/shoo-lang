@@ -205,7 +205,13 @@ and check_stmt ctxt = function
                  (let get_init (_,_,i) = i in
                  let v_init = get_init v_field in
                  let get_type (t,_,_) = t in
-                 let v_type = get_type v_field in
+                 let field_type = get_type v_field in
+                 (* Check the type to ensure there isn't a recusrive
+                  * definition. *)
+                 let v_type = 
+                     if field_type = Struct(name) then
+                        raise (Failure "can't have recursive struct def")
+                     else field_type in 
                  (* add the expression to the map *)
                  let add_map = match v_init with
                     None -> (add_to_ctxt v_type v_name map)
