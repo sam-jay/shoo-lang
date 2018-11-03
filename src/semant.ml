@@ -58,20 +58,14 @@ let find_in_ctxt v_name ctxt =
   | _::tl -> helper false tl in
   helper true ctxt
 
-let get_members_if_struct v_type ctxt =
-        try let get_struct_name (Struct(n)) = n in
-            let struct_name = get_struct_name v_type in
-            let ((t,m), _) = find_in_ctxt struct_name ctxt
-            in (*(v_type,m)*) m
-        with Not_found -> 
-            (* Not a struct so shouldn't have a members map *)
-            (*(v_type, None)*) None
-        (*if v_type = Struct(_) then 
-            let get_struct_name Struct(n) = n in
-            let struct_name = get_struct_name v_type in
-            (* The struct name is the name stored in the ctxt *) 
-            let ((t, m), _) = find_in_ctxt struct_name ctxt
-        in (v_type, m)*)
+(* This functions gives the member map if the 
+ * type given is a struct. *)
+let get_members_if_struct v_type ctxt = match v_type with  
+    Struct(struct_name) -> 
+            let ((_,m), _) = find_in_ctxt struct_name ctxt
+            in m
+    (* Not a struct so shouldn't have a members map *)
+    | _ -> None   
 
 let create_scope list ctxt = 
  let rec helper m = function
