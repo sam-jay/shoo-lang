@@ -54,6 +54,7 @@ let find_in_ctxt v_name ctxt =
     let (v_type, v_map) = StringMap.find v_name hd in
     (match v_map with
         None -> ((Some(v_type), None), init)
+        (* TODO(claire) should this be Some(m)? *)
         | Some(m) -> ((Some(v_type), Some(m)), init)) 
   | _::tl -> helper false tl in
   helper true ctxt
@@ -63,34 +64,29 @@ let find_in_ctxt v_name ctxt =
 let get_members_if_struct v_type ctxt = match v_type with  
     Struct(struct_name) -> 
             let ((_,m), _) = find_in_ctxt struct_name ctxt
-            in m
+            in 
+    (*        (match m with 
+            Some(map) -> map
+            | None -> None)*)
+            m
     (* Not a struct so shouldn't have a members map *)
     | _ -> None   
 
 let create_scope list ctxt = 
  let rec helper m = function
    [] -> m
- (* TODO(claire) need to change this so it added the map
-  * if the type is struct. The map will be in the ctxt
+ (* TODO(claire) Changed this so it adds the map
+  * if the type is struct. The struct name will be in the ctxt
   * because the struct will already have to be defined.
   * This function now has to take the ctxt in which the
   * function is being declared. I am not sure how the
   * nested scopes work, but it should also allow you do use
   * struct types declared in the outer scopes. *)
  | (t, n)::tl -> 
-         (* TODO TODO TODO change this to call get_members_if_struct
-          * instead of asking to already have the members *)
-         (*(match members with
-         Some(members) ->
-            let new_m = StringMap.add n (t, members) m 
-                 in helper new_m tl
-         | None ->
-            let new_m = StringMap.add n (t, None) m 
-                 in helper new_m tl)*)
          (* TODO(claire) what ctxt should this take? *)
-            let members = get_members_if_struct t ctxt in
-            let new_m = StringMap.add n (t, members) m 
-                 in helper new_m tl
+         let members = get_members_if_struct t ctxt in
+         let new_m = StringMap.add n (t, members) m in 
+         helper new_m tl
  in helper StringMap.empty list
 
 (* Returns a tuple with a map and another tuple.
@@ -190,12 +186,14 @@ let rec check_expr ctxt = function
   | _ -> raise (Undeclared_reference ("undeclared function " ^ name)))
 | _ -> (ctxt, (Void, SNoexpr))
 
-(* Make sure that types of arguements match the types of
+(* Make sure that types of arguments match the types of
  * formal parameters when you declare a func variable. *)
 and check_args ctxt t args =
   match t with Func(f_type) ->
   let rec helper ctxt sl = function
     ([], []) -> (ctxt, sl)
+  (* TODO(claire) does handle struct types
+   * already as long as dot is added to check_expr? *)
   | (p_typ::pl, arg::al) ->
     let (nctxt, (a_typ, se)) = check_expr ctxt arg in
     if p_typ = a_typ then helper nctxt ((a_typ, se)::sl) (pl, al)
@@ -230,12 +228,17 @@ and check_stmt ctxt = function
       check_expr ctxt e in (nctxt, Some((t_i, si)))) in
   let ((t_opt, _), local) = find_in_ctxt n nctxt in
   (match t_opt with
-    None -> (add_to_ctxt (t, None) n nctxt, Void, SVDecl(t, n, si)) 
+    (* find_in_ctxt gives None when the variable hasn't been 
+     * declared before. *)
+    None ->
+        let member_map =  get_members_if_struct t ctxt in
+        (add_to_ctxt (t, member_map) n nctxt, Void, SVDecl(t, n, si)) 
    (* TODO(claire): so we can have local vars with the 
      * same name as global vars and the local var wins over the 
      * global one? need to update LRM with this info abt scoping *)
-  | Some(_) when not local -> (add_to_ctxt (t, None) n nctxt, 
-            Void, SVDecl(t, n, si))
+  | Some(_) when not local -> 
+          let member_map = get_members_if_struct t ctxt in
+          (add_to_ctxt (t, member_map) n nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
 | StructDef(name, fields) ->
    (* See if there are repeat variables. *)
@@ -265,9 +268,18 @@ and check_stmt ctxt = function
                      if field_type = Struct(name) then
                         raise (Failure "can't have recursive struct def")
                      else field_type in 
-                 (* add the expression to the map *)
+                 (* Add the expression to the map. Add the member
+                  * map if the type is struct. The struct def would be in
+                  * the ctxt, not the map that is being built, since
+                  * you can't define a struct in a struct. 
+                  * TODO(claire) write a test to ensure that you can't
+                  * define a struct in anyway inside another struct. *)
                  let add_map = match v_init with
-                    None -> (add_to_ctxt (v_type, None) v_name map)
+                    None ->
+                        let member_map = 
+                            get_members_if_struct v_type ctxt in
+                        (add_to_ctxt (v_type, member_map) 
+                            v_name map)
                     | Some(e) -> let (_, (t_i, _)) =
                         (* check_expr doesn't change the map *)
                         check_expr map e 
@@ -277,9 +289,14 @@ and check_stmt ctxt = function
                              * the given type *)
                             check_assign v_type t_i
                             (Failure ("illegal assignment in struct"))
-                        in
                             (* TODO(claire) pretty print error above *)
-                        add_to_ctxt (matching_type, None) v_name map 
+                        in
+                        (* Need to use ctxt because the struct def 
+                         * is in the outer ctxt, not in the map that
+                         * is being built. *)
+                        let member_map = 
+                            get_members_if_struct matching_type ctxt in 
+                        add_to_ctxt (matching_type, member_map) v_name map 
                   in add_map))
            ) (* end of function *) [StringMap.empty] fields
     in
@@ -304,7 +321,7 @@ and check_stmt ctxt = function
         (v_type, v_name, find_expression_type)
         ) (* end of function*) fields 
     in 
-    (add_to_ctxt (Struct(name), None) name ctxt, Void,
+    (add_to_ctxt (Struct(name), (List.hd vdecl_repeats_map)) name ctxt, Void,
                 SStructDef(name, field_types))
 | FDecl(name, params, ret, body) ->
   let f_type = Func({
