@@ -343,7 +343,8 @@ and check_stmt ctxt = function
      let (ctxt4, _, st') = check_stmt_list ctxt3 st
      in
     (ctxt4, Void, SForLoop(s1', e2', e3', st'))
-(* Note: Handling the context variable two branches is kinda tricky because
+
+(* Note: Handling the context variable of two branches is kinda tricky because
    it does not follow a linear flow. My assumption is that everything 
    defined in the block should not be effective outside of the if block
    and that it should be consistent between For and If. *)
