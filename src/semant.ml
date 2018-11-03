@@ -333,7 +333,7 @@ and check_stmt ctxt = function
      let (ctxt2, e2') = match e2 with
         None -> (ctxt1, None)
         | Some(e2) -> (let (nctxt, (t_i, si)) = 
-            check_expr ctxt1 e2 in (nctxt, Some((t_i, si))))
+            check_bool_expr ctxt1 e2 in (nctxt, Some((t_i, si))))
      in
      let (ctxt3, e3') = match e3 with
         None -> (ctxt, None)

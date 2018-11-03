@@ -66,6 +66,13 @@ let unop_dec_str test_ctxt =
 let if_stat_empty test_ctxt = assert_equal "" (check "if (true) {} ")
 let if_stat_empty_else test_ctxt = assert_equal "" (check "if (false) {} else {} ")
 
+(* For Loop *)
+let for_stat_empty test_ctxt = assert_equal "" (check "for (int i = 0; true; i++) {} ")
+
+let for_not_bool test_ctxt = 
+  let f = fun () -> check "for (int i = 0; 3 + 4; i++) {} " in
+  assert_raises (Failure("expected Boolean expression")) f
+
 
 (* Function Declaration *)
 
@@ -125,6 +132,10 @@ let tests =
     (* If Statement *)
     "If statement with empty block" >:: if_stat_empty;
     "If statement with empty block and an else" >:: if_stat_empty_else;
+    
+    (* For Loop *)
+    "For loop with empty block" >:: for_stat_empty;
+    "For loop without conditions" >:: for_not_bool;
     
     (* Function Declaration *)
     "Function declaration that returns int" >:: func_dec_int;
