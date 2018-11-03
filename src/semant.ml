@@ -27,10 +27,7 @@ exception Undeclared_reference of string
  *)
 
 let check_assign lvaluet rvaluet err =
-    (* TODO(claire) make sure == is right. MircoC does it so...
-     * It might allow this to be used for structs too without having
-     * to check the members in the map? *)
-    if lvaluet == rvaluet then lvaluet else raise err
+    if lvaluet = rvaluet then lvaluet else raise err
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
