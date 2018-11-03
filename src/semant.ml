@@ -52,10 +52,12 @@ let find_in_ctxt v_name ctxt =
     (* See if there is a map, meaning that you have a 
      * struct type. *)
     let (v_type, v_map) = StringMap.find v_name hd in
-    (match v_map with
+    (*(match v_map with
         None -> ((Some(v_type), None), init)
         (* TODO(claire) should this be Some(m)? *)
-        | Some(m) -> ((Some(v_type), Some(m)), init)) 
+        | Some(m) -> ((Some(v_type), Some(m)), init)) *)
+    (* TODO is this the same as above? --> not the current issue *)
+    ((Some(v_type), v_map), init)
   | _::tl -> helper false tl in
   helper true ctxt
 
@@ -240,12 +242,15 @@ and check_stmt ctxt = function
           let member_map = get_members_if_struct t ctxt in
           (add_to_ctxt (t, member_map) n nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
-| StructDef(name, fields) ->
+(*| StructDef(name, fields) ->
    (* See if there are repeat variables. *)
    (* TODO(claire): need to add this map to the ctxt as another optional
     * field to track the variables in a struct. *)
     (* TODO(claire): need to figure out how to detect mutually 
      * recursive struct defs *)
+
+    (* TODO TODO TODO something is wrong with this --> some where it is
+     * putting the type and the new map inside the list of maps*)
     let vdecl_repeats_map = List.fold_left (fun map v_field ->
         let get_name (_,n,_) = n in
         let v_name = get_name v_field in
@@ -322,7 +327,7 @@ and check_stmt ctxt = function
         ) (* end of function*) fields 
     in 
     (add_to_ctxt (Struct(name), (List.hd vdecl_repeats_map)) name ctxt, Void,
-                SStructDef(name, field_types))
+                SStructDef(name, field_types))*)
 | FDecl(name, params, ret, body) ->
   let f_type = Func({
     param_typs = List.map (fun (t, _) -> 
