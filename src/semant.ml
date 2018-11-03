@@ -70,6 +70,49 @@ let find_in_ctxt v_name ctxt =
     (* Not a struct so shouldn't have a members map *)
     | _ -> None   
 *)
+
+let check_struct_access struct_type field_name ctxt = 
+    let access_type = (match struct_type with
+        (* make sure you were passed a struct *)
+        Struct(struct_name) -> 
+            (* get the map of fields for the given struct_name *)
+            let ((_,m),_) = find_in_ctxt struct_name ctxt
+            in
+            (match m with 
+            Some(_) -> 
+                (* find the field in the struct type *)
+                let ((t_opt,_),_) = find_in_ctxt field_name ctxt 
+                in
+                (match t_opt with
+                    Some(t) -> t
+                    | None -> raise (Failure "no such member field name")
+                ) 
+            (* None should never happen. All structs, even empty structs,
+             * should have maps.*)
+            | None -> raise (Failure "Struct missing member map"))
+       | _ -> raise (Failure "not a struct type"))
+       in access_type 
+            (* see if the map exists *)
+    (*        (match m with 
+            (* TODO(claire) an empty struct will just have an empty
+             * member map right? *)
+            None -> 
+                raise (Failure "Missing member map. Shouldn't happen.")
+            | Some(m) -> 
+            (* get the field type from the map of fields *)
+                let ((t,_),_) = find_in_ctxt field_name m 
+                in
+                (match t with 
+                    (* TODO(claire) see if the field exists. *)
+                    Some(t) -> t
+                    | None -> 
+                        raise (Failure "no such member field in struct")
+                    (* TODO(claire) pretty print error above *)
+                )
+           )*)
+      (* | _ -> raise (Failure "not a struct type")
+       (* TODO(claire) pretty print error above *)
+    )*)
 let create_scope list (*ctxt*) = 
  let rec helper m = function
    [] -> m
@@ -130,6 +173,10 @@ let rec check_expr ctxt = function
       | _ -> check_expr nctxt e1 in
     if t1 = t2 then (nctxt, (t1, SAssign((t1, se1), (t2, se2))))
     else raise (Type_mismatch "type mismatch in assignment")
+(*| Dot(e, field_name) -> 
+        let (_, (t1, se1)) = check_expr ctxt e in
+        let access_type = check_struct_access t1 field_name ctxt 
+        in (ctxt, (access_type, SDot((access_type, se1), field_name)))*)
 | Binop(e1, op, e2) ->
         let (nctxt, (lt, se1)) = check_expr ctxt e1 in
         let (nctxt, (rt, se2)) = check_expr nctxt e2 in
@@ -305,7 +352,7 @@ and check_stmt ctxt = function
     (add_to_ctxt (Struct(name), 
         Some(List.hd vdecl_repeats_map)) name ctxt, Void,
         SStructDef(name, field_types))
-| FDecl(name, params, ret, body) ->
+(*| FDecl(name, params, ret, body) ->
   let f_type = Func({
     param_typs = List.map (fun (t, _) -> t) params;
     return_typ = ret;
@@ -321,7 +368,7 @@ and check_stmt ctxt = function
   let nctxt = (create_scope params)::nctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
-  else raise (Failure "invalid function return type")
+  else raise (Failure "invalid function return type")*)
 | Return(e) -> let (nctxt, (t, ss)) = 
     check_expr ctxt e in (nctxt, t, SReturn (t, ss))
 | ForLoop (s1, e2, e3, st) -> 
