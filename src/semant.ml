@@ -63,7 +63,7 @@ let find_in_ctxt v_name ctxt =
 
 (* This functions gives the member map if the 
  * type given is a struct. *)
-let get_members_if_struct v_type ctxt = match v_type with  
+(*let get_members_if_struct v_type ctxt = match v_type with  
     Struct(struct_name) -> 
             let ((_,m), _) = find_in_ctxt struct_name ctxt
             in 
@@ -73,8 +73,8 @@ let get_members_if_struct v_type ctxt = match v_type with
             m
     (* Not a struct so shouldn't have a members map *)
     | _ -> None   
-
-let create_scope list ctxt = 
+*)
+let create_scope list (*ctxt*) = 
  let rec helper m = function
    [] -> m
  (* TODO(claire) Changed this so it adds the map
@@ -84,10 +84,14 @@ let create_scope list ctxt =
   * function is being declared. I am not sure how the
   * nested scopes work, but it should also allow you do use
   * struct types declared in the outer scopes. *)
+ (* TODO(claire) I think that this is just used for parameters right?
+  * If so, you will never be defining a new struct type in
+ * the parameters so it must already be defined in the outer scope
+ * so no member map is needed *)
  | (t, n)::tl -> 
          (* TODO(claire) what ctxt should this take? *)
-         let members = get_members_if_struct t ctxt in
-         let new_m = StringMap.add n (t, members) m in 
+         (*let members = get_members_if_struct t ctxt in*)
+         let new_m = StringMap.add n (t, None) m in 
          helper new_m tl
  in helper StringMap.empty list
 
@@ -157,10 +161,12 @@ let rec check_expr ctxt = function
         | Equal | Neq  when 
             (lt = Float && rt = Int) ||
             (lt = Int && rt = Float) -> (nctxt, (Bool, sbinop))
-        | Equal | Neq  when lt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
+        | Equal | Neq  when lt = Bool && rt = Bool -> 
+                (nctxt, (Bool, sbinop))
         | Less | Leq | Greater | Geq  
                                  when (lt = Int && rt = Int) 
-                                 || (lt = Float || rt = Float) -> (nctxt, (Bool, sbinop))
+                                 || (lt = Float || rt = Float) -> 
+                                         (nctxt, (Bool, sbinop))
         | And | Or when rt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
         | _ -> raise (Type_mismatch "Type mismatch across binary operator"))
         (* TODO(claire) need to pretty print error above *)
@@ -233,16 +239,16 @@ and check_stmt ctxt = function
     (* find_in_ctxt gives None when the variable hasn't been 
      * declared before. *)
     None ->
-        let member_map =  get_members_if_struct t ctxt in
-        (add_to_ctxt (t, member_map) n nctxt, Void, SVDecl(t, n, si)) 
+        (*let member_map =  get_members_if_struct t ctxt in*)
+        (add_to_ctxt (t, None) n nctxt, Void, SVDecl(t, n, si)) 
    (* TODO(claire): so we can have local vars with the 
      * same name as global vars and the local var wins over the 
      * global one? need to update LRM with this info abt scoping *)
   | Some(_) when not local -> 
-          let member_map = get_members_if_struct t ctxt in
-          (add_to_ctxt (t, member_map) n nctxt, Void, SVDecl(t, n, si))
+          (*let member_map = get_members_if_struct t ctxt in*)
+          (add_to_ctxt (t, None) n nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
-(*| StructDef(name, fields) ->
+| StructDef(name, fields) ->
    (* See if there are repeat variables. *)
    (* TODO(claire): need to add this map to the ctxt as another optional
     * field to track the variables in a struct. *)
@@ -281,10 +287,9 @@ and check_stmt ctxt = function
                   * define a struct in anyway inside another struct. *)
                  let add_map = match v_init with
                     None ->
-                        let member_map = 
-                            get_members_if_struct v_type ctxt in
-                        (add_to_ctxt (v_type, member_map) 
-                            v_name map)
+                        (*let member_map = 
+                            get_members_if_struct v_type ctxt in*)
+                        (add_to_ctxt (v_type, None) v_name map)
                     | Some(e) -> let (_, (t_i, _)) =
                         (* check_expr doesn't change the map *)
                         check_expr map e 
@@ -299,9 +304,9 @@ and check_stmt ctxt = function
                         (* Need to use ctxt because the struct def 
                          * is in the outer ctxt, not in the map that
                          * is being built. *)
-                        let member_map = 
-                            get_members_if_struct matching_type ctxt in 
-                        add_to_ctxt (matching_type, member_map) v_name map 
+                        (*let member_map = 
+                            get_members_if_struct matching_type ctxt in *)
+                        add_to_ctxt (matching_type, None) v_name map 
                   in add_map))
            ) (* end of function *) [StringMap.empty] fields
     in
@@ -326,8 +331,9 @@ and check_stmt ctxt = function
         (v_type, v_name, find_expression_type)
         ) (* end of function*) fields 
     in 
-    (add_to_ctxt (Struct(name), (List.hd vdecl_repeats_map)) name ctxt, Void,
-                SStructDef(name, field_types))*)
+    (* name is the name of the struct type *)
+    (add_to_ctxt (Struct(name), Some(List.hd vdecl_repeats_map)) name ctxt, Void,
+                SStructDef(name, field_types))
 | FDecl(name, params, ret, body) ->
   let f_type = Func({
     param_typs = List.map (fun (t, _) -> 
@@ -349,7 +355,7 @@ and check_stmt ctxt = function
     body = []
   })) in
   let nctxt = add_to_ctxt (f_type, None) name ctxt in
-  let nctxt = (create_scope params nctxt)::nctxt in
+  let nctxt = (create_scope params (*nctxt*))::nctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
   else raise (Failure "invalid function return type")
