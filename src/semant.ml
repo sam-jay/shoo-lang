@@ -343,6 +343,14 @@ and check_stmt ctxt = function
      let (ctxt4, _, st') = check_stmt_list ctxt3 st
      in
     (ctxt4, Void, SForLoop(s1', e2', e3', st'))
+| If (e, st1, st2) ->
+     let (ctxt1, e') = check_bool_expr ctxt e
+     in
+     let (_, _, st1') = check_stmt_list ctxt1 st1
+     in
+     let (_, _, st2') = check_stmt_list ctxt1 st2
+     in
+    (ctxt, Void, SIf(e', st1', st2'))
     
 | _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 
