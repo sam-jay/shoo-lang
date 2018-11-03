@@ -27,12 +27,16 @@ exception Undeclared_reference of string
  *)
 
 let check_assign lvaluet rvaluet err =
-    if lvaluet = rvaluet then lvaluet else raise err
+    (* TODO(claire) make sure == is right. MircoC does it so...
+     * It might allow this to be used for structs too without having
+     * to check the members in the map? *)
+    if lvaluet == rvaluet then lvaluet else raise err
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
  * The map in the tuple is used for the member fields
- * in structs. *)    
+ * in structs. The map is None unless you are adding a new
+ * struct type. *)    
 let add_to_ctxt (v_type, v_member_map) v_name ctxt =
   let map = List.hd ctxt in
   (* TODO(claire): why rename v_type to v? *)
@@ -47,17 +51,9 @@ let find_in_ctxt v_name ctxt =
   let rec helper init = function
     [] -> ((None, None), init)
   | hd::_ when StringMap.mem v_name hd ->
-     (* TODO(claire) need to change this to give the map
-      * only if the type is struct *) 
-    (* See if there is a map, meaning that you have a 
-     * struct type. *)
     let (v_type, v_map) = StringMap.find v_name hd in
-    (*(match v_map with
-        None -> ((Some(v_type), None), init)
-        (* TODO(claire) should this be Some(m)? *)
-        | Some(m) -> ((Some(v_type), Some(m)), init)) *)
-    (* TODO is this the same as above? --> not the current issue *)
-    ((Some(v_type), v_map), init)
+    (* TODO(claire) should this be Some(v_map) right? *)
+    ((Some(v_type), Some(v_map)), init)
   | _::tl -> helper false tl in
   helper true ctxt
 
@@ -77,22 +73,13 @@ let find_in_ctxt v_name ctxt =
 let create_scope list (*ctxt*) = 
  let rec helper m = function
    [] -> m
- (* TODO(claire) Changed this so it adds the map
-  * if the type is struct. The struct name will be in the ctxt
-  * because the struct will already have to be defined.
-  * This function now has to take the ctxt in which the
-  * function is being declared. I am not sure how the
-  * nested scopes work, but it should also allow you do use
-  * struct types declared in the outer scopes. *)
  (* TODO(claire) I think that this is just used for parameters right?
   * If so, you will never be defining a new struct type in
  * the parameters so it must already be defined in the outer scope
  * so no member map is needed *)
  | (t, n)::tl -> 
-         (* TODO(claire) what ctxt should this take? *)
-         (*let members = get_members_if_struct t ctxt in*)
-         let new_m = StringMap.add n (t, None) m in 
-         helper new_m tl
+    let new_m = StringMap.add n (t, None) m in 
+        helper new_m tl
  in helper StringMap.empty list
 
 (* Returns a tuple with a map and another tuple.
@@ -236,27 +223,17 @@ and check_stmt ctxt = function
       check_expr ctxt e in (nctxt, Some((t_i, si)))) in
   let ((t_opt, _), local) = find_in_ctxt n nctxt in
   (match t_opt with
-    (* find_in_ctxt gives None when the variable hasn't been 
-     * declared before. *)
     None ->
-        (*let member_map =  get_members_if_struct t ctxt in*)
         (add_to_ctxt (t, None) n nctxt, Void, SVDecl(t, n, si)) 
-   (* TODO(claire): so we can have local vars with the 
+    (* TODO(claire): so we can have local vars with the 
      * same name as global vars and the local var wins over the 
      * global one? need to update LRM with this info abt scoping *)
   | Some(_) when not local -> 
-          (*let member_map = get_members_if_struct t ctxt in*)
           (add_to_ctxt (t, None) n nctxt, Void, SVDecl(t, n, si))
   | Some(_) -> raise (Failure "already declared"))
 | StructDef(name, fields) ->
-   (* See if there are repeat variables. *)
-   (* TODO(claire): need to add this map to the ctxt as another optional
-    * field to track the variables in a struct. *)
-    (* TODO(claire): need to figure out how to detect mutually 
-     * recursive struct defs *)
-
-    (* TODO TODO TODO something is wrong with this --> some where it is
-     * putting the type and the new map inside the list of maps*)
+    (* Create a map of the member fields. 
+     * See if there are repeat variables. *)
     let vdecl_repeats_map = List.fold_left (fun map v_field ->
         let get_name (_,n,_) = n in
         let v_name = get_name v_field in
@@ -279,16 +256,10 @@ and check_stmt ctxt = function
                      if field_type = Struct(name) then
                         raise (Failure "can't have recursive struct def")
                      else field_type in 
-                 (* Add the expression to the map. Add the member
-                  * map if the type is struct. The struct def would be in
-                  * the ctxt, not the map that is being built, since
-                  * you can't define a struct in a struct. 
-                  * TODO(claire) write a test to ensure that you can't
-                  * define a struct in anyway inside another struct. *)
                  let add_map = match v_init with
                     None ->
-                        (*let member_map = 
-                            get_members_if_struct v_type ctxt in*)
+                        (* The map is None because you can't define a
+                         * struct inside of a struct. *)
                         (add_to_ctxt (v_type, None) v_name map)
                     | Some(e) -> let (_, (t_i, _)) =
                         (* check_expr doesn't change the map *)
@@ -297,15 +268,12 @@ and check_stmt ctxt = function
                         let matching_type = 
                             (* see if the expression matches 
                              * the given type *)
+                            (* TODO(claire) I am not sure if check_assign 
+                             * deals with struct and array comparision...*)
                             check_assign v_type t_i
                             (Failure ("illegal assignment in struct"))
                             (* TODO(claire) pretty print error above *)
                         in
-                        (* Need to use ctxt because the struct def 
-                         * is in the outer ctxt, not in the map that
-                         * is being built. *)
-                        (*let member_map = 
-                            get_members_if_struct matching_type ctxt in *)
                         add_to_ctxt (matching_type, None) v_name map 
                   in add_map))
            ) (* end of function *) [StringMap.empty] fields
@@ -329,25 +297,20 @@ and check_stmt ctxt = function
         let get_type (t,_,_) = t in
         let v_type = get_type v_field in
         (v_type, v_name, find_expression_type)
-        ) (* end of function*) fields 
+        ) (* end of function for List.map *) fields 
     in 
     (* name is the name of the struct type *)
-    (add_to_ctxt (Struct(name), Some(List.hd vdecl_repeats_map)) name ctxt, Void,
-                SStructDef(name, field_types))
+    (* Add the name of the struct type, its type, and the map of its
+     * members to the ctxt. *)
+    (add_to_ctxt (Struct(name), 
+        Some(List.hd vdecl_repeats_map)) name ctxt, Void,
+        SStructDef(name, field_types))
 | FDecl(name, params, ret, body) ->
   let f_type = Func({
-    param_typs = List.map (fun (t, _) -> 
-        (* TODO(claire) leave this as is for now and change
-         * create_scope to call get_members_if_struct itself *)
-        (* Get the member map from the ctxt if you have
-         * a struct type *)
-        (*let (v_type, v_map) =
-            if v_type = Struct() *)
-    (*    let (v_type, v_map) = get_members_if_struct t ctxt 
-            in (v_type, v_map)*) t) params;
+    param_typs = List.map (fun (t, _) -> t) params;
     return_typ = ret;
   }) in
-  (* TODO(claire) why is this here? It gives unusd variable warnings
+  (* TODO(claire) why is this here? It gives unused variable warnings
    * because of this. *)
   let init = Some(FExpr({
     typ = ret;
@@ -355,7 +318,7 @@ and check_stmt ctxt = function
     body = []
   })) in
   let nctxt = add_to_ctxt (f_type, None) name ctxt in
-  let nctxt = (create_scope params (*nctxt*))::nctxt in
+  let nctxt = (create_scope params)::nctxt in
   let (nctxt, t, ssl) = check_stmt_list nctxt body in
   if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
   else raise (Failure "invalid function return type")
