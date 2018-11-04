@@ -20,7 +20,7 @@
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ
-%left PLUS MINUS  NEG
+%left PLUS MINUS NEG
 %left TIMES DIVIDE MOD
 %right NOT
 %right INCREMENT DECREMENT

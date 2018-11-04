@@ -27,10 +27,7 @@ exception Undeclared_reference of string
  *)
 
 let check_assign lvaluet rvaluet err =
-    (* TODO(claire) make sure == is right. MircoC does it so...
-     * It might allow this to be used for structs too without having
-     * to check the members in the map? *)
-    if lvaluet == rvaluet then lvaluet else raise err
+    if lvaluet = rvaluet then lvaluet else raise err
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
@@ -70,7 +67,30 @@ let find_in_ctxt v_name ctxt =
     (* Not a struct so shouldn't have a members map *)
     | _ -> None   
 *)
-let create_scope list (*ctxt*) = 
+
+let check_struct_access struct_type field_name ctxt = 
+    (* TODO(claire) need to pretty print errors below *)
+    let access_type = (match struct_type with
+        (* make sure you were passed a struct *)
+        Struct(struct_name) -> 
+            (* get the map of fields for given struct type named name *)
+            let ((_,m),_) = find_in_ctxt struct_name ctxt
+            in
+            (match m with 
+            Some(_) -> 
+                (* find the field in the struct type's map *)
+                let ((t_opt,_),_) = find_in_ctxt field_name ctxt 
+                in
+                (match t_opt with
+                    Some(t) -> t
+                    | None -> raise (Failure "no such member field name")
+                ) 
+            (* None should never happen. All structs, even empty structs,
+             * should have maps.*)
+            | None -> raise (Failure "struct missing member map. shouldn't happend."))
+       | _ -> raise (Failure "not a struct type"))
+       in access_type 
+let create_scope list = 
  let rec helper m = function
    [] -> m
  (* TODO(claire) I think that this is just used for parameters right?
@@ -130,6 +150,10 @@ let rec check_expr ctxt = function
       | _ -> check_expr nctxt e1 in
     if t1 = t2 then (nctxt, (t1, SAssign((t1, se1), (t2, se2))))
     else raise (Type_mismatch "type mismatch in assignment")
+| Dot(e, field_name) -> 
+        let (_, (t1, se1)) = check_expr ctxt e in
+        let field_type = check_struct_access t1 field_name ctxt 
+        in (ctxt, (field_type, SDot((field_type, se1), field_name)))
 | Binop(e1, op, e2) ->
         let (nctxt, (lt, se1)) = check_expr ctxt e1 in
         let (nctxt, (rt, se2)) = check_expr nctxt e2 in
@@ -142,7 +166,8 @@ let rec check_expr ctxt = function
             (lt = Float && rt = Int) ||
             (lt = Int && rt = Float) -> (nctxt, (Float, sbinop))
         (* TODO(claire): make sure LRM says that we can compare all
-         * expressions of the same type using ==, including functions, strings,
+         * expressions of the same type using ==, including functions, 
+         * strings,
          * structs, arrays? *)
         | Equal | Neq  when lt = rt -> (nctxt, (Bool, sbinop))
         | Equal | Neq  when 
@@ -316,7 +341,7 @@ and check_stmt ctxt = function
      let (ctxt2, e2') = match e2 with
         None -> (ctxt1, None)
         | Some(e2) -> (let (nctxt, (t_i, si)) = 
-            check_expr ctxt1 e2 in (nctxt, Some((t_i, si))))
+            check_bool_expr ctxt1 e2 in (nctxt, Some((t_i, si))))
      in
      let (ctxt3, e3') = match e3 with
         None -> (ctxt, None)
@@ -326,6 +351,19 @@ and check_stmt ctxt = function
      let (ctxt4, _, st') = check_stmt_list ctxt3 st
      in
     (ctxt4, Void, SForLoop(s1', e2', e3', st'))
+
+(* Note: Handling the context variable of two branches is kinda tricky because
+   it does not follow a linear flow. My assumption is that everything 
+   defined in the block should not be effective outside of the if block
+   and that it should be consistent between For and If. *)
+| If (e, st1, st2) ->
+     let (ctxt1, e') = check_bool_expr ctxt e
+     in
+     let (_, _, st1') = check_stmt_list ctxt1 st1
+     in
+     let (_, _, st2') = check_stmt_list ctxt1 st2
+     in
+    (ctxt, Void, SIf(e', st1', st2'))
     
 | _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 
