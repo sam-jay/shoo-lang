@@ -1,5 +1,4 @@
 open OUnit2
-open Ast
 
 let parse input =
   let lexbuf = Lexing.from_string input in

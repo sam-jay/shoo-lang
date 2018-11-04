@@ -21,6 +21,10 @@ printer:
 infer:
 	ocamlbuild -use-ocamlfind src/infer.native
 
+.PHONY : helloworld
+helloworld:
+	ocamlbuild -use-ocamlfind src/helloworld.native
+
 .PHONY : test
 test:
 	ocamlbuild -use-ocamlfind test/test.native
