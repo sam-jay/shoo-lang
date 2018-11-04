@@ -533,27 +533,9 @@ let rec_function_test _ = assert_equal
       }\
       };")
 
-let function_variable _ = assert_equal 
-  [Expr(FExpr({
-    name="";
-    params=[(Int, "y")]; 
-    typ = Int; body = [Return(Binop(Id("y"),Add,IntLit(5)))]}));
-  StructDef("Baz",
-    [(Func({ param_typs = [Int]; return_typ = Int}), 
-        "f", Some(Id("temp"))); (Int,"field2", None)])
-]
-    (parse "function (int y) int {\
-        return y+5;\
-};\
- struct Baz { // has function members\
-    func(int; int) f = temp;\
-    int field2;\
-}")
-
 let func_tests  =
   "Functions" >:::
   [
-    "First-class functions as variables" >::function_variable;
     "Simple function call" >:: print_test;
     "Using keyword rec for function test" >:: rec_function_test;
     "Not using keyword rec for function test" >:: no_rec_function_test;

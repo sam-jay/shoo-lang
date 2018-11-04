@@ -65,15 +65,15 @@ let unop_dec_str _ =
 let if_stat_empty _ = assert_equal "" (check "if (true) {} ")
 let if_stat_empty_else _ = assert_equal "" (check "if (false) {} else {} ")
 
-let if_not_bool test_ctxt = 
+let if_not_bool _ = 
   let f = fun () -> check "if (3 + 4) {} " in
   assert_raises (Failure("expected Boolean expression")) f
   
 
 (* For Loop *)
-let for_stat_empty test_ctxt = assert_equal "" (check "for (int i = 0; true; i++) {} ")
+let for_stat_empty _ = assert_equal "" (check "for (int i = 0; true; i++) {} ")
 
-let for_not_bool test_ctxt = 
+let for_not_bool _ = 
   let f = fun () -> check "for (int i = 0; 3 + 4; i++) {} " in
   assert_raises (Failure("expected Boolean expression")) f
 

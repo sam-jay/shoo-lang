@@ -106,6 +106,7 @@ let rec fmt_typ = function
   | String -> "String"
   | Struct(n) -> fmt_one "Struct" n
   | Array(t) -> fmt_one "Array" (fmt_typ t)
+  | ABSTRACT -> "ABSTRACT"
 
 and fmt_typ_list l =
   let typs = List.map fmt_typ l in
@@ -179,8 +180,6 @@ and fmt_init l =
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
-| FDecl(n, p, t, b) -> 
-  fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
 | VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_expr e)
 | ForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 
