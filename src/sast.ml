@@ -23,20 +23,26 @@ and sx =
 | SArrayAccess of string * sexpr
 | SDot of sexpr * string
 | SNew of snewable
+| SClosure of sclsr
 | SNoexpr
 
 and sfexpr = {
+    sname : string;
     srecursive : bool; 
     styp : typ;
     sparams: bind list;
     sbody : sstmt list
 }
 
+and sclsr = {
+  ind: int;
+  free_vars: bind list;
+}
+
 and sstmt =
   SExpr of sexpr
 | SVDecl of typ * string * sexpr option
 | SReturn of sexpr
-| SFDecl of string * (typ * string) list * typ * sstmt list
 | SIf of sexpr * sstmt list * sstmt list
 | SForLoop of (sstmt option) * (sexpr option) * (sexpr option) * sstmt list
 | SStructDef of string * (typ * string * sexpr option) list
@@ -81,6 +87,7 @@ let rec fmt_sexpr (t,s) =
 | SArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_sexpr l))
 | SDestruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_sexpr e)
 | SNew(t) -> fmt_one "New" (fmt_sn t)
+| SClosure _ -> "Closure" (* TODO: fix this *)
 | SNoexpr -> ""
           ) ^ ")" 
 
@@ -101,8 +108,6 @@ and fmt_sinit l =
 and fmt_sstmt = function
   SExpr(se) -> fmt_sexpr se
 | SReturn(e) -> fmt_one "Return" (fmt_sexpr e)
-| SFDecl(n, p, t, b) -> 
-  fmt_four "FDecl" n (fmt_sparams p) (fmt_typ t) (fmt_sstmt_list b)
 | SVDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_sexpr e)
 | SForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 

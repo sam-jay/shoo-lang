@@ -330,23 +330,6 @@ and check_stmt ctxt = function
     (add_to_ctxt (Struct(name), 
         Some(List.hd vdecl_repeats_map)) name ctxt, Void,
         SStructDef(name, field_types))
-| FDecl(name, params, ret, body) ->
-  let f_type = Func({
-    param_typs = List.map (fun (t, _) -> t) params;
-    return_typ = ret;
-  }) in
-  (* TODO(claire) why is this here? It gives unused variable warnings
-   * because of this. *)
-  let init = Some(FExpr({
-    typ = ret;
-    params = params;
-    body = []
-  })) in
-  let nctxt = add_to_ctxt (f_type, None) name ctxt in
-  let nctxt = (create_scope params)::nctxt in
-  let (nctxt, t, ssl) = check_stmt_list nctxt body in
-  if t = ret then (List.tl nctxt, Void, SFDecl(name, params, ret, ssl))
-  else raise (Failure "invalid function return type")
 | Return(e) -> let (nctxt, (t, ss)) = 
     check_expr ctxt e in (nctxt, t, SReturn (t, ss))
 | ForLoop (s1, e2, e3, st) -> 

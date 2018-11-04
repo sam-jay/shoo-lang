@@ -41,7 +41,10 @@ stmt:
   expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
 | RETURN expr_opt SEMI { Return($2) }
-| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET { FDecl($2, $4, $6, List.rev $8) }
+| FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET {
+  VDecl(Func({ param_typs = List.map (fun (ty, _) -> ty) $4; return_typ = $6 }), $2,
+    Some(FExpr({ name = $2; typ = $6; params = $4; body = List.rev $8 })))
+}
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
 | FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
@@ -106,7 +109,8 @@ function_expr:
         * declaration? */
     FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
     RBRACKET
-    { { params = $3;
+    { { name = "";
+        params = $3;
         typ = $5;
         body = List.rev $7} }
 

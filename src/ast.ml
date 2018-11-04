@@ -11,6 +11,7 @@ type typ =
 | Func of func_typ
 | Struct of string
 | Array of typ
+| ABSTRACT
 
 and func_typ = {
     param_typs : typ list;
@@ -67,16 +68,16 @@ and expr =
 | Noexpr
 
 and fexpr = {
-    typ : typ;
-    params: bind list;
-    body : stmt list
+  name : string;
+  typ : typ;
+  params: bind list;
+  body : stmt list
 }
 
 and stmt =
   Expr of expr
 | VDecl of typ * string * expr option
 | Return of expr
-| FDecl of string * (typ * string) list * typ * stmt list
 | If of expr * stmt list * stmt list
 | ForLoop of (stmt option) * (expr option) * (expr option) * stmt list
 | StructDef of string * (typ * string * expr option) list
@@ -105,6 +106,7 @@ let rec fmt_typ = function
   | String -> "String"
   | Struct(n) -> fmt_one "Struct" n
   | Array(t) -> fmt_one "Array" (fmt_typ t)
+  | ABSTRACT -> "ABSTRACT"
 
 and fmt_typ_list l =
   let typs = List.map fmt_typ l in
@@ -178,8 +180,6 @@ and fmt_init l =
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
-| FDecl(n, p, t, b) -> 
-  fmt_four "FDecl" n (fmt_params p) (fmt_typ t) (fmt_stmt_list b)
 | VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_expr e)
 | ForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 
