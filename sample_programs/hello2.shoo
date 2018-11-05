@@ -1,0 +1,7 @@
+function foo() func(;string) {
+  string x = "Hello World";
+  return function () string {
+    return x;
+  };
+}
+println(foo()());

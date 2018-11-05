@@ -3,7 +3,7 @@ open OUnit2
 let suite =
   "suite">:::
   [
-    TParser.tests;
+    (*TParser.tests;*)
     TFullPrograms.tests;
     TSemant.tests;
   ];;

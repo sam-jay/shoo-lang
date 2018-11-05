@@ -172,7 +172,7 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
           Inc when t = Int -> (nctxt, (Int, spop))
         | Dec when t = Int -> (nctxt, (Int, spop))
         | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
-| FCall(name, args) ->
+| FCall(expr, args) ->
   let check_args f_type args =
     let rec helper sl = function
       ([], []) -> sl
@@ -184,12 +184,12 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
     in
     helper [] (f_type.param_typs, args)
   in
-  let t = find_in_ctxt name ctxt in
+  let (_, (t, se)) = check_expr ctxt expr in
   let (func_t, sl) = match t with
     Func(func_t) -> (func_t, check_args func_t args)
   | _ -> raise (Failure "not a function")
   in
-  (ctxt, (func_t.return_typ, SFCall(name, sl)))
+  (ctxt, (func_t.return_typ, SFCall((t, se), sl)))
 | FExpr(fexpr) ->
   let func_t = Func({ return_typ = fexpr.typ; param_typs = List.map fst fexpr.params }) in
   let create_scope list =
@@ -214,7 +214,7 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
     srecursive = false; (* TODO: handle recursion *)
   })))
 | Noexpr -> (ctxt, (Void, SNoexpr))
-| _ -> raise (Failure "not implemented")
+| _ -> raise (Failure "not implemented in semant")
 
 and check_stmt_list (ctxt : typ StringMap.t list) = function
   [] -> (ctxt, Void, [])
