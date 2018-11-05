@@ -10,7 +10,7 @@ let check input =
 
 let ref_int_undec _ =
   let f = fun () -> check "int x = 1; x + y;" in
-  assert_raises (Semant.Undeclared_reference "undeclared reference") f
+  assert_raises (Semant.Undeclared_reference "undeclared reference y") f
   
 
 (* Variable Assignment *)
@@ -21,15 +21,15 @@ let asn_str_str _ = assert_equal "" (check "string s; s = \"abs\";")
 
 let asn_int_str _ =
   let f = fun () -> check "int x; x = \"foo\";" in
-  assert_raises (Semant.Type_mismatch "type mismatch in assignment") f
+  assert_raises (Semant.Type_mismatch "type mismatch error") f
 
 let asn_int_bool _ =
   let f = fun () -> check "int i; i = true;" in
-  assert_raises (Semant.Type_mismatch "type mismatch in assignment") f
+  assert_raises (Semant.Type_mismatch "type mismatch error") f
 
 let asn_bool_int _ =
   let f = fun () -> check "bool b; b = 48;" in
-  assert_raises (Semant.Type_mismatch "type mismatch in assignment") f
+  assert_raises (Semant.Type_mismatch "type mismatch error") f
 
 
 (* Binary Operators *)
@@ -86,7 +86,7 @@ let fcall_valid _ = assert_equal "" (check "function foo() int { return 0; } foo
 
 let fcall_invalid _ =
   let f = fun () -> check "foo();" in
-  assert_raises (Semant.Undeclared_reference "undeclared function foo") f
+  assert_raises (Semant.Undeclared_reference "undeclared reference foo") f
 
 let assign_to_global _ = assert_equal "" (check "\
 string x;\
@@ -104,6 +104,58 @@ function foo() int {\
   x = 5;\
   return 1;\
 }")
+
+let empty_struct_decl _ = assert_equal "" (check "\
+struct Empty {}\
+")
+
+let simple_struct_decl _ = assert_equal "" (check "\
+struct BankAccount {\
+  int number;\
+  int balance = 0;\
+}\
+")
+
+let simple_struct_init _ = assert_equal "" (check "\
+struct BankAccount {\
+  int number;\
+  int balance = 0;\
+}\
+")
+
+let literal_struct_init _ = assert_equal "" (check "\
+struct BankAccount {\
+  int number;\
+  int balance = 0;\
+}\
+BankAccount foo = {\
+  number = 0;\
+  balance = 0;\
+};\
+")
+
+let new_struct_init _ = assert_equal "" (check "\
+struct BankAccount {\
+  int number;\
+  int balance = 0;\
+}\
+BankAccount foo = new(BankAccount);
+")
+
+let struct_as_member _ = assert_equal "" (check "\
+struct Foo {}\
+struct Bar {\
+  Foo x;\
+}\
+")
+
+let struct_duplicate_decl _ =
+  let f = fun () -> check "struct Foo { int number; int number; }" in
+  assert_raises (Failure "number already declared in struct Foo") f
+
+let recursive_struct _ =
+  let f = fun () -> check "struct Recursive { Recursive x; }" in
+  assert_raises (Failure "illegal recursive struct Recursive") f
 
 let tests =
   "Semantic checker" >:::
@@ -150,4 +202,12 @@ let tests =
 
     "Assign to a global variable inside a function" >:: assign_to_global;
     "Shadow a global variable inside a function" >:: shadow_global;
+
+    "Empty struct declaration" >:: empty_struct_decl;
+    "Simple struct declaration" >:: simple_struct_decl;
+    "Literal struct initialization" >:: literal_struct_init;
+    "Initialize struct using new" >:: new_struct_init;
+    "Duplicate struct member" >:: struct_duplicate_decl;
+    "Recursive struct" >:: recursive_struct;
+    "Struct as struct member" >:: struct_as_member;
   ]

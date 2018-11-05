@@ -28,31 +28,35 @@ exception Undeclared_reference of string
 
 let check_assign lvaluet rvaluet err =
     if lvaluet = rvaluet then lvaluet else raise err
+  
+let check_asn lvalue_t rvalue_t =
+  if lvalue_t = rvalue_t 
+  then lvalue_t
+  else raise (Type_mismatch "type mismatch error")
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
  * The map in the tuple is used for the member fields
  * in structs. The map is None unless you are adding a new
  * struct type. *)    
-let add_to_ctxt (v_type, v_member_map) v_name ctxt =
+let add_to_ctxt (v_type : typ) (v_name : string) (ctxt : typ StringMap.t list) =
   let map = List.hd ctxt in
-  (* TODO(claire): why rename v_type to v? *)
-  let v = v_type in
-  let newMap = StringMap.add v_name (v, v_member_map) map in
-  newMap::List.tl ctxt
+  try
+    match (StringMap.find v_name map) with
+    _ -> raise (Failure (v_name ^ " already declared"))
+  with Not_found ->
+    let newMap = StringMap.add v_name v_type map in
+    newMap::List.tl ctxt
 
 (* Returns a tuple with the type and the map and if
  * the variable is initalized or not. The type and
  * map are optional. *)
-let find_in_ctxt v_name ctxt =
-  let rec helper init = function
-    [] -> ((None, None), init)
-  | hd::_ when StringMap.mem v_name hd ->
-    let (v_type, v_map) = StringMap.find v_name hd in
-    (* TODO(claire) should this be Some(v_map) right? *)
-    ((Some(v_type), Some(v_map)), init)
-  | _::tl -> helper false tl in
-  helper true ctxt
+let rec find_in_ctxt (v_name : string) (ctxt : typ StringMap.t list) =
+  try
+    StringMap.find v_name (List.hd ctxt)
+  with Not_found -> match List.tl ctxt with
+    [] -> raise (Undeclared_reference ("undeclared reference " ^ v_name))
+  | tail -> find_in_ctxt v_name tail
 
 (* This functions gives the member map if the 
  * type given is a struct. *)
@@ -68,26 +72,12 @@ let find_in_ctxt v_name ctxt =
     | _ -> None   
 *)
 
+
 let check_struct_access struct_type field_name ctxt = 
     (* TODO(claire) need to pretty print errors below *)
-    let access_type = (match struct_type with
+    let (access_type, _) = (match struct_type with
         (* make sure you were passed a struct *)
-        Struct(struct_name) -> 
-            (* get the map of fields for given struct type named name *)
-            let ((_,m),_) = find_in_ctxt struct_name ctxt
-            in
-            (match m with 
-            Some(_) -> 
-                (* find the field in the struct type's map *)
-                let ((t_opt,_),_) = find_in_ctxt field_name ctxt 
-                in
-                (match t_opt with
-                    Some(t) -> t
-                    | None -> raise (Failure "no such member field name")
-                ) 
-            (* None should never happen. All structs, even empty structs,
-             * should have maps.*)
-            | None -> raise (Failure "struct missing member map. shouldn't happend."))
+        Struct(struct_t) ->  StringMap.find field_name struct_t.members
        | _ -> raise (Failure "not a struct type"))
        in access_type 
 let create_scope list = 
@@ -104,7 +94,7 @@ let create_scope list =
 
 (* Returns a tuple with a map and another tuple.
  * The second tuple has the type and the stype. *)
-let rec check_expr ctxt = function
+let rec check_expr (ctxt : typ StringMap.t list) = function
 | IntLit(x) -> (ctxt, (Int, SIntLit x))
 | BoolLit(x) -> (ctxt, (Bool, SBoolLit x))
 | FloatLit(x) -> (ctxt, (Float, SFloatLit x))
@@ -136,24 +126,21 @@ let rec check_expr ctxt = function
         if t1 = Int then (nctxt, (t1, SArrayAccess(arr_name, (t1, se1))))
         else raise (Failure ("can't access array with non-integer type"))
 | Id(n) -> 
-    let ((t_opt, _), _) = find_in_ctxt n ctxt in
-    (match t_opt with
-      Some(t) -> (ctxt, (t, SId n))
-    | None -> raise (Undeclared_reference "undeclared reference"))
+    let t = find_in_ctxt n ctxt in
+    (ctxt, (t, SId n))
 | Assign(e1, e2) ->
     let (nctxt, (t2, se2)) = check_expr ctxt e2 in
     let (nctxt, (t1, se1)) = match e1 with
-        Id(n) -> let ((t_opt,_), _) = find_in_ctxt n nctxt in
-                (match t_opt with
-                  Some(t) -> (nctxt, (t, SId n))
-                | None -> raise (Undeclared_reference "undeclared reference"))
+        Id(n) -> let t = find_in_ctxt n nctxt in
+                (nctxt, (t, SId n))
       | _ -> check_expr nctxt e1 in
-    if t1 = t2 then (nctxt, (t1, SAssign((t1, se1), (t2, se2))))
-    else raise (Type_mismatch "type mismatch in assignment")
+    (nctxt, (check_asn t1 t2, SAssign((t1, se1), (t2, se2))))
+
 | Dot(e, field_name) -> 
         let (_, (t1, se1)) = check_expr ctxt e in
         let field_type = check_struct_access t1 field_name ctxt 
         in (ctxt, (field_type, SDot((field_type, se1), field_name)))
+
 | Binop(e1, op, e2) ->
         let (nctxt, (lt, se1)) = check_expr ctxt e1 in
         let (nctxt, (rt, se2)) = check_expr nctxt e2 in
@@ -198,17 +185,14 @@ let rec check_expr ctxt = function
         | Dec when t = Int -> (nctxt, (Int, spop))
         | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
 | FCall(name, args) ->
-  let ((t_opt, _), _) = find_in_ctxt name ctxt in
-  (match t_opt with
-    Some(t) -> 
-      let (nctxt, sl) = check_args ctxt t args in
-      (nctxt, (t, SFCall(name, sl)))
-  | _ -> raise (Undeclared_reference ("undeclared function " ^ name)))
-| _ -> (ctxt, (Void, SNoexpr))
+  let t = find_in_ctxt name ctxt in
+  let (nctxt, sl) = check_args ctxt t args in
+  (nctxt, (t, SFCall(name, sl)))
+| _ -> raise (Failure "not implemented")
 
 (* Make sure that types of arguments match the types of
  * formal parameters when you declare a func variable. *)
-and check_args ctxt t args =
+and check_args (ctxt : typ StringMap.t list) (t : typ) args =
   match t with Func(f_type) ->
   let rec helper ctxt sl = function
     ([], []) -> (ctxt, sl)
@@ -223,7 +207,7 @@ and check_args ctxt t args =
   helper ctxt [] (f_type.param_typs, args)
   | _ -> raise (Failure "unknown")
 
-let rec check_stmt_list ctxt = function
+let rec check_stmt_list (ctxt : typ StringMap.t list) = function
   [] -> (ctxt, Void, [])
 | hd::tl -> 
   let (nctxt, t, ss) = check_stmt ctxt hd in
@@ -231,31 +215,54 @@ let rec check_stmt_list ctxt = function
   let ret = if t = Void then t_rest else t in
   (nctxt, ret, ss::ssl) (* returned something *)
 
-and check_bool_expr ctxt e = 
+and check_bool_expr (ctxt : typ StringMap.t list) e = 
     let (nctxt, (t, st)) = check_expr ctxt e in
     if (t != Bool) then raise (Failure "expected Boolean expression")
     (* TODO(claire) add pretty print above *) 
     else (nctxt, (t, st)) 
 
 (* returns the map, type, stype *)
-and check_stmt ctxt = function
+and check_stmt (ctxt : typ StringMap.t list) = function
   Expr(e) -> let (nctxt, (t, ss)) = 
       check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
 | VDecl(t, n, i) ->
-  let (nctxt, si) = match i with
-    None -> (ctxt, None)
-  | Some(e) -> (let (nctxt, (t_i, si)) = 
-      check_expr ctxt e in (nctxt, Some((t_i, si)))) in
-  let ((t_opt, _), local) = find_in_ctxt n nctxt in
-  (match t_opt with
-    None ->
-        (add_to_ctxt (t, None) n nctxt, Void, SVDecl(t, n, si)) 
-    (* TODO(claire): so we can have local vars with the 
-     * same name as global vars and the local var wins over the 
-     * global one? need to update LRM with this info abt scoping *)
-  | Some(_) when not local -> 
-          (add_to_ctxt (t, None) n nctxt, Void, SVDecl(t, n, si))
-  | Some(_) -> raise (Failure "already declared"))
+  (match i with
+    None -> (add_to_ctxt t n ctxt, Void, SVDecl(t, n, None))
+  | Some(e) ->
+    let (nctxt, (t_i, s_i)) = check_expr ctxt e in
+    let nctxt = add_to_ctxt t n nctxt in
+    (nctxt, Void, SVDecl((check_asn t_i t), n, Some((t_i, s_i)))))
+
+| StructDef(name, fields) ->
+    let helper (map, list) (lt, n, i) =
+      match lt with
+        Struct(struct_t) when name = struct_t.name -> raise (Failure ("illegal recursive struct " ^ name))
+      | _ ->
+      try
+      match (StringMap.find n map) with
+        _ -> raise (Failure (n ^ " already declared in struct " ^ name))
+      with Not_found ->
+        let (init, opt_se) = match i with
+          None -> (None, None)
+        | Some e ->
+          let (_, (rt, se)) = check_expr ctxt e in
+          let _ = check_asn lt rt in
+          (Some(e), Some(rt, se))
+        in
+        let new_map = StringMap.add n (lt, init) map in
+        let new_list = (lt, n, opt_se)::list in
+        (new_map, new_list)
+    in
+    let (members, fields_se) = List.fold_left helper (StringMap.empty, []) fields in
+    let struct_t = Struct({
+      name = name;
+      members = members;
+      incomplete = false;
+    }) in
+    let nctxt = add_to_ctxt struct_t name ctxt in
+    (nctxt, Void, SStructDef(name, fields_se))
+
+(*
 | StructDef(name, fields) ->
     (* Create a map of the member fields. 
      * See if there are repeat variables. *)
@@ -330,8 +337,11 @@ and check_stmt ctxt = function
     (add_to_ctxt (Struct(name), 
         Some(List.hd vdecl_repeats_map)) name ctxt, Void,
         SStructDef(name, field_types))
+*)
+
+
 | Return(e) -> let (nctxt, (t, ss)) = 
-    check_expr ctxt e in (nctxt, t, SReturn (t, ss))
+    check_expr ctxt e in (nctxt, t, SReturn((t, ss)))
 | ForLoop (s1, e2, e3, st) -> 
      let (ctxt1, s1') = match s1 with
         None -> (ctxt, None)
@@ -372,10 +382,13 @@ let def_ctxt =
     param_typs = [String];
     return_typ = Void
   }) in
-  let ctxt = add_to_ctxt (println_t, None) "println" [StringMap.empty] in
+  let ctxt = add_to_ctxt println_t "println" [StringMap.empty] in
   ctxt
 
-let check_program prog =
-  (*print_endline(Printer.fmt_prog prog);*)
-  let (_, _, ssl) = check_stmt_list def_ctxt prog in
+let check_program (prog : stmt list) =
+  let (_, _, ssl) = check_stmt_list 
+  def_ctxt 
+  prog 
+  in
   ssl
+

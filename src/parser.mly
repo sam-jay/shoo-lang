@@ -1,4 +1,7 @@
-%{ open Ast %}
+%{
+  open Ast
+  module StringMap = Map.Make (String)
+%}
 
 %token SEMI ASSIGN INT FLOAT STRING BOOL FUNC LPAREN RPAREN LBRACKET RBRACKET
 %token PLUS MINUS TIMES DIVIDE MOD ASSIGN NOT DECREMENT INCREMENT
@@ -142,7 +145,7 @@ typ:
 | STRING { String }
 | ARRAY LT typ GT { Array($3) }
 | func_type { Func($1) }
-| STRUCTID { Struct($1) }
+| STRUCTID { Struct({ name = $1; members = StringMap.empty; incomplete = true }) }
 
 /* This is the type for Func with the syntax
 func(parameter_type1, parameter_type2; return_type) */
