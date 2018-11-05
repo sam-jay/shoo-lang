@@ -72,26 +72,6 @@ let rec find_in_ctxt (v_name : string) (ctxt : typ StringMap.t list) =
     | _ -> None   
 *)
 
-
-let check_struct_access struct_type field_name ctxt = 
-    (* TODO(claire) need to pretty print errors below *)
-    let (access_type, _) = (match struct_type with
-        (* make sure you were passed a struct *)
-        Struct(struct_t) ->  StringMap.find field_name struct_t.members
-       | _ -> raise (Failure "not a struct type"))
-       in access_type 
-let create_scope list = 
- let rec helper m = function
-   [] -> m
- (* TODO(claire) I think that this is just used for parameters right?
-  * If so, you will never be defining a new struct type in
- * the parameters so it must already be defined in the outer scope
- * so no member map is needed *)
- | (t, n)::tl -> 
-    let new_m = StringMap.add n (t, None) m in 
-        helper new_m tl
- in helper StringMap.empty list
-
 (* Returns a tuple with a map and another tuple.
  * The second tuple has the type and the stype. *)
 let rec check_expr (ctxt : typ StringMap.t list) = function
@@ -137,9 +117,17 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
     (nctxt, (check_asn t1 t2, SAssign((t1, se1), (t2, se2))))
 
 | Dot(e, field_name) -> 
-        let (_, (t1, se1)) = check_expr ctxt e in
-        let field_type = check_struct_access t1 field_name ctxt 
-        in (ctxt, (field_type, SDot((field_type, se1), field_name)))
+  let check_struct_access struct_type field_name = 
+    (* TODO(claire) need to pretty print errors below *)
+    let (access_type, _) = (match struct_type with
+      (* make sure you were passed a struct *)
+      Struct(struct_t) ->  StringMap.find field_name struct_t.members
+    | _ -> raise (Failure "not a struct type"))
+    in access_type
+  in
+  let (_, (t1, se1)) = check_expr ctxt e in
+  let field_type = check_struct_access t1 field_name 
+  in (ctxt, (field_type, SDot((field_type, se1), field_name)))
 
 | Binop(e1, op, e2) ->
         let (nctxt, (lt, se1)) = check_expr ctxt e1 in
@@ -185,34 +173,59 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
         | Dec when t = Int -> (nctxt, (Int, spop))
         | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
 | FCall(name, args) ->
+  let check_args f_type args =
+    let rec helper sl = function
+      ([], []) -> sl
+    | (p_typ::pl, arg::al) ->
+      let (_, (a_typ, se)) = check_expr ctxt arg in
+      if p_typ = a_typ then helper ((a_typ, se)::sl) (pl, al)
+      else raise (Failure "argument type mismatch")
+    | _ -> raise (Failure "invalid number of arguments")
+    in
+    helper [] (f_type.param_typs, args)
+  in
   let t = find_in_ctxt name ctxt in
-  let (nctxt, sl) = check_args ctxt t args in
-  (nctxt, (t, SFCall(name, sl)))
+  let (func_t, sl) = match t with
+    Func(func_t) -> (func_t, check_args func_t args)
+  | _ -> raise (Failure "not a function")
+  in
+  (ctxt, (func_t.return_typ, SFCall(name, sl)))
+| FExpr(fexpr) ->
+  let func_t = Func({ return_typ = fexpr.typ; param_typs = List.map fst fexpr.params }) in
+  let create_scope list =
+    let rec helper m = function
+      [] -> m
+    | (t, n)::tl -> 
+        let new_m = StringMap.add n t m in 
+            helper new_m tl
+    in
+    if fexpr.name != ""
+    then helper (StringMap.add fexpr.name func_t StringMap.empty) list
+    else helper StringMap.empty list
+  in
+  let func_scope = create_scope fexpr.params in
+  let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
+  check_asn return_t fexpr.typ;
+  (ctxt, (func_t, SFExpr({
+    sname = fexpr.name;
+    styp = fexpr.typ;
+    sparams = fexpr.params;
+    sbody = sl;
+    srecursive = false; (* TODO: handle recursion *)
+  })))
+| Noexpr -> (ctxt, (Void, SNoexpr))
 | _ -> raise (Failure "not implemented")
 
-(* Make sure that types of arguments match the types of
- * formal parameters when you declare a func variable. *)
-and check_args (ctxt : typ StringMap.t list) (t : typ) args =
-  match t with Func(f_type) ->
-  let rec helper ctxt sl = function
-    ([], []) -> (ctxt, sl)
-  (* TODO(claire) does handle struct types
-   * already as long as dot is added to check_expr? *)
-  | (p_typ::pl, arg::al) ->
-    let (nctxt, (a_typ, se)) = check_expr ctxt arg in
-    if p_typ = a_typ then helper nctxt ((a_typ, se)::sl) (pl, al)
-    else raise (Failure "argument type mismatch")
-  | _ -> raise (Failure "invalid number of arguments")
-  in
-  helper ctxt [] (f_type.param_typs, args)
-  | _ -> raise (Failure "unknown")
-
-let rec check_stmt_list (ctxt : typ StringMap.t list) = function
+and check_stmt_list (ctxt : typ StringMap.t list) = function
   [] -> (ctxt, Void, [])
 | hd::tl -> 
   let (nctxt, t, ss) = check_stmt ctxt hd in
   let (nctxt, t_rest, ssl) = check_stmt_list nctxt tl in
-  let ret = if t = Void then t_rest else t in
+  let ret =
+    if t = Void
+    then t_rest 
+    else (if List.length tl != 0 then raise (Failure "dead code after return") else (); t)
+  in
   (nctxt, ret, ss::ssl) (* returned something *)
 
 and check_bool_expr (ctxt : typ StringMap.t list) e = 

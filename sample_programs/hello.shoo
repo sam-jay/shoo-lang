@@ -1,0 +1,4 @@
+function foo() string {
+  return "Hello World";
+}
+println(foo());
