@@ -105,6 +105,28 @@ function foo() int {\
   return 1;\
 }")
 
+let dead_code_after_return _ =
+  let f = fun () -> check "\
+  function foo() int {\
+    return 5;
+    int x = 5;
+  }\
+  " in
+  assert_raises (Failure "dead code after return") f
+
+let illegal_void_param _ =
+  let f = fun () -> check "\
+  function foo(void x) int {\
+    return 5;
+  }\
+  " in
+  assert_raises (Parsing.Parse_error) f
+
+let return_void _ = assert_equal "" (check "\
+function foo() void {\
+  return;\
+}")
+
 let empty_struct_decl _ = assert_equal "" (check "\
 struct Empty {}\
 ")
@@ -148,6 +170,17 @@ struct Bar {\
   Foo x;\
 }\
 ")
+
+let simple_call _ = assert_equal "" (check "\
+function foo() string {\
+  return \"Hello World\";
+}\
+println(foo());
+")
+
+let call_nonfunc _ =
+  let f = fun () -> check "int foo = 5; foo();" in
+  assert_raises (Failure "not a function") f
 
 let struct_duplicate_decl _ =
   let f = fun () -> check "struct Foo { int number; int number; }" in
@@ -196,12 +229,17 @@ let tests =
     
     (* Function Declaration *)
     "Function declaration that returns int" >:: func_dec_int;
+    "Illegal void parameter" >:: illegal_void_param;
+    "Return void" >:: return_void;
+    "Simple function call" >:: simple_call;
 
     "Valid function call" >:: fcall_valid;
     "Missing function call" >:: fcall_invalid;
+    "Call something which is not a function" >:: call_nonfunc;
 
     "Assign to a global variable inside a function" >:: assign_to_global;
     "Shadow a global variable inside a function" >:: shadow_global;
+    "Dead code after return" >:: dead_code_after_return;
 
     "Empty struct declaration" >:: empty_struct_decl;
     "Simple struct declaration" >:: simple_struct_decl;
