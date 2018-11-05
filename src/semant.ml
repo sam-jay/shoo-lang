@@ -30,7 +30,10 @@ let check_assign lvaluet rvaluet err =
     if lvaluet = rvaluet then lvaluet else raise err
   
 let check_asn lvalue_t rvalue_t =
-  if lvalue_t = rvalue_t 
+  let found_match = match lvalue_t, rvalue_t with
+    Struct(s_l), Struct(s_r) -> s_l.name = s_r.name
+  | _ -> lvalue_t = rvalue_t in
+  if found_match
   then lvalue_t
   else raise (Type_mismatch "type mismatch error")
 
@@ -79,6 +82,11 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
 | BoolLit(x) -> (ctxt, (Bool, SBoolLit x))
 | FloatLit(x) -> (ctxt, (Float, SFloatLit x))
 | StrLit(x) -> (ctxt, (String, SStrLit x))
+
+| New(NStruct(name)) ->
+    let t = find_in_ctxt name ctxt in
+    (ctxt, (t, SNew(SNStruct(name))))
+    
 (* TODO(claire) This doesn't handle arrays of structs I don't think? *)
 (* Go through all the items in the square brackets to see if they match *)
 (* TODO(claire) check_expr never changes the map so we shouldn't pass
@@ -100,14 +108,17 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
         else raise (Failure ("Multiple types inside an array"))
         (* TODO(claire) add pretty print for error above *)
     ) x in (ctxt, (item_type, SArrayLit t))
+
 | ArrayAccess(arr_name, int_expr) ->
-        let (nctxt, (t1, se1)) = check_expr ctxt int_expr 
-        in
-        if t1 = Int then (nctxt, (t1, SArrayAccess(arr_name, (t1, se1))))
-        else raise (Failure ("can't access array with non-integer type"))
+    let (nctxt, (t1, se1)) = check_expr ctxt int_expr 
+    in
+    if t1 = Int then (nctxt, (t1, SArrayAccess(arr_name, (t1, se1))))
+    else raise (Failure ("can't access array with non-integer type"))
+
 | Id(n) -> 
     let t = find_in_ctxt n ctxt in
     (ctxt, (t, SId n))
+
 | Assign(e1, e2) ->
     let (nctxt, (t2, se2)) = check_expr ctxt e2 in
     let (nctxt, (t1, se1)) = match e1 with
@@ -117,102 +128,111 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
     (nctxt, (check_asn t1 t2, SAssign((t1, se1), (t2, se2))))
 
 | Dot(e, field_name) -> 
-  let check_struct_access struct_type field_name = 
-    (* TODO(claire) need to pretty print errors below *)
-    let (access_type, _) = (match struct_type with
-      (* make sure you were passed a struct *)
-      Struct(struct_t) ->  StringMap.find field_name struct_t.members
-    | _ -> raise (Failure "not a struct type"))
-    in access_type
-  in
-  let (_, (t1, se1)) = check_expr ctxt e in
-  let field_type = check_struct_access t1 field_name 
-  in (ctxt, (field_type, SDot((field_type, se1), field_name)))
+    let check_struct_access struct_type field_name = 
+      (* TODO(claire) need to pretty print errors below *)
+      let (access_type, _) = (match struct_type with
+        (* make sure you were passed a struct *)
+        Struct(s) ->
+          (let t = find_in_ctxt s.name ctxt in (* Get the complete struct with members *)
+          let struct_t = match t with Struct(st) -> st | _ -> raise (Failure "shouldn't happen") in
+          try StringMap.find field_name struct_t.members
+          with Not_found -> raise (Failure ("struct " ^ s.name ^ " has no member " ^ field_name)))
+      | _ -> raise (Failure "dot operator used on non-struct type"))
+      in access_type
+    in
+    let (_, (t1, se1)) = check_expr ctxt e in
+    let field_type = check_struct_access t1 field_name 
+    in (ctxt, (field_type, SDot((field_type, se1), field_name)))
 
 | Binop(e1, op, e2) ->
-        let (nctxt, (lt, se1)) = check_expr ctxt e1 in
-        let (nctxt, (rt, se2)) = check_expr nctxt e2 in
-        let sbinop = SBinop((lt, se1), op, (rt, se2)) in
-        (match op with
-          Add | Sub | Mult | Div when lt = Int && rt = Int -> (nctxt, (Int, sbinop))
-        | Add | Sub | Mult | Div when lt = Float && rt = Float -> (nctxt, (Float, sbinop))
-        (* Allow for ints and floats to be used together. *)
-        | Add | Sub | Mult | Div when 
-            (lt = Float && rt = Int) ||
-            (lt = Int && rt = Float) -> (nctxt, (Float, sbinop))
-        (* TODO(claire): make sure LRM says that we can compare all
-         * expressions of the same type using ==, including functions, 
-         * strings,
-         * structs, arrays? *)
-        | Equal | Neq  when lt = rt -> (nctxt, (Bool, sbinop))
-        | Equal | Neq  when 
-            (lt = Float && rt = Int) ||
-            (lt = Int && rt = Float) -> (nctxt, (Bool, sbinop))
-        | Equal | Neq  when lt = Bool && rt = Bool -> 
-                (nctxt, (Bool, sbinop))
-        | Less | Leq | Greater | Geq  
-                                 when (lt = Int && rt = Int) 
-                                 || (lt = Float || rt = Float) -> 
-                                         (nctxt, (Bool, sbinop))
-        | And | Or when rt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
-        | _ -> raise (Type_mismatch "Type mismatch across binary operator"))
-        (* TODO(claire) need to pretty print error above *)
+    let (nctxt, (lt, se1)) = check_expr ctxt e1 in
+    let (nctxt, (rt, se2)) = check_expr nctxt e2 in
+    let sbinop = SBinop((lt, se1), op, (rt, se2)) in
+    (match op with
+      Add | Sub | Mult | Div when lt = Int && rt = Int -> (nctxt, (Int, sbinop))
+    | Add | Sub | Mult | Div when lt = Float && rt = Float -> (nctxt, (Float, sbinop))
+    (* Allow for ints and floats to be used together. *)
+    | Add | Sub | Mult | Div when 
+        (lt = Float && rt = Int) ||
+        (lt = Int && rt = Float) -> (nctxt, (Float, sbinop))
+    (* TODO(claire): make sure LRM says that we can compare all
+      * expressions of the same type using ==, including functions, 
+      * strings,
+      * structs, arrays? *)
+    | Equal | Neq  when lt = rt -> (nctxt, (Bool, sbinop))
+    | Equal | Neq  when 
+        (lt = Float && rt = Int) ||
+        (lt = Int && rt = Float) -> (nctxt, (Bool, sbinop))
+    | Equal | Neq  when lt = Bool && rt = Bool -> 
+            (nctxt, (Bool, sbinop))
+    | Less | Leq | Greater | Geq  
+                              when (lt = Int && rt = Int) 
+                              || (lt = Float || rt = Float) -> 
+                                      (nctxt, (Bool, sbinop))
+    | And | Or when rt = Bool && rt = Bool -> (nctxt, (Bool, sbinop))
+    | _ -> raise (Type_mismatch "Type mismatch across binary operator"))
+    (* TODO(claire) need to pretty print error above *)
+
 | Unop(op, e) -> 
-        let (nctxt, (t, e)) = check_expr ctxt e in 
-        let sunop = SUnop(op, (t, e)) in
-        (match op with 
-          Neg when t = Int -> (nctxt, (Int, sunop))
-        | Neg when t = Float -> (nctxt, (Float, sunop))
-        | Not when t = Bool -> (nctxt, (Bool, sunop))
-        | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
+    let (nctxt, (t, e)) = check_expr ctxt e in 
+    let sunop = SUnop(op, (t, e)) in
+    (match op with 
+      Neg when t = Int -> (nctxt, (Int, sunop))
+    | Neg when t = Float -> (nctxt, (Float, sunop))
+    | Not when t = Bool -> (nctxt, (Bool, sunop))
+    | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
+
 | Pop(e, op) ->
-        let (nctxt, (t, e)) = check_expr ctxt e in 
-        let spop = SPop((t, e), op) in
-        (match op with 
-          Inc when t = Int -> (nctxt, (Int, spop))
-        | Dec when t = Int -> (nctxt, (Int, spop))
-        | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
+    let (nctxt, (t, e)) = check_expr ctxt e in 
+    let spop = SPop((t, e), op) in
+    (match op with 
+      Inc when t = Int -> (nctxt, (Int, spop))
+    | Dec when t = Int -> (nctxt, (Int, spop))
+    | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
+
 | FCall(expr, args) ->
-  let check_args f_type args =
-    let rec helper sl = function
-      ([], []) -> sl
-    | (p_typ::pl, arg::al) ->
-      let (_, (a_typ, se)) = check_expr ctxt arg in
-      if p_typ = a_typ then helper ((a_typ, se)::sl) (pl, al)
-      else raise (Failure "argument type mismatch")
-    | _ -> raise (Failure "invalid number of arguments")
+    let check_args f_type args =
+      let rec helper sl = function
+        ([], []) -> sl
+      | (p_typ::pl, arg::al) ->
+        let (_, (a_typ, se)) = check_expr ctxt arg in
+        if p_typ = a_typ then helper ((a_typ, se)::sl) (pl, al)
+        else raise (Failure "argument type mismatch")
+      | _ -> raise (Failure "invalid number of arguments")
+      in
+      helper [] (f_type.param_typs, args)
     in
-    helper [] (f_type.param_typs, args)
-  in
-  let (_, (t, se)) = check_expr ctxt expr in
-  let (func_t, sl) = match t with
-    Func(func_t) -> (func_t, check_args func_t args)
-  | _ -> raise (Failure "not a function")
-  in
-  (ctxt, (func_t.return_typ, SFCall((t, se), sl)))
+    let (_, (t, se)) = check_expr ctxt expr in
+    let (func_t, sl) = match t with
+      Func(func_t) -> (func_t, check_args func_t args)
+    | _ -> raise (Failure "not a function")
+    in
+    (ctxt, (func_t.return_typ, SFCall((t, se), sl)))
+
 | FExpr(fexpr) ->
-  let func_t = Func({ return_typ = fexpr.typ; param_typs = List.map fst fexpr.params }) in
-  let create_scope list =
-    let rec helper m = function
-      [] -> m
-    | (t, n)::tl -> 
-        let new_m = StringMap.add n t m in 
-            helper new_m tl
+    let func_t = Func({ return_typ = fexpr.typ; param_typs = List.map fst fexpr.params }) in
+    let create_scope list =
+      let rec helper m = function
+        [] -> m
+      | (t, n)::tl -> 
+          let new_m = StringMap.add n t m in 
+              helper new_m tl
+      in
+      if fexpr.name != ""
+      then helper (StringMap.add fexpr.name func_t StringMap.empty) list
+      else helper StringMap.empty list
     in
-    if fexpr.name != ""
-    then helper (StringMap.add fexpr.name func_t StringMap.empty) list
-    else helper StringMap.empty list
-  in
-  let func_scope = create_scope fexpr.params in
-  let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
-  check_asn return_t fexpr.typ;
-  (ctxt, (func_t, SFExpr({
-    sname = fexpr.name;
-    styp = fexpr.typ;
-    sparams = fexpr.params;
-    sbody = sl;
-    srecursive = false; (* TODO: handle recursion *)
-  })))
+    let func_scope = create_scope fexpr.params in
+    let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
+    check_asn return_t fexpr.typ;
+    (ctxt, (func_t, SFExpr({
+      sname = fexpr.name;
+      styp = fexpr.typ;
+      sparams = fexpr.params;
+      sbody = sl;
+      srecursive = false; (* TODO: handle recursion *)
+    })))
+
 | Noexpr -> (ctxt, (Void, SNoexpr))
 | _ -> raise (Failure "not implemented in semant")
 

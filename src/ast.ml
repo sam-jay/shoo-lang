@@ -112,9 +112,11 @@ let rec fmt_typ = function
   | Float -> "Float"
   | Bool -> "Bool"
   | String -> "String"
-  | Struct(_) -> "Struct"
+  | Struct(st) -> fmt_three "Struct" st.name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.members))) (string_of_bool st.incomplete)
   | Array(t) -> fmt_one "Array" (fmt_typ t)
   | ABSTRACT -> "ABSTRACT"
+
+
 
 and fmt_typ_list l =
   let typs = List.map fmt_typ l in

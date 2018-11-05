@@ -127,6 +127,18 @@ function foo() void {\
   return;\
 }")
 
+let simple_call _ = assert_equal "" (check "\
+function foo() string {\
+  return \"Hello World\";
+}\
+println(foo());
+")
+
+let call_nonfunc _ =
+  let f = fun () -> check "int foo = 5; foo();" in
+  assert_raises (Failure "not a function") f
+
+
 let empty_struct_decl _ = assert_equal "" (check "\
 struct Empty {}\
 ")
@@ -171,16 +183,29 @@ struct Bar {\
 }\
 ")
 
-let simple_call _ = assert_equal "" (check "\
-function foo() string {\
-  return \"Hello World\";
+let valid_struct_access _ = assert_equal "" (check "\
+struct BankAccount {\
+  int number;\
+  int balance = 0;\
 }\
-println(foo());
+BankAccount foo = new(BankAccount);\
+int balance = foo.balance;\
 ")
 
-let call_nonfunc _ =
-  let f = fun () -> check "int foo = 5; foo();" in
-  assert_raises (Failure "not a function") f
+let dot_access_missing _ =
+  let f = fun () -> check "\
+  struct BankAccount {\
+    int number;\
+    int balance = 0;\
+  }\
+  BankAccount foo = new(BankAccount);\
+  int balance = foo.bar;\
+  " in
+  assert_raises (Failure "struct BankAccount has no member bar") f
+
+let dot_access_invalid _ =
+  let f = fun () -> check "int x = 5; x.hello;" in
+  assert_raises (Failure "dot operator used on non-struct type") f
 
 let struct_duplicate_decl _ =
   let f = fun () -> check "struct Foo { int number; int number; }" in
@@ -248,4 +273,7 @@ let tests =
     "Duplicate struct member" >:: struct_duplicate_decl;
     "Recursive struct" >:: recursive_struct;
     "Struct as struct member" >:: struct_as_member;
+    "Valid struct access" >:: valid_struct_access;
+    "Invalid dot access" >:: dot_access_invalid;
+    "Dot access missing member" >:: dot_access_missing;
   ]
