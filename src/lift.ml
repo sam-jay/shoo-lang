@@ -124,7 +124,7 @@ and dfs_sexpr ?fname funcs env (t, expr) =
         Some(x) -> x :: fvs1
       | _ -> fvs1
       in (funcs1, fvs', (t, SFCall((t, se), args')))
-    | _ -> raise (Failure "not implemented in lifter"))
+    | _ -> (* print_endline(fmt_sexpr (t, se)); *) raise (Failure "not implemented in lifter"))
   | _ as x -> (funcs, [], (t, x))
   in
   let fvs' = List.filter check_scope fvs' in
