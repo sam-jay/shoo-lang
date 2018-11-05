@@ -1,6 +1,8 @@
 open OUnit2
 open Ast
 
+module StringMap = Map.Make(String)
+
 let parse input =
   let lexbuf = Lexing.from_string input in
   Parser.program Scanner.token lexbuf
@@ -197,13 +199,13 @@ let int_dec _ = assert_equal [VDecl(Int, "x", None)] (parse "int x;")
 let int_def _ = assert_equal [VDecl(Int, "x", Some(IntLit(5)))] (parse "int x = 5;")
 let struct_dec _ = assert_equal [StructDef("BankAccount", 
     [(Int, "balance", None); (Int, "ownerId", None)]);
-    VDecl(Struct("BankAccount"), "myAccount", None)] 
+    VDecl(Struct({name="BankAccount"; members=StringMap.empty; incomplete=true;}), "myAccount", None)] 
     (parse "struct BankAccount { int balance; int ownerId; }\
          BankAccount myAccount;")
 let struct_def _ = assert_equal
   [
     StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
-    VDecl(Struct("BankAccount"), "myAccount", Some(New(NStruct("BankAccount"))));
+    VDecl(Struct({name="BankAccount";members=StringMap.empty; incomplete=true;}), "myAccount", Some(New(NStruct("BankAccount"))));
   ]
   (parse "struct BankAccount { int balance; int ownerId; }\
   BankAccount myAccount = new(BankAccount);")
@@ -360,7 +362,7 @@ let set_struct_val _ = assert_equal
 let toy_struct_program _ = assert_equal
   [
     StructDef("BankAccount", [(Int, "balance", None); (Int, "ownerId", None)]);
-    VDecl(Struct("BankAccount"), "myAccount", Some(New(NStruct("BankAccount"))));
+    VDecl(Struct({name="BankAccount";members=StringMap.empty; incomplete=true;}), "myAccount", Some(New(NStruct("BankAccount"))));
     Expr(Assign(Dot(Id("myAccount"), "balance"), IntLit(0)));
     Expr(Assign(Dot(Id("myAccount"), "ownerId"), IntLit(0)));
   ]
@@ -428,8 +430,8 @@ let one_intarr_new_def _ = assert_equal
     (parse "array<int> x = new(array<int>[5]);")
 
 let array_of_struct_type _ = assert_equal
-	[VDecl(Array(Struct("BankAccount")), "x", 
-		Some(New(NArray(Struct("BankAccount"), IntLit(5)))))]
+	[VDecl(Array(Struct({name="BankAccount";members=StringMap.empty; incomplete=true;})), "x", 
+		Some(New(NArray(Struct({name="BankAccount";members=StringMap.empty; incomplete=true;}), IntLit(5)))))]
     (parse "array<BankAccount> x = new(array<BankAccount>[5]);")
 
 let simple_array_access _ = assert_equal

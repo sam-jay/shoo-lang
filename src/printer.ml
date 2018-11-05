@@ -21,7 +21,7 @@ let rec fmt_typ = function
   | Float -> "Float"
   | Bool -> "Bool"
   | String -> "String"
-  | Struct(n) -> fmt_one "Struct" n
+  | Struct(_) -> "Struct"
   | Array(t) -> fmt_one "Array" (fmt_typ t)
 
 and fmt_typ_list l =

@@ -1,22 +1,8 @@
+module StringMap = Map.Make (String)
+
 type size =
   Fixed of int
 | Param of string
-
-type typ =
-  Void
-| Int
-| Float
-| Bool
-| String
-| Func of func_typ
-| Struct of string
-| Array of typ
-| ABSTRACT
-
-and func_typ = {
-    param_typs : typ list;
-    return_typ : typ;
-}
 
 type op = 
   Add 
@@ -41,9 +27,31 @@ type pop =
 | Dec 
 | Inc
 
-type bind = typ * string
+type typ =
+  Void
+| Int
+| Float
+| Bool
+| String
+| Func of func_typ
+| Struct of struct_typ
+| Array of typ
+| ABSTRACT
 
-type newable =
+and func_typ = {
+  param_typs: typ list;
+  return_typ: typ;
+}
+
+and struct_typ = {
+  name: string;
+  members: (typ * expr option) StringMap.t;
+  incomplete: bool;
+}
+
+and bind = typ * string
+
+and newable =
   NArray of typ * expr
 | NStruct of string
 
@@ -104,7 +112,7 @@ let rec fmt_typ = function
   | Float -> "Float"
   | Bool -> "Bool"
   | String -> "String"
-  | Struct(n) -> fmt_one "Struct" n
+  | Struct(_) -> "Struct"
   | Array(t) -> fmt_one "Array" (fmt_typ t)
   | ABSTRACT -> "ABSTRACT"
 
