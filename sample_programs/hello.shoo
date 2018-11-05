@@ -1,4 +1,5 @@
 function foo() string {
-  return "Hello World";
+  string x = "Hello World";
+  return x;
 }
 println(foo());

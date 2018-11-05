@@ -180,9 +180,9 @@ let translate functions =
       | SId s -> L.build_load (lookup s) s builder
       | SNoexpr -> L.const_int i32_t 0
       | SClosure clsr -> build_clsr clsr
-      | SFCall("println", [(typ, sexpr)]) ->
+      | SFCall((_, SId("println")), [(typ, sexpr)]) ->
           L.build_call printf_func [| string_format_str; (expr builder m (typ, sexpr)); |] "" builder
-      | SFCall(f, args) ->
+      | SFCall((t, SId(f)), args) ->
           let (t, lclsr) = lookup_both f in
           let func_t = match t with 
             Func(func_t) -> func_t
@@ -193,7 +193,7 @@ let translate functions =
           let llargs = env_ptr :: (List.rev (List.map (expr builder m) (List.rev args))) in
           let result = (match func_t.return_typ with Void -> "" | _ -> f ^ "_result") in
           L.build_call func_ptr (Array.of_list llargs) result builder
-      | _ -> raise (Failure "not implemented")
+      | _ -> raise (Failure "not implemented in codegen")
     in
 
     let add_terminal builder instr =
@@ -226,7 +226,7 @@ let translate functions =
           Void -> L.build_ret_void builder
         | _ -> L.build_ret (expr builder m e) builder
         in (builder, m)
-    | _ -> raise (Failure "not implemented")
+    | _ -> raise (Failure "not implemented in codegen")
 
     and stmt_list builder m sl =
       (* throw away the scope generated because it should not be modifying current scope.

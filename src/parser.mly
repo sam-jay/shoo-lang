@@ -99,7 +99,7 @@ expr:
 | NEW LPAREN newable RPAREN { New($3) }
 | LBRACKET destruct RBRACKET ASSIGN expr { Destruct(List.rev $2, $5) }
 | function_expr { FExpr($1) }
-| ID LPAREN args_opt RPAREN { FCall($1, $3) }
+| expr LPAREN args_opt RPAREN { FCall($1, $3) }
 | LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
 

@@ -79,7 +79,7 @@ let rec dfs_sstmt funcs env sstmt =
   | SExpr e ->
       let (funcs1, fvs1, e1) = dfs_sexpr funcs env e in
       (funcs1, fvs1, env, SExpr(e1))
-  | _ -> raise (Failure "not implemented") in
+  | _ -> raise (Failure "not implemented in lifter") in
   let check_scope (_, fv) = not (StringMap.mem fv env.variables) in
   let fvs' = List.filter check_scope fvs' in
   (funcs', fvs', env', sstmt')
@@ -111,7 +111,9 @@ and dfs_sexpr ?fname funcs env (t, expr) =
         else [lookup env s1, s1]
       in
       (funcs, fv, (t, SId(s1)))
-  | SFCall(s1, args) ->
+  | SFCall((t, se), args) ->
+    (match se with
+    SId(s1) ->
       let fv' = 
         if StringMap.mem s1 env.variables || StringMap.mem s1 built_in_decls
         then None
@@ -121,7 +123,8 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       let fvs' = match fv' with
         Some(x) -> x :: fvs1
       | _ -> fvs1
-      in (funcs1, fvs', (t, SFCall(s1, args')))
+      in (funcs1, fvs', (t, SFCall((t, se), args')))
+    | _ -> raise (Failure "not implemented in lifter"))
   | _ as x -> (funcs, [], (t, x))
   in
   let fvs' = List.filter check_scope fvs' in
