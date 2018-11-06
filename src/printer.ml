@@ -116,4 +116,5 @@ and fmt_opt_expr = function
 | Some(e) -> fmt_expr e
 
 let fmt_prog program =
+  print_endline(string_of_int (List.length program));
   fmt_stmt_list program

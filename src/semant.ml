@@ -31,7 +31,7 @@ let check_assign lvaluet rvaluet err =
   
 let check_asn lvalue_t rvalue_t =
   let found_match = match lvalue_t, rvalue_t with
-    Struct(s_l), Struct(s_r) -> s_l.name = s_r.name
+    Struct(s_l), Struct(s_r) -> s_l.struct_name = s_r.struct_name
   | _ -> lvalue_t = rvalue_t in
   if found_match
   then lvalue_t
@@ -120,12 +120,13 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
     (ctxt, (t, SId n))
 
 | Assign(e1, e2) ->
-    let (nctxt, (t2, se2)) = check_expr ctxt e2 in
-    let (nctxt, (t1, se1)) = match e1 with
-        Id(n) -> let t = find_in_ctxt n nctxt in
-                (nctxt, (t, SId n))
-      | _ -> check_expr nctxt e1 in
-    (nctxt, (check_asn t1 t2, SAssign((t1, se1), (t2, se2))))
+    let (_, (t1, se1)) = match e1 with
+        Id(n) -> let t = find_in_ctxt n ctxt in
+                (ctxt, (t, SId n))
+      | _ -> check_expr ctxt e1 
+    in
+    let (_, (t2, se2)) = check_expr ctxt e2 in
+    (ctxt, (check_asn t1 t2, SAssign((t1, se1), (t2, se2))))
 
 | Dot(e, field_name) -> 
     let check_struct_access struct_type field_name = 
@@ -133,10 +134,10 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
       let (access_type, _) = (match struct_type with
         (* make sure you were passed a struct *)
         Struct(s) ->
-          (let t = find_in_ctxt s.name ctxt in (* Get the complete struct with members *)
+          (let t = find_in_ctxt s.struct_name ctxt in (* Get the complete struct with members *)
           let struct_t = match t with Struct(st) -> st | _ -> raise (Failure "shouldn't happen") in
           try StringMap.find field_name struct_t.members
-          with Not_found -> raise (Failure ("struct " ^ s.name ^ " has no member " ^ field_name)))
+          with Not_found -> raise (Failure ("struct " ^ s.struct_name ^ " has no member " ^ field_name)))
       | _ -> raise (Failure "dot operator used on non-struct type"))
       in access_type
     in
@@ -234,7 +235,7 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
     })))
 
 | Noexpr -> (ctxt, (Void, SNoexpr))
-| _ -> raise (Failure "not implemented in semant")
+| _ as x -> print_endline(Ast.fmt_expr x); raise (Failure "not implemented in semant")
 
 and check_stmt_list (ctxt : typ StringMap.t list) = function
   [] -> (ctxt, Void, [])
@@ -258,18 +259,35 @@ and check_bool_expr (ctxt : typ StringMap.t list) e =
 and check_stmt (ctxt : typ StringMap.t list) = function
   Expr(e) -> let (nctxt, (t, ss)) = 
       check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
-| VDecl(t, n, i) ->
+| VDecl(ltype, n, i) ->
+  let t = match ltype with 
+    Struct(struct_t) -> find_in_ctxt struct_t.struct_name ctxt 
+    | _ -> ltype
+  in
   (match i with
     None -> (add_to_ctxt t n ctxt, Void, SVDecl(t, n, None))
   | Some(e) ->
-    let (nctxt, (t_i, s_i)) = check_expr ctxt e in
-    let nctxt = add_to_ctxt t n nctxt in
-    (nctxt, Void, SVDecl((check_asn t_i t), n, Some((t_i, s_i)))))
+      let (_, (t_i, s_i)) = match e with
+        StructInit(assigns) -> 
+          let struct_t = match t with Struct(st) -> st | _ -> raise (Type_mismatch "type mismatch error") in
+          let check_init (name, exp) =
+            let (_, (t, se)) = check_expr ctxt exp in
+            try
+              let (mt, _) = StringMap.find name struct_t.members in
+              (name, (check_asn t mt, se))
+            with Not_found -> raise (Failure ("struct " ^ struct_t.struct_name ^ " has no member " ^ name))
+          in
+          let slist = List.map check_init assigns in
+          (ctxt, (Struct(struct_t), SStructInit(slist)))
+      | _ -> check_expr ctxt e
+      in
+      let nctxt = add_to_ctxt t n ctxt in
+      (nctxt, Void, SVDecl((check_asn t_i t), n, Some((t_i, s_i)))))
 
 | StructDef(name, fields) ->
     let helper (map, list) (lt, n, i) =
       match lt with
-        Struct(struct_t) when name = struct_t.name -> raise (Failure ("illegal recursive struct " ^ name))
+        Struct(struct_t) when name = struct_t.struct_name -> raise (Failure ("illegal recursive struct " ^ name))
       | _ ->
       try
       match (StringMap.find n map) with
@@ -288,7 +306,7 @@ and check_stmt (ctxt : typ StringMap.t list) = function
     in
     let (members, fields_se) = List.fold_left helper (StringMap.empty, []) fields in
     let struct_t = Struct({
-      name = name;
+      struct_name = name;
       members = members;
       incomplete = false;
     }) in

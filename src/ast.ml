@@ -44,7 +44,7 @@ and func_typ = {
 }
 
 and struct_typ = {
-  name: string;
+  struct_name: string;
   members: (typ * expr option) StringMap.t;
   incomplete: bool;
 }
@@ -112,7 +112,7 @@ let rec fmt_typ = function
   | Float -> "Float"
   | Bool -> "Bool"
   | String -> "String"
-  | Struct(st) -> fmt_three "Struct" st.name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.members))) (string_of_bool st.incomplete)
+  | Struct(st) -> fmt_three "Struct" st.struct_name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.members))) (string_of_bool st.incomplete)
   | Array(t) -> fmt_one "Array" (fmt_typ t)
   | ABSTRACT -> "ABSTRACT"
 
@@ -202,7 +202,7 @@ and fmt_stmt = function
 
 and fmt_stmt_list l =
   let stmts = List.map fmt_stmt l in
-  fmt_list stmts
+  String.concat "\n" stmts
 
 and fmt_opt_expr = function
   None -> ""
