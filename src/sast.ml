@@ -87,7 +87,7 @@ let rec fmt_sexpr (t,s) =
 | SArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_sexpr l))
 | SDestruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_sexpr e)
 | SNew(t) -> fmt_one "New" (fmt_sn t)
-| SClosure _ -> "Closure" (* TODO: fix this *)
+| SClosure(clsr) -> fmt_two "Closure" (string_of_int clsr.ind) (fmt_list (List.map (fun (t, n) -> fmt_typ t ^ " " ^ n) clsr.free_vars))
 | SNoexpr -> ""
           ) ^ ")" 
 
@@ -107,8 +107,8 @@ and fmt_sinit l =
 
 and fmt_sstmt = function
   SExpr(se) -> fmt_sexpr se
-| SReturn(e) -> fmt_one "Return" (fmt_sexpr e)
-| SVDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_sexpr e)
+| SReturn(e) -> "Return " ^ (fmt_sexpr e)
+| SVDecl (t, n, l) -> (fmt_typ t) ^ " " ^ n ^ " = " ^ (match l with None -> "" | Some(e) -> fmt_sexpr e)
 | SForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 
   (match init with None -> "" | Some(s) -> fmt_sstmt s)
@@ -118,9 +118,11 @@ and fmt_sstmt = function
 | SEnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n (fmt_sexpr e) (fmt_sstmt_list b)
 | SIf(e, tL, fL) -> fmt_three "If" (fmt_sexpr e) (fmt_sstmt_list tL) (fmt_sstmt_list fL)
 
-and fmt_sstmt_list l =
+and fmt_sstmt_list ?spacer l =
   let sstmts = List.map fmt_sstmt l in
-  fmt_list sstmts
+  let s = match spacer with Some(s) -> s | _ -> "" in
+  let sstmts = List.map (fun x -> s ^ x) sstmts in
+  String.concat ";\n" sstmts
 
 and fmt_opt_sexpr = function
   None -> ""

@@ -2,7 +2,7 @@
    check the resulting AST and generate an SAST from it, generate LLVM IR,
    and dump the module *)
 
-type action = Ast | Sast | LLVM_IR | Compile
+type action = Ast | Sast | Lsast | LLVM_IR | Compile
 
 let () =
   let action = ref Compile in
@@ -10,6 +10,7 @@ let () =
   let speclist = [
     ("-a", Arg.Unit (set_action Ast), "Print the AST");
     ("-s", Arg.Unit (set_action Sast), "Print the SAST");
+    ("-ls", Arg.Unit (set_action Lsast), "Print the LSAST");
     ("-l", Arg.Unit (set_action LLVM_IR), "Print the generated LLVM IR");
     ("-c", Arg.Unit (set_action Compile),
       "Check and print the generated LLVM IR (default)");
@@ -28,6 +29,7 @@ let () =
     match !action with
       Ast     -> print_string (Ast.string_of_program ast)
     | Sast    -> print_string (Sast.string_of_sprogram sast)
+    | Lsast   -> print_string (Lift.string_of_lsast lsast)
     | LLVM_IR -> print_string (Llvm.string_of_llmodule (Codegen.translate lsast))
     | Compile -> let m = Codegen.translate lsast in
       Llvm_analysis.assert_valid_module m;
