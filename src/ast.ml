@@ -105,9 +105,7 @@ let fmt_list l =
 
 let rec fmt_typ = function
   Void -> "void"
-  | Func(e) -> fmt_two "func" 
-          (fmt_typ_list e.param_typs) 
-          (fmt_typ e.return_typ)
+  | Func(e) -> "func(" ^ (String.concat "," (List.map fmt_typ e.param_typs)) ^ "; " ^ (fmt_typ e.return_typ) ^ ")" 
   | Int -> "int"
   | Float -> "float"
   | Bool -> "bool"

@@ -66,7 +66,7 @@ let fmt_sparams l =
   fmt_list (List.map fmt_p l)
 
 let rec fmt_sexpr (t,s) =
-  "(" ^ fmt_typ t ^ " : " ^ (match s with
+(match s with
   SIntLit(l) -> fmt_one "IntLit" (string_of_int l)
 | SFloatLit(l) -> fmt_one "FloatLit" l
 | SStrLit(l) -> fmt_one "StrLit"  l
@@ -78,7 +78,7 @@ let rec fmt_sexpr (t,s) =
 | SAssign(e1, e2) -> fmt_two "Assign" (fmt_sexpr e1) (fmt_sexpr e2)
 | SArrayAccess(s, e) -> fmt_two "ArrayAccess" (fmt_sexpr s) (fmt_sexpr e)
 | SDot(e, s) -> fmt_two "Dot" (fmt_sexpr e) s
-| SFCall(se, a) -> fmt_two "SFCall" (fmt_sexpr se) (fmt_list (List.map fmt_sexpr a))
+| SFCall(se, a) -> "SFCall(\n      " ^ ((fmt_sexpr se) ^ "\n") ^ ("      " ^ fmt_list (List.map fmt_sexpr a) ^ "\n    )")
 (* below actually is parsed with {name = e.name; param = e.params;
  * typ = e.typ; body = e.body}. See test programs for examples. *)
 | SFExpr(s) -> fmt_four "FExpr" (fmt_rec s.srecursive) (fmt_sparams s.sparams) 
@@ -89,7 +89,7 @@ let rec fmt_sexpr (t,s) =
 | SNew(t) -> fmt_one "New" (fmt_sn t)
 | SClosure(clsr) -> fmt_two "Closure" (string_of_int clsr.ind) (fmt_list (List.map (fun (t, n) -> fmt_typ t ^ " " ^ n) clsr.free_vars))
 | SNoexpr -> ""
-          ) ^ ")" 
+          ) ^ "   // " ^ fmt_typ t
 
 and fmt_sn = function
   SNArray(t, s) -> fmt_two "NArray" (fmt_typ t) (fmt_sexpr s)
@@ -122,7 +122,7 @@ and fmt_sstmt_list ?spacer l =
   let sstmts = List.map fmt_sstmt l in
   let s = match spacer with Some(s) -> s | _ -> "" in
   let sstmts = List.map (fun x -> s ^ x) sstmts in
-  String.concat ";\n" sstmts
+  String.concat "\n" sstmts
 
 and fmt_opt_sexpr = function
   None -> ""

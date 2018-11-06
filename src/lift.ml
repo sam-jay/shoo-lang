@@ -66,7 +66,7 @@ let rec dfs_sstmt funcs env sstmt =
       let (funcs', fvs', sexpr') = dfs_sexpr funcs env sexpr ~fname:name in
       let (rt, _) = sexpr' in
       let new_typ = match (lt, rt) with
-        Func(_), Func(_) -> rt
+        Func(_), Func(_) -> lt
       | _ -> lt in
       let env' = {
         variables = StringMap.add name new_typ env.variables;
@@ -79,7 +79,7 @@ let rec dfs_sstmt funcs env sstmt =
   | SExpr e ->
       let (funcs1, fvs1, e1) = dfs_sexpr funcs env e in
       (funcs1, fvs1, env, SExpr(e1))
-  | _ -> raise (Failure "not implemented in lifter") in
+  | _ -> print_endline(fmt_sstmt sstmt); raise (Failure "not implemented in lifter") in
   let check_scope (_, fv) = not (StringMap.mem fv env.variables) in
   let fvs' = List.filter check_scope fvs' in
   (funcs', fvs', env', sstmt')
@@ -124,7 +124,7 @@ and dfs_sexpr ?fname funcs env (t, expr) =
         Some(x) -> x :: fvs1
       | _ -> fvs1
       in (funcs1, fvs', (t, SFCall((t, se), args')))
-    | _ -> (* print_endline(fmt_sexpr (t, se)); *) raise (Failure "not implemented in lifter"))
+    | _ -> print_endline(fmt_sexpr (t, se)); raise (Failure "not implemented in lifter"))
   | _ as x -> (funcs, [], (t, x))
   in
   let fvs' = List.filter check_scope fvs' in
