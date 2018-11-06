@@ -4,7 +4,7 @@ set -e
 
 if [ -z "$1" ]
   then
-    echo "Usage: ./compile.sh <name_of_file.shoo>"
+    echo "Usage: ./run.sh <name_of_file.shoo>"
     exit 1
 fi
 f=$1
