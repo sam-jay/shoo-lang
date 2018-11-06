@@ -41,7 +41,7 @@ stmt_list:
 | stmt_list stmt { $2 :: $1 }
 
 stmt:
-  callexpr SEMI { Expr $1 }
+  expr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
 | RETURN expr_opt SEMI { Return($2) }
 | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET {
@@ -50,36 +50,27 @@ stmt:
 }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
-| FOR LPAREN typ ID IN callexpr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
+| FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
 | STRUCT STRUCTID LBRACKET mems_opt RBRACKET { StructDef($2, $4) }
-| IF LPAREN callexpr RPAREN LBRACKET stmt_list RBRACKET false_branch { If($3, $6, $8) }
+| IF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { If($3, $6, $8) }
 
 opt_init:
   { None }
-| ASSIGN callexpr { Some($2) }
+| ASSIGN expr { Some($2) }
 
 expr_opt:
   { Noexpr }
-  | callexpr { $1 }
+  | expr { $1 }
 
 false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
 
 elif:
-ELIF LPAREN callexpr RPAREN LBRACKET stmt_list RBRACKET false_branch { [If($3, $6, $8)] }
+ELIF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { [If($3, $6, $8)] }
 
 cf_else:
 ELSE LBRACKET stmt_list RBRACKET { $3 }
 
-callexpr:
-  | callexpr LPAREN args_opt RPAREN { FCall($1, $3) }
-  | expr { $1 }
-
 expr:
-  INTLIT { IntLit($1) }
-| FLOATLIT { FloatLit($1) }
-| BOOLLIT { BoolLit($1) }
-| STRLIT { StrLit($1) }
-| ID { Id($1) }
 | expr INCREMENT { Pop($1, Inc) }
 | expr DECREMENT { Pop($1, Dec) }
 | expr ASSIGN expr { Assign($1, $3) }
@@ -97,7 +88,6 @@ expr:
 | expr GEQ expr { Binop($1, Geq, $3) }
 | expr AND expr { Binop($1, And, $3) }
 | expr OR expr { Binop($1, Or, $3) }
-| expr LSQBRACE expr RSQBRACE { ArrayAccess($1, $3) }
 | MINUS expr %prec NEG { Unop(Neg, $2) }
 | NOT expr { Unop(Not, $2) }
 | NEW LPAREN newable RPAREN { New($3) }
@@ -105,6 +95,19 @@ expr:
 | function_expr { FExpr($1) }
 | LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
+| accessor { $1 }
+
+accessor:
+  accessor LPAREN args_opt RPAREN { FCall($1, $3) }
+| accessor LSQBRACE accessor RSQBRACE { ArrayAccess($1, $3) }
+| atom { $1 }
+
+atom:
+  INTLIT { IntLit($1) }
+| FLOATLIT { FloatLit($1) }
+| BOOLLIT { BoolLit($1) }
+| STRLIT { StrLit($1) }
+| ID { Id($1) }
 
 newable:
   ARRAY LT typ GT LSQBRACE expr RSQBRACE { NArray($3, $6) }
@@ -135,7 +138,7 @@ opt_loop_init:
 
 opt_expr:
   { None }
-| callexpr { Some($1) }
+| expr { Some($1) }
 
 ret_typ:
   VOID { Void }
@@ -178,8 +181,8 @@ args_opt:
 | arg_list { List.rev $1 }
 
 arg_list:
-  callexpr { [$1] }
-| arg_list COMMA callexpr { $3 :: $1 }
+  expr { [$1] }
+| arg_list COMMA expr { $3 :: $1 }
 
 destruct:
   ID SEMI { [$1] }
@@ -195,10 +198,10 @@ mem_list:
 
 member:
   typ ID { ($1, $2, None) }
-| typ ID ASSIGN callexpr { ($1, $2, Some($4)) }
+| typ ID ASSIGN expr { ($1, $2, Some($4)) }
 
 init_list:
   init SEMI { [$1] }
 | init_list init SEMI { $2 :: $1 }
 
-init: ID ASSIGN callexpr { ($1, $3) }
+init: ID ASSIGN expr { ($1, $3) }
