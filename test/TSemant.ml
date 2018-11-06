@@ -215,6 +215,31 @@ let recursive_struct _ =
   let f = fun () -> check "struct Recursive { Recursive x; }" in
   assert_raises (Failure "illegal recursive struct Recursive") f
 
+let simple_new_array _ = assert_equal "" (check "\
+new(array<int>[5]);\
+")
+
+let simple_new_array_bad_type_size _ =
+  let f = fun () -> check "new(array<int>[true]);" in
+  assert_raises (Failure "array size must be an integer type") f
+
+let simple_new_array_2 _ = assert_equal "" (check "\
+new(array<bool>[10]);\
+")
+
+let simple_new_array_3 _ = assert_equal "" (check "\
+new(array<float>[0]);\
+")
+
+let new_array_with_asn _ = assert_equal "" (check "\
+array<bool> z = new(array<bool>[2]);\
+")
+
+let new_array_with_asn_bad _ =
+  let f = fun () -> check "array<int> z = new(array<bool>[2]);" in
+  assert_raises (Semant.Type_mismatch "type mismatch error") f
+
+
 let tests =
   "Semantic checker" >:::
   [
@@ -276,4 +301,12 @@ let tests =
     "Valid struct access" >:: valid_struct_access;
     "Invalid dot access" >:: dot_access_invalid;
     "Dot access missing member" >:: dot_access_missing;
+
+    (*new arrays*)
+    "New int array simple" >:: simple_new_array;
+    "New bool array simple" >:: simple_new_array_2;
+    "New float array simple" >:: simple_new_array_3;
+    "New array simple bad type for size" >:: simple_new_array_bad_type_size;
+    "New array with var assignment" >:: new_array_with_asn;
+    "New array with type mismatch assignment" >:: new_array_with_asn_bad;
   ]

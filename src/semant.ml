@@ -86,6 +86,11 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
 | New(NStruct(name)) ->
     let t = find_in_ctxt name ctxt in
     (ctxt, (t, SNew(SNStruct(name))))
+| New(NArray(t,e)) ->
+    let (nctxt, (t_e, se_e)) = check_expr ctxt e 
+    in
+    if t_e <> Int then raise (Failure ("array size must be an integer type"))
+    else (nctxt, (Array t, SNew(SNArray(t, (t_e, se_e)))))
     
 (* TODO(claire) This doesn't handle arrays of structs I don't think? *)
 (* Go through all the items in the square brackets to see if they match *)
@@ -219,7 +224,7 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
           let new_m = StringMap.add n t m in 
               helper new_m tl
       in
-      if fexpr.name != ""
+      if fexpr.name <> ""
       then helper (StringMap.add fexpr.name func_t StringMap.empty) list
       else helper StringMap.empty list
     in
@@ -245,13 +250,13 @@ and check_stmt_list (ctxt : typ StringMap.t list) = function
   let ret =
     if t = Void
     then t_rest 
-    else (if List.length tl != 0 then raise (Failure "dead code after return") else (); t)
+    else (if List.length tl <> 0 then raise (Failure "dead code after return") else (); t)
   in
   (nctxt, ret, ss::ssl) (* returned something *)
 
 and check_bool_expr (ctxt : typ StringMap.t list) e = 
     let (nctxt, (t, st)) = check_expr ctxt e in
-    if (t != Bool) then raise (Failure "expected Boolean expression")
+    if (t <> Bool) then raise (Failure "expected Boolean expression")
     (* TODO(claire) add pretty print above *) 
     else (nctxt, (t, st)) 
 
