@@ -41,7 +41,7 @@ stmt_list:
 | stmt_list stmt { $2 :: $1 }
 
 stmt:
-  expr SEMI { Expr $1 }
+  callexpr SEMI { Expr $1 }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
 | RETURN expr_opt SEMI { Return($2) }
 | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET {
@@ -50,25 +50,29 @@ stmt:
 }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
-| FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
+| FOR LPAREN typ ID IN callexpr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
 | STRUCT STRUCTID LBRACKET mems_opt RBRACKET { StructDef($2, $4) }
-| IF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { If($3, $6, $8) }
+| IF LPAREN callexpr RPAREN LBRACKET stmt_list RBRACKET false_branch { If($3, $6, $8) }
 
 opt_init:
   { None }
-| ASSIGN expr { Some($2) }
+| ASSIGN callexpr { Some($2) }
 
 expr_opt:
-    { Noexpr }
-    | expr { $1 }
+  { Noexpr }
+  | callexpr { $1 }
 
 false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
 
 elif:
-ELIF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { [If($3, $6, $8)] }
+ELIF LPAREN callexpr RPAREN LBRACKET stmt_list RBRACKET false_branch { [If($3, $6, $8)] }
 
 cf_else:
 ELSE LBRACKET stmt_list RBRACKET { $3 }
+
+callexpr:
+  | callexpr LPAREN args_opt RPAREN { FCall($1, $3) }
+  | expr { $1 }
 
 expr:
   INTLIT { IntLit($1) }
@@ -99,7 +103,6 @@ expr:
 | NEW LPAREN newable RPAREN { New($3) }
 | LBRACKET destruct RBRACKET ASSIGN expr { Destruct(List.rev $2, $5) }
 | function_expr { FExpr($1) }
-| expr LPAREN args_opt RPAREN { FCall($1, $3) }
 | LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
 
@@ -132,7 +135,7 @@ opt_loop_init:
 
 opt_expr:
   { None }
-| expr { Some($1) }
+| callexpr { Some($1) }
 
 ret_typ:
   VOID { Void }
@@ -145,7 +148,7 @@ typ:
 | STRING { String }
 | ARRAY LT typ GT { Array($3) }
 | func_type { Func($1) }
-| STRUCTID { Struct({ name = $1; members = StringMap.empty; incomplete = true }) }
+| STRUCTID { Struct({ struct_name = $1; members = StringMap.empty; incomplete = true }) }
 
 /* This is the type for Func with the syntax
 func(parameter_type1, parameter_type2; return_type) */
@@ -175,8 +178,8 @@ args_opt:
 | arg_list { List.rev $1 }
 
 arg_list:
-  expr { [$1] }
-| arg_list COMMA expr { $3 :: $1 }
+  callexpr { [$1] }
+| arg_list COMMA callexpr { $3 :: $1 }
 
 destruct:
   ID SEMI { [$1] }
@@ -192,10 +195,10 @@ mem_list:
 
 member:
   typ ID { ($1, $2, None) }
-| typ ID ASSIGN expr { ($1, $2, Some($4)) }
+| typ ID ASSIGN callexpr { ($1, $2, Some($4)) }
 
 init_list:
   init SEMI { [$1] }
 | init_list init SEMI { $2 :: $1 }
 
-init: ID ASSIGN expr { ($1, $3) }
+init: ID ASSIGN callexpr { ($1, $3) }

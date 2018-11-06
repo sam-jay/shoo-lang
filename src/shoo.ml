@@ -21,12 +21,12 @@ let () =
   let lexbuf = Lexing.from_channel !channel in
   let ast = Parser.program Scanner.token lexbuf in  
   match !action with
-    (*Ast -> print_string (Ast.string_of_program ast)*)
+    Ast -> print_string (Ast.string_of_program ast)
   | _ ->
     let sast = Semant.check_program ast in
     let lsast = Lift.lift sast in
     match !action with
-      Ast     -> ()
+      Ast     -> print_string (Ast.string_of_program ast)
     | Sast    -> print_string (Sast.string_of_sprogram sast)
     | LLVM_IR -> print_string (Llvm.string_of_llmodule (Codegen.translate lsast))
     | Compile -> let m = Codegen.translate lsast in
