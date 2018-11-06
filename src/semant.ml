@@ -434,13 +434,14 @@ and check_stmt (ctxt : typ StringMap.t list) = function
     
 | _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 
+let builtins = [
+  ("println", Func({ param_typs = [String]; return_typ = Void }));
+  ("str_of_int", Func({ param_typs = [Int]; return_typ = String }));
+]
+
 let def_ctxt =
-  let println_t = Func({
-    param_typs = [String];
-    return_typ = Void
-  }) in
-  let ctxt = add_to_ctxt println_t "println" [StringMap.empty] in
-  ctxt
+  let add_func ctxt (name, func_t) = add_to_ctxt func_t name ctxt in
+  List.fold_left add_func [StringMap.empty] builtins
 
 let check_program (prog : stmt list) =
   let (_, _, ssl) = check_stmt_list 
