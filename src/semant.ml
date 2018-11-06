@@ -162,6 +162,8 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
     | Add | Sub | Mult | Div when 
         (lt = Float && rt = Int) ||
         (lt = Int && rt = Float) -> (nctxt, (Float, sbinop))
+    (* allow string concatenation TODO(crystal): update LRM *)
+    | Add when lt = String && rt = String -> (nctxt, (String,sbinop))
     (* TODO(claire): make sure LRM says that we can compare all
       * expressions of the same type using ==, including functions, 
       * strings,
