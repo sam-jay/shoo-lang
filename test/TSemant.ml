@@ -250,6 +250,9 @@ struct BankAccount {\
 array<BankAccount> foo = new(array<BankAccount>[5]);\
 func(;string) hello = foo[0].bar;\
 println(hello());\
+function baz() int { return 1; }\
+function foobar() array<BankAccount> { return foo; }\
+baz() + baz() * foobar()[0].balance;\
 ")
 
 let tests =
