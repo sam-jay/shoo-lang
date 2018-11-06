@@ -439,6 +439,8 @@ and check_stmt (ctxt : typ StringMap.t list) = function
 let builtins = [
   ("println", Func({ param_typs = [String]; return_typ = Void }));
   ("str_of_int", Func({ param_typs = [Int]; return_typ = String }));
+  ("string_concat", Func({ param_typs = [String; String]; return_typ = String })); 
+  ("string_equals", Func({ param_typs = [String; String]; return_typ = Int })); 
 ]
 
 let def_ctxt =

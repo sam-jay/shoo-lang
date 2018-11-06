@@ -1,0 +1,6 @@
+string x = "Hello "+"World"+"!";
+string y = "what";
+x==y;
+int i = 0;
+int j = 0;
+i!=j;

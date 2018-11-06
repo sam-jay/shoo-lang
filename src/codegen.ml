@@ -69,12 +69,6 @@ let translate functions =
     StringMap.add name (L.declare_function name ltype the_module) m
   ) StringMap.empty Semant.builtins in
 
-  (* string functions - ref: Justin's*)
-  let string_concat_t = L.function_type str_t [| str_t; str_t |] in
-  let string_concat_f = L.declare_function "string_concat" string_concat_t the_module in
-  let string_equals_t = L.function_type i32_t [| str_t; str_t |] in
-  let string_equals_f = L.declare_function "string_equals" string_equals_t the_module in
-
   (* Build each function signature without building the body *)
   let function_decls : (L.llvalue * lfunc) StringMap.t =
     let function_decl m (name, lfexpr) =
@@ -220,7 +214,7 @@ let translate functions =
             | Mult    -> L.build_mul
             | Div     -> L.build_sdiv
             | And     -> L.build_and
-            | Or      -> L.build_or  (*TODO(crystal): remove? what does it mean to AND/OR ints?*)
+            | Or      -> L.build_or
             | Equal   -> L.build_icmp L.Icmp.Eq
             | Neq     -> L.build_icmp L.Icmp.Ne
             | Less    -> L.build_icmp L.Icmp.Slt
@@ -238,11 +232,11 @@ let translate functions =
                     ^ " not implemented for type" ^ (fmt_typ t)))
               ) e1' e2' "tmp" builder
         | String -> (match op with
-            Add -> L.build_call string_concat_f [| e1'; e2' |] "string_concat" builder
+            Add -> L.build_call (StringMap.find "string_concat" builtins) [| e1'; e2'|] "string_concat" builder
           | Equal -> (L.build_icmp L.Icmp.Ne) (L.const_int i32_t 0)
-                (L.build_call string_equals_f [| e1'; e2' |] "string_equals" builder) "tmp" builder
+                (L.build_call (StringMap.find "string_equals" builtins) [| e1'; e2'|] "string_equals" builder) "tmp" builder
           | Neq -> (L.build_icmp L.Icmp.Eq) (L.const_int i32_t 0)
-                (L.build_call string_equals_f [| e1'; e2' |] "string_equals" builder) "tmp" builder
+                (L.build_call (StringMap.find "string_equals" builtins) [| e1'; e2'|] "string_equals" builder) "tmp" builder
           | _ -> raise (Failure ("operation " ^ (fmt_op op)
                 ^ " not implemented for type" ^ (fmt_typ t))))
         | _ -> (match op with
