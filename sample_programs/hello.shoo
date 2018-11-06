@@ -1,4 +1,4 @@
-function foo() func(;string) {
+function foo() func(int;string) {
   string x = "Hello World";
   return function(int y) string {
     return x;
