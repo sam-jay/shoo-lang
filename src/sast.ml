@@ -20,7 +20,7 @@ and sx =
 | SFExpr of sfexpr
 | SStructInit of (string * sexpr) list
 | SDestruct of string list * sexpr
-| SArrayAccess of string * sexpr
+| SArrayAccess of sexpr * sexpr
 | SDot of sexpr * string
 | SNew of snewable
 | SClosure of sclsr
@@ -76,7 +76,7 @@ let rec fmt_sexpr (t,s) =
 | SUnop(uo, e) -> fmt_two "Unop" (fmt_uop uo) (fmt_sexpr e)
 | SPop(e, po) -> fmt_two "Pop" (fmt_sexpr e) (fmt_pop po)
 | SAssign(e1, e2) -> fmt_two "Assign" (fmt_sexpr e1) (fmt_sexpr e2)
-| SArrayAccess(s, e) -> fmt_two "ArrayAccess" s (fmt_sexpr e)
+| SArrayAccess(s, e) -> fmt_two "ArrayAccess" (fmt_sexpr s) (fmt_sexpr e)
 | SDot(e, s) -> fmt_two "Dot" (fmt_sexpr e) s
 | SFCall(se, a) -> fmt_two "SFCall" (fmt_sexpr se) (fmt_list (List.map fmt_sexpr a))
 (* below actually is parsed with {name = e.name; param = e.params;

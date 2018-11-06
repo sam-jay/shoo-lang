@@ -97,7 +97,7 @@ expr:
 | expr GEQ expr { Binop($1, Geq, $3) }
 | expr AND expr { Binop($1, And, $3) }
 | expr OR expr { Binop($1, Or, $3) }
-| ID LSQBRACE expr RSQBRACE { ArrayAccess($1, $3) }
+| expr LSQBRACE expr RSQBRACE { ArrayAccess($1, $3) }
 | MINUS expr %prec NEG { Unop(Neg, $2) }
 | NOT expr { Unop(Not, $2) }
 | NEW LPAREN newable RPAREN { New($3) }

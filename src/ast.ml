@@ -70,7 +70,7 @@ and expr =
 | FExpr of fexpr
 | StructInit of (string * expr) list
 | Destruct of string list * expr
-| ArrayAccess of string * expr
+| ArrayAccess of expr * expr
 | Dot of expr * string
 | New of newable
 | Noexpr
@@ -160,7 +160,7 @@ let rec fmt_expr = function
 | Unop(uo, e) -> fmt_two "Unop" (fmt_uop uo) (fmt_expr e)
 | Pop(e, po) -> fmt_two "Pop" (fmt_expr e) (fmt_pop po)
 | Assign(e1, e2) -> fmt_two "Assign" (fmt_expr e1) (fmt_expr e2)
-| ArrayAccess(s, e) -> fmt_two "ArrayAccess" s (fmt_expr e)
+| ArrayAccess(s, e) -> fmt_two "ArrayAccess" (fmt_expr s) (fmt_expr e)
 | Dot(e, s) -> fmt_two "Dot" (fmt_expr e) s
 | FCall(n, a) -> "FCall"
 (* below actually is parsed with {name = e.name; param = e.params;
