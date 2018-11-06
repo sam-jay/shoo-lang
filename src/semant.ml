@@ -114,10 +114,11 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
         (* TODO(claire) add pretty print for error above *)
     ) x in (ctxt, (item_type, SArrayLit t))
 
-| ArrayAccess(arr_name, int_expr) ->
-    let (nctxt, (t1, se1)) = check_expr ctxt int_expr 
-    in
-    if t1 = Int then (nctxt, (t1, SArrayAccess(arr_name, (t1, se1))))
+| ArrayAccess(expr, int_expr) ->
+    let (_, (t1, se1)) = check_expr ctxt expr in
+    let (_, (t2, se2)) = check_expr ctxt int_expr in
+    let t3 = match t1 with Array(t) -> t | _ -> raise (Failure ("not an array")) in
+    if t2 = Int then (ctxt, (t3, SArrayAccess((t1, se1), (t2, se2))))
     else raise (Failure ("can't access array with non-integer type"))
 
 | Id(n) -> 
@@ -143,7 +144,7 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
           let struct_t = match t with Struct(st) -> st | _ -> raise (Failure "shouldn't happen") in
           try StringMap.find field_name struct_t.members
           with Not_found -> raise (Failure ("struct " ^ s.struct_name ^ " has no member " ^ field_name)))
-      | _ -> raise (Failure "dot operator used on non-struct type"))
+      | _ -> print_endline(fmt_typ struct_type); raise (Failure "dot operator used on non-struct type"))
       in access_type
     in
     let (_, (t1, se1)) = check_expr ctxt e in

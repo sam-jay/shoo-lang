@@ -239,6 +239,18 @@ let new_array_with_asn_bad _ =
   let f = fun () -> check "array<int> z = new(array<bool>[2]);" in
   assert_raises (Semant.Type_mismatch "type mismatch error") f
 
+let struct_array _ = assert_equal "" (check "\
+struct BankAccount {\
+  int number;\
+  int balance = 0;\
+  func(;string) bar = function() string {\
+    return \"Hello World\";\
+  };\
+}\
+array<BankAccount> foo = new(array<BankAccount>[5]);\
+func(;string) hello = foo[0].bar;\
+println(hello());\
+")
 
 let tests =
   "Semantic checker" >:::
@@ -309,4 +321,5 @@ let tests =
     "New array simple bad type for size" >:: simple_new_array_bad_type_size;
     "New array with var assignment" >:: new_array_with_asn;
     "New array with type mismatch assignment" >:: new_array_with_asn_bad;
+    "Struct array" >:: struct_array;
   ]
