@@ -74,7 +74,6 @@ expr:
 | expr INCREMENT { Pop($1, Inc) }
 | expr DECREMENT { Pop($1, Dec) }
 | expr ASSIGN expr { Assign($1, $3) }
-| expr DOT ID { Dot($1, $3) }
 | expr PLUS expr { Binop($1, Add, $3) }
 | expr MINUS expr { Binop($1, Sub, $3) }
 | expr TIMES expr { Binop($1, Mult, $3) }
@@ -100,6 +99,7 @@ expr:
 accessor:
   accessor LPAREN args_opt RPAREN { FCall($1, $3) }
 | accessor LSQBRACE accessor RSQBRACE { ArrayAccess($1, $3) }
+| accessor DOT ID { Dot($1, $3) }
 | atom { $1 }
 
 atom:
