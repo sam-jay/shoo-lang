@@ -61,10 +61,13 @@ let translate functions =
   let printf_func : L.llvalue =
     let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
     L.declare_function "printf" printf_t the_module in
-  
-  let str_of_int_func : L.llvalue =
-    let str_of_int_t = L.function_type (L.pointer_type i8_t) [| i32_t |] in
-    L.declare_function "str_of_int" str_of_int_t the_module in
+
+  let builtins = List.fold_left (fun m (name, ty) -> 
+    let ftype = match ty with Func(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
+    let params = List.map ltype_of_typ ftype.param_typs in
+    let ltype = L.function_type (ltype_of_typ ftype.return_typ) (Array.of_list params) in
+    StringMap.add name (L.declare_function name ltype the_module) m
+  ) StringMap.empty Semant.builtins in
 
   (* string functions - ref: Justin's*)
   let string_concat_t = L.function_type str_t [| str_t; str_t |] in
@@ -251,8 +254,9 @@ let translate functions =
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
           L.build_call printf_func [| string_format_str; (expr builder m (typ, sexpr)); |] "" builder
-      | SFCall((_, SId("str_of_int")), [arg]) ->
-          L.build_call str_of_int_func [| (expr builder m arg) |] "_result" builder
+      | SFCall((_, SId(name)), args) when StringMap.mem name builtins ->
+          let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
+          L.build_call (StringMap.find name builtins) arg_array "_result" builder
       | SFCall((t, s), args) ->
           let func_t = match t with
             Func(func_t) -> func_t
