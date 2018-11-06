@@ -5,13 +5,16 @@
 # Easiest way to build: using ocamlbuild, which in turn uses ocamlfind
 
 .PHONY : all
-all : shoo.native
+all : shoo.native builtins.o
 
 .PHONY : shoo.native
 shoo.native :
 	rm -f *.o
 	ocamlbuild -use-ocamlfind -pkgs llvm,llvm.analysis,llvm.bitreader -cflags -w,+a-4 \
 		shoo.native
+
+builtins.o :
+	cc -c -o builtins.o src/builtins.c
 
 .PHONY : printer
 printer:

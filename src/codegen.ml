@@ -61,6 +61,10 @@ let translate functions =
   let printf_func : L.llvalue =
     let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
     L.declare_function "printf" printf_t the_module in
+  
+  let str_of_int_func : L.llvalue =
+    let str_of_int_t = L.function_type (L.pointer_type i8_t) [| i32_t |] in
+    L.declare_function "str_of_int" str_of_int_t the_module in
 
   (* Build each function signature without building the body *)
   let function_decls : (L.llvalue * lfunc) StringMap.t =
@@ -182,6 +186,8 @@ let translate functions =
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
           L.build_call printf_func [| string_format_str; (expr builder m (typ, sexpr)); |] "" builder
+      | SFCall((_, SId("str_of_int")), [arg]) ->
+          L.build_call str_of_int_func [| (expr builder m arg) |] "_result" builder
       | SFCall((t, s), args) ->
           let func_t = match t with
             Func(func_t) -> func_t

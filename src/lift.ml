@@ -44,9 +44,8 @@ type lfunc = {
 let built_in_decls =
   let empty_func ty = ({ return_typ = ty; param_typs = [] }) in
   let add_default map (name, ty) = StringMap.add name (Func ty) map in
-  List.fold_left add_default StringMap.empty [
-    ("println", empty_func Void);
-  ]
+  let builtins = List.map (fun (name, Func(func_t)) -> (name, empty_func func_t.return_typ)) Semant.builtins in
+  List.fold_left add_default StringMap.empty builtins
 
 let rec lookup (e : environment) name =
 try
