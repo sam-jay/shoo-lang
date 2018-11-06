@@ -1,5 +1,7 @@
-function foo() string {
+function foo() func(;string) {
   string x = "Hello World";
-  return x;
+  return function(int y) string {
+    return x;
+  };
 }
-println(foo());
+println(foo()(5));

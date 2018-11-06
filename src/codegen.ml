@@ -137,7 +137,7 @@ let translate functions =
       StringMap.add lfexpr.lname (func_t, clsr_p) params_fvs
     in
 
-    let rec expr builder (m : (typ * L.llvalue) StringMap.t) ((_, e) : sexpr) =
+    let rec expr builder (m : (typ * L.llvalue) StringMap.t) ((ty, e) : sexpr) =
 
       let lookup_both n = try StringMap.find n m with
         Not_found -> raise (Failure ("Variable not found: " ^ n)) 
@@ -182,18 +182,17 @@ let translate functions =
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
           L.build_call printf_func [| string_format_str; (expr builder m (typ, sexpr)); |] "" builder
-      | SFCall((t, SId(f)), args) ->
-          let (t, lclsr) = lookup_both f in
-          let func_t = match t with 
+      | SFCall((t, s), args) ->
+          let func_t = match t with
             Func(func_t) -> func_t
           | _ -> raise (Failure "wrong type for function call") in
-          let clsr_val = L.build_load lclsr "clsr_val" builder in
+          let clsr_val = expr builder m (t, s) in
           let func_ptr = L.build_extractvalue clsr_val 0 "fp" builder in
           let env_ptr = L.build_extractvalue clsr_val 1 "envp" builder in
           let llargs = env_ptr :: (List.rev (List.map (expr builder m) (List.rev args))) in
-          let result = (match func_t.return_typ with Void -> "" | _ -> f ^ "_result") in
+          let result = (match func_t.return_typ with Void -> "" | _ -> "_result") in
           L.build_call func_ptr (Array.of_list llargs) result builder
-      | _ -> raise (Failure "not implemented in codegen")
+      | _ as x -> print_endline(fmt_sexpr (ty, x));  raise (Failure "not implemented in codegen")
     in
 
     let add_terminal builder instr =
