@@ -69,6 +69,12 @@ let translate functions =
     StringMap.add name (L.declare_function name ltype the_module) m
   ) StringMap.empty Semant.builtins in
 
+  (* string functions - ref: Justin's*)
+  let string_concat_t = L.function_type str_t [| str_t; str_t |] in
+  let string_concat_f = L.declare_function "string_concat" string_concat_t the_module in
+  let string_equals_t = L.function_type i32_t [| str_t; str_t |] in
+  let string_equals_f = L.declare_function "string_equals" string_equals_t the_module in
+
   (* Build each function signature without building the body *)
   let function_decls : (L.llvalue * lfunc) StringMap.t =
     let function_decl m (name, lfexpr) =
@@ -183,9 +189,68 @@ let translate functions =
       match e with
         SStrLit s -> L.build_global_stringptr s "str" builder
       | SIntLit x -> L.const_int i32_t x
+      | SBoolLit b -> L.const_int i1_t (if b then 1 else 0)
       | SFloatLit x -> L.const_float_of_string float_t x
       | SId s -> L.build_load (lookup s) s builder
       | SNoexpr -> L.const_int i32_t 0
+      | SBinop (e1, op, e2) -> (*COPIED FROM JUSTIN*)
+        let (t, _) = e1
+        and e1' = expr builder m e1
+        and e2' = expr builder m e2 in
+          (match snd e1, snd e2 with
+           _ -> (match t with
+
+          Float -> (match op with
+              Add     -> L.build_fadd
+            | Sub     -> L.build_fsub
+            | Mult    -> L.build_fmul
+            | Div     -> L.build_fdiv
+            | Equal   -> L.build_fcmp L.Fcmp.Oeq
+            | Neq     -> L.build_fcmp L.Fcmp.One
+            | Less    -> L.build_fcmp L.Fcmp.Olt
+            | Leq     -> L.build_fcmp L.Fcmp.Ole
+            | Greater -> L.build_fcmp L.Fcmp.Ogt
+            | Geq     -> L.build_fcmp L.Fcmp.Oge
+            | _ ->
+              raise (Failure "internal error: semant should have rejected and/or on float")
+              ) e1' e2' "tmp" builder
+        | Int -> (match op with
+            | Add     -> L.build_add
+            | Sub     -> L.build_sub
+            | Mult    -> L.build_mul
+            | Div     -> L.build_sdiv
+            | And     -> L.build_and
+            | Or      -> L.build_or  (*TODO(crystal): remove? what does it mean to AND/OR ints?*)
+            | Equal   -> L.build_icmp L.Icmp.Eq
+            | Neq     -> L.build_icmp L.Icmp.Ne
+            | Less    -> L.build_icmp L.Icmp.Slt
+            | Leq     -> L.build_icmp L.Icmp.Sle
+            | Greater -> L.build_icmp L.Icmp.Sgt
+            | Geq     -> L.build_icmp L.Icmp.Sge
+            | Mod     -> L.build_srem
+            | _         -> raise (Failure ("operation " ^ (fmt_op op)
+                    ^ " not implemented for type" ^ (fmt_typ t)))
+              ) e1' e2' "tmp" builder
+        | Bool -> (match op with
+              And     -> L.build_and
+            | Or      -> L.build_or
+            | _         -> raise (Failure ("operation " ^ (fmt_op op)
+                    ^ " not implemented for type" ^ (fmt_typ t)))
+              ) e1' e2' "tmp" builder
+        | String -> (match op with
+            Add -> L.build_call string_concat_f [| e1'; e2' |] "string_concat" builder
+          | Equal -> (L.build_icmp L.Icmp.Ne) (L.const_int i32_t 0)
+                (L.build_call string_equals_f [| e1'; e2' |] "string_equals" builder) "tmp" builder
+          | Neq -> (L.build_icmp L.Icmp.Eq) (L.const_int i32_t 0)
+                (L.build_call string_equals_f [| e1'; e2' |] "string_equals" builder) "tmp" builder
+          | _ -> raise (Failure ("operation " ^ (fmt_op op)
+                ^ " not implemented for type" ^ (fmt_typ t))))
+        | _ -> (match op with
+            Equal -> (L.build_icmp L.Icmp.Eq) e1' e2' "tmp" builder
+          | Neq -> (L.build_icmp L.Icmp.Ne) e1' e2' "tmp" builder
+          | _ -> raise (Failure ("operation " ^ (fmt_op op)
+                ^ " not implemented for type" ^ (fmt_typ t))))
+         ))
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
           L.build_call printf_func [| string_format_str; (expr builder m (typ, sexpr)); |] "" builder
