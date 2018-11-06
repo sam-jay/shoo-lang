@@ -183,8 +183,25 @@ let lift sstmts =
   let named_funcs = List.mapi name (List.rev funcs) in
   (("main", main_func) :: named_funcs)
 
-let helper (name, _) = name
 
-let rec str_of_lsast = function
+(*
+type lfunc = {
+  lname: string;
+  lfvs: bind list; (* Free variables *)
+  lreturn_typ: typ;
+  lparams: bind list;
+  lbody: sstmt list;
+}*)
+
+let fmt_lfunc f = String.concat "\n" [
+  " -fvs: " ^ String.concat "" (List.map (fun (t, n) -> (fmt_typ t) ^ " " ^ n) f.lfvs);
+  " -return_t: " ^ fmt_typ f.lreturn_typ;
+  " -params: " ^ String.concat "" (List.map (fun (t, n) -> (fmt_typ t) ^ " " ^ n) f.lparams);
+  " -lbody: \n" ^ fmt_sstmt_list f.lbody ~spacer:"    ";
+]
+
+let helper (name, f) = name ^ ":\n" ^ (fmt_lfunc f)
+
+let rec string_of_lsast = function
   [] -> ""
-| item :: rest -> String.concat "\n" [(helper item);(str_of_lsast rest)]
+| item :: rest -> String.concat "\n" [(helper item);(string_of_lsast rest)]

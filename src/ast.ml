@@ -104,16 +104,16 @@ let fmt_list l =
   String.concat "" ["["; items; "]"]
 
 let rec fmt_typ = function
-  Void -> "Void"
-  | Func(e) -> fmt_two "Func" 
+  Void -> "void"
+  | Func(e) -> fmt_two "func" 
           (fmt_typ_list e.param_typs) 
           (fmt_typ e.return_typ)
-  | Int -> "Int"
-  | Float -> "Float"
-  | Bool -> "Bool"
-  | String -> "String"
-  | Struct(st) -> fmt_three "Struct" st.struct_name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.members))) (string_of_bool st.incomplete)
-  | Array(t) -> fmt_one "Array" (fmt_typ t)
+  | Int -> "int"
+  | Float -> "float"
+  | Bool -> "bool"
+  | String -> "string"
+  | Struct(st) -> fmt_three "struct" st.struct_name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.members))) (string_of_bool st.incomplete)
+  | Array(t) -> fmt_one "array" (fmt_typ t)
   | ABSTRACT -> "ABSTRACT"
 
 
