@@ -11,6 +11,9 @@ bin/
 
 *.ll
 *.s
+*.diff
+*.err
+*.log
 # ocamlbuild working directory
 _build/
 
