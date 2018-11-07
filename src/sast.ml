@@ -72,7 +72,7 @@ let rec fmt_sexpr (t,s) =
 | SStrLit(l) -> fmt_one "StrLit"  l
 | SBoolLit(l) -> fmt_one "BoolLit" (string_of_bool l)
 | SId(s) -> fmt_one "Id" s
-| SBinop(e1, o, e2) -> fmt_three "Binop" (fmt_sexpr e1) (fmt_op o) (fmt_sexpr e2)
+| SBinop(e1, o, e2) -> (fmt_sexpr e1) ^ "\n    " ^ (fmt_op o) ^ "\n    " ^ (fmt_sexpr e2)
 | SUnop(uo, e) -> fmt_two "Unop" (fmt_uop uo) (fmt_sexpr e)
 | SPop(e, po) -> fmt_two "Pop" (fmt_sexpr e) (fmt_pop po)
 | SAssign(e1, e2) -> fmt_two "Assign" (fmt_sexpr e1) (fmt_sexpr e2)
@@ -129,4 +129,4 @@ and fmt_opt_sexpr = function
 | Some(e) -> fmt_sexpr e
 
 let string_of_sprogram sast =
-  fmt_sstmt_list sast
+  String.concat ";\n" (List.map fmt_sstmt sast)
