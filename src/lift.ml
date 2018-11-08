@@ -75,6 +75,11 @@ let rec dfs_sstmt funcs env sstmt =
   | SReturn e -> 
       let (funcs1, fvs1, e1) = dfs_sexpr funcs env e in
       (funcs1, fvs1, env, SReturn(e1))
+  | SIf(e, s1, s2) ->
+             let (funcs1, fvs1, e') = dfs_sexpr funcs env e in
+             let (funcs2, fvs2, _, s1') = dfs_sstmts funcs1 env s1 in
+             let (funcs3, fvs3, _, s2') = dfs_sstmts funcs2 env s2 in
+             (funcs3, List.concat [fvs1; fvs2; fvs3], env, SIf(e', s1', s2'))
   | SExpr e ->
       let (funcs1, fvs1, e1) = dfs_sexpr funcs env e in
       (funcs1, fvs1, env, SExpr(e1))

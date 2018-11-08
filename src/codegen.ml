@@ -287,6 +287,19 @@ let translate functions =
         let m' = StringMap.add n (t, local_var) m in
         let _ = L.build_store e' local_var builder in
         (builder, m')
+      (* Ref: Justin's codegen.ml *)
+      | SIf (pred, then_stmts, else_stmts) ->
+         let bool_val = expr builder m pred in
+         let merge_bb = L.append_block context "merge" the_function in
+         let branch_instr = L.build_br merge_bb in
+         let then_bb = L.append_block context "then" the_function in
+         let (then_builder, _) = stmt_list (L.builder_at_end context then_bb) m then_stmts in
+           let () = add_terminal then_builder branch_instr in
+         let else_bb = L.append_block context "else" the_function in
+         let (else_builder, _) = stmt_list (L.builder_at_end context else_bb) m else_stmts in
+         let () = add_terminal else_builder branch_instr in
+         let _ = L.build_cond_br bool_val then_bb else_bb builder in
+         (L.builder_at_end context merge_bb, m)
     | SReturn e ->
         let _ = match lfexpr.lreturn_typ with
           Void -> L.build_ret_void builder
