@@ -146,6 +146,8 @@ let translate functions =
 
     let rec expr builder (m : (typ * L.llvalue) StringMap.t) ((ty, e) : sexpr) =
 
+      (* TODO(claire) why is this here and why is it never used (gives
+       * warning)? *)
       let lookup_both n = try StringMap.find n m with
         Not_found -> raise (Failure ("Variable not found: " ^ n)) 
       in
@@ -294,6 +296,43 @@ let translate functions =
           Void -> L.build_ret_void builder
         | _ -> L.build_ret (expr builder m e) builder
         in (builder, m)
+    (* TODO(claire) need to handle other cases where parts are
+     * missing. *)
+    | SForLoop -> (Some(init), Some(predicate), Some(incr), body) ->
+        (* TODO(claire) how to handle init statement? *)
+         
+        (* Build a basic block for the increment expression. *)
+        let incr_bb = L.append_block context "increment_loop" in
+        let (incr_builder, _) 
+            = stmt (L.builder_at_end context incr_bb) m incr in
+
+        (* Build a basic block for the condition checking *)
+        let pred_bb = L.append_block context "for" the_function in
+        (* Branch to the predicate to execute the condition from
+         * the current block. *)
+        let _ = L.build_br pred_bb builder in
+        (* Create the body of the for loop. As long as the
+         * body doesn't return, evaluate the increment expression
+         * and then return to the predicate block. *)
+        let body_bb = L.append_block context "for_body" the_function
+        in
+        let (for_builder, _) = stmt (L.builder_at_end context body_bb)
+            m body
+        in
+        add_terminal for_builder (L.build_br pred_bb) in
+
+        (* Generate the predicate code in the predicate block *)
+        let pred_builder = L.builder_at_end context pred_bb in
+        let bool_val = expr pred_builder m predicate in
+
+        (* Finish the loop *)
+        let merge_bb = L.append_block contxt "merge" the_function in
+        let _ = L.build_cond_br bool_val body_bb merge_bb pred_builder
+        in
+        (L.builder_at_end contxt merge_bb, m)
+        (* Add the increment to the block only if the block doesn't
+         * already have a terminator. *)
+
     | _ -> raise (Failure "not implemented in codegen")
 
     and stmt_list builder m sl =
