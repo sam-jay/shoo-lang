@@ -303,9 +303,10 @@ let translate functions =
          
         (* Build a basic block for the init statement. *)
         let init_bb = L.append_block context "init_loop" the_function in
-        let (init_builder, _) 
-            = stmt (L.builder_at_end context init_bb) m init
-        in (L.builder_at_end context init_bb, m);
+        let (init_builder, m_incr) 
+            = stmt (L.builder_at_end context init_bb) m init in
+        (*in (L.builder_at_end context init_bb, map);*)
+        let () = add_terminal init_builder (L.build_br init_bb) in
 
         (* Build a basic block for the increment expression. *)
         (*let incr_bb = L.append_block context "incr_loop" in
@@ -324,7 +325,7 @@ let translate functions =
         in
         let for_builder = List.fold_left (fun b_bb s -> 
             let (build, _) = 
-                stmt (*(L.builder_at_end context b_bb)*) b_bb m s in build) 
+                stmt b_bb m_incr s in build) 
             (L.builder_at_end context body_bb) body
         in
         (*let (for_builder, _) = List.fold_left stmt m (L.builder_at_end context body*)
@@ -335,7 +336,7 @@ let translate functions =
         let incr_for_builder = 
             (match L.block_terminator (L.insertion_block for_builder) with
             None -> let (new_incr_builder, _) = 
-                stmt for_builder m (SExpr(incr)) in
+                stmt for_builder m_incr (SExpr(incr)) in
                 new_incr_builder
             | Some _ -> for_builder) in
       (*| Some _ -> ()
@@ -345,12 +346,14 @@ let translate functions =
         
         (* Generate the predicate code in the predicate block *)
         let pred_builder = L.builder_at_end context pred_bb in
-        let bool_val = expr pred_builder m predicate in
+        let bool_val = expr pred_builder m_incr predicate in
 
         (* Finish the loop *)
         let merge_bb = L.append_block context "merge" the_function in
         let _ = L.build_cond_br bool_val body_bb merge_bb pred_builder
         in
+        (* Return m instead of m_incr because the incr variable doesn't
+         * exist outside of the scope of this loop. *)
         (L.builder_at_end context merge_bb, m)
         
     | _ -> raise (Failure "not implemented in codegen")
