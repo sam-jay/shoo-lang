@@ -299,20 +299,20 @@ let translate functions =
     (* TODO(claire) need to handle other cases where parts are
      * missing. *)
     | SForLoop (Some(init), Some(predicate), Some(incr), body) ->
-        (* TODO(claire) how to handle init statement? *)
-         
         (* Build a basic block for the init statement. *)
         let init_bb = L.append_block context "init_loop" the_function in
         let (init_builder, m_incr) 
             = stmt (L.builder_at_end context init_bb) m init in
         (*in (L.builder_at_end context init_bb, map);*)
-        let () = add_terminal init_builder (L.build_br init_bb) in
+        (*let () = add_terminal init_builder (L.build_br init_bb) in*)
+        let _ = L.build_br init_bb builder in
 
         (* Build a basic block for the condition checking *)
         let pred_bb = L.append_block context "for" the_function in
         (* Branch to the predicate to execute the condition from
          * the current block. *)
-        let _ = L.build_br pred_bb builder in
+        let _ = L.build_br pred_bb init_builder in
+        (*let _ = L.build_br pred_bb builder in*)
         (* Create the body of the for loop. As long as the
          * body doesn't return, evaluate the increment expression
          * and then return to the predicate block. *)
