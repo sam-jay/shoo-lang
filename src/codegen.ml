@@ -187,7 +187,7 @@ let translate functions =
       | SFloatLit x -> L.const_float_of_string float_t x
       | SId s -> L.build_load (lookup s) s builder
       | SNoexpr -> L.const_int i32_t 0
-      | SBinop (e1, op, e2) -> (*COPIED FROM JUSTIN*)
+      | SBinop (e1, op, e2) -> (*Ref: Justin's codegen.ml*)
         let (t, _) = e1
         and e1' = expr builder m e1
         and e2' = expr builder m e2 in
@@ -222,14 +222,12 @@ let translate functions =
             | Greater -> L.build_icmp L.Icmp.Sgt
             | Geq     -> L.build_icmp L.Icmp.Sge
             | Mod     -> L.build_srem
-            | _         -> raise (Failure ("operation " ^ (fmt_op op)
-                    ^ " not implemented for type" ^ (fmt_typ t)))
               ) e1' e2' "tmp" builder
         | Bool -> (match op with
               And     -> L.build_and
             | Or      -> L.build_or
             | _         -> raise (Failure ("operation " ^ (fmt_op op)
-                    ^ " not implemented for type" ^ (fmt_typ t)))
+                    ^ " not implemented for type " ^ (fmt_typ t)))
               ) e1' e2' "tmp" builder
         | String -> (match op with
             Add -> L.build_call (StringMap.find "string_concat" builtins) [| e1'; e2'|] "string_concat" builder
@@ -238,12 +236,12 @@ let translate functions =
           | Neq -> (L.build_icmp L.Icmp.Eq) (L.const_int i32_t 0)
                 (L.build_call (StringMap.find "string_equals" builtins) [| e1'; e2'|] "string_equals" builder) "tmp" builder
           | _ -> raise (Failure ("operation " ^ (fmt_op op)
-                ^ " not implemented for type" ^ (fmt_typ t))))
+                ^ " not implemented for type " ^ (fmt_typ t))))
         | _ -> (match op with
             Equal -> (L.build_icmp L.Icmp.Eq) e1' e2' "tmp" builder
           | Neq -> (L.build_icmp L.Icmp.Ne) e1' e2' "tmp" builder
           | _ -> raise (Failure ("operation " ^ (fmt_op op)
-                ^ " not implemented for type" ^ (fmt_typ t))))
+                ^ " not implemented for type " ^ (fmt_typ t))))
          ))
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
