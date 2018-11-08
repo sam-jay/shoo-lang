@@ -303,31 +303,28 @@ let translate functions =
         let init_bb = L.append_block context "init_loop" the_function in
         let (init_builder, m_incr) 
             = stmt (L.builder_at_end context init_bb) m init in
-        (*in (L.builder_at_end context init_bb, map);*)
-        (*let () = add_terminal init_builder (L.build_br init_bb) in*)
         let _ = L.build_br init_bb builder in
 
         (* Build a basic block for the condition checking *)
         let pred_bb = L.append_block context "for" the_function in
+        
         (* Branch to the predicate to execute the condition from
          * the current block. *)
         let _ = L.build_br pred_bb init_builder in
-        (*let _ = L.build_br pred_bb builder in*)
-        (* Create the body of the for loop. As long as the
-         * body doesn't return, evaluate the increment expression
-         * and then return to the predicate block. *)
         let body_bb = L.append_block context "for_body" the_function
         in
+        
         (* Don't need to keep the map because the variables declared in
          * the for loop only exist in the for loop. *)   
         let (for_builder, _) = List.fold_left (fun (b_bb, temp_map) s -> 
             let (build, map) = 
                 stmt b_bb temp_map s in (build, map)) 
-            ((L.builder_at_end context body_bb), m_incr) body
+            (* TODO(claire) figure out why body needs List.rev *)
+            ((L.builder_at_end context body_bb), m_incr) (List.rev body)
         in
+
         (* Add the increment to the block only if the block doesn't
          * already have a terminator. *)
-        (* TODO(claire) does this handle return at end of loop? *)
         (* See if the for loop has a return statement in it *)
         let incr_for_builder = 
             (match L.block_terminator (L.insertion_block for_builder) with
