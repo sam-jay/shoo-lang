@@ -298,14 +298,20 @@ let translate functions =
         in (builder, m)
     (* TODO(claire) need to handle other cases where parts are
      * missing. *)
-    | SForLoop -> (Some(init), Some(predicate), Some(incr), body) ->
+    | SForLoop (Some(init), Some(predicate), Some(incr), body) ->
         (* TODO(claire) how to handle init statement? *)
          
+        (* Build a basic block for the init statement. *)
+        (*let init_bb = L.append_block context "init_loop" in
+        let (init_builder, _) 
+            = stmt (L.builder_at_end context init_bb) m incr
+        in (L.builder_at_end context init_bb, m);
+*)
         (* Build a basic block for the increment expression. *)
-        let incr_bb = L.append_block context "increment_loop" in
+        (*let incr_bb = L.append_block context "incr_loop" in
         let (incr_builder, _) 
-            = stmt (L.builder_at_end context incr_bb) m incr in
-
+            = expr (L.builder_at_end context incr_bb) m incr in
+*)
         (* Build a basic block for the condition checking *)
         let pred_bb = L.append_block context "for" the_function in
         (* Branch to the predicate to execute the condition from
@@ -316,23 +322,29 @@ let translate functions =
          * and then return to the predicate block. *)
         let body_bb = L.append_block context "for_body" the_function
         in
-        let (for_builder, _) = stmt (L.builder_at_end context body_bb)
-            m body
+        let for_builder = List.fold_left (fun b_bb s -> 
+            let (build, _) = 
+                stmt (*(L.builder_at_end context b_bb)*) b_bb m s in build) 
+            (L.builder_at_end context body_bb) body
         in
-        add_terminal for_builder (L.build_br pred_bb) in
-
+        (*let (for_builder, _) = List.fold_left stmt m (L.builder_at_end context body*)
+        (* Add the increment to the block only if the block doesn't
+         * already have a terminator. *)
+        (* TODO(claire) does this handle return at end of loop? *)
+        let (incr_for_builder, _) = 
+            stmt for_builder m (SExpr(incr)) in
+        let() = add_terminal incr_for_builder (L.build_br pred_bb) in
+        
         (* Generate the predicate code in the predicate block *)
         let pred_builder = L.builder_at_end context pred_bb in
         let bool_val = expr pred_builder m predicate in
 
         (* Finish the loop *)
-        let merge_bb = L.append_block contxt "merge" the_function in
+        let merge_bb = L.append_block context "merge" the_function in
         let _ = L.build_cond_br bool_val body_bb merge_bb pred_builder
         in
-        (L.builder_at_end contxt merge_bb, m)
-        (* Add the increment to the block only if the block doesn't
-         * already have a terminator. *)
-
+        (L.builder_at_end context merge_bb, m)
+        
     | _ -> raise (Failure "not implemented in codegen")
 
     and stmt_list builder m sl =
