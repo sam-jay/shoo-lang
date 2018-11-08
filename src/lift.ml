@@ -78,6 +78,19 @@ let rec dfs_sstmt funcs env sstmt =
   | SExpr e ->
       let (funcs1, fvs1, e1) = dfs_sexpr funcs env e in
       (funcs1, fvs1, env, SExpr(e1))
+  | SForLoop (Some(s1), Some(e1), Some(e2), body) ->
+      let (funcs1, fvs1, _, s1') = dfs_sstmt funcs env s1 in
+      let (funcs2, fvs2, e1') = dfs_sexpr funcs1 env e1 in
+      let (funcs3, fvs3, e2') = dfs_sexpr funcs2 env e2 in
+      let (funcs4, fvs4, body') = List.fold_left 
+        (fun (funcs, fvslist, stmtlist) s ->
+          let (funcs', fvs, _, slift) =
+          dfs_sstmt funcs env s in 
+          (funcs', fvs::fvslist, slift::stmtlist)) 
+          (funcs3, [fvs3; fvs2; fvs1], []) 
+        body in
+      (funcs4, List.concat (List.rev fvs4), env, 
+      SForLoop(Some(s1'), Some(e1'), Some(e2'), body'))
   | _ -> print_endline(fmt_sstmt sstmt); raise (Failure "not implemented in lifter") in
   let check_scope (_, fv) = not (StringMap.mem fv env.variables) in
   let fvs' = List.filter check_scope fvs' in

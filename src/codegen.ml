@@ -302,11 +302,11 @@ let translate functions =
         (* TODO(claire) how to handle init statement? *)
          
         (* Build a basic block for the init statement. *)
-        (*let init_bb = L.append_block context "init_loop" in
+        let init_bb = L.append_block context "init_loop" the_function in
         let (init_builder, _) 
-            = stmt (L.builder_at_end context init_bb) m incr
+            = stmt (L.builder_at_end context init_bb) m init
         in (L.builder_at_end context init_bb, m);
-*)
+
         (* Build a basic block for the increment expression. *)
         (*let incr_bb = L.append_block context "incr_loop" in
         let (incr_builder, _) 
@@ -331,8 +331,16 @@ let translate functions =
         (* Add the increment to the block only if the block doesn't
          * already have a terminator. *)
         (* TODO(claire) does this handle return at end of loop? *)
+        (* See if the for loop has a return statement in it *)
+        let incr_for_builder = 
+            (match L.block_terminator (L.insertion_block for_builder) with
+            None -> let (new_incr_builder, _) = 
+                stmt for_builder m (SExpr(incr)) in
+                new_incr_builder
+            | Some _ -> for_builder) in
+      (*| Some _ -> ()
         let (incr_for_builder, _) = 
-            stmt for_builder m (SExpr(incr)) in
+            stmt for_builder m (SExpr(incr)) in*)
         let() = add_terminal incr_for_builder (L.build_br pred_bb) in
         
         (* Generate the predicate code in the predicate block *)
