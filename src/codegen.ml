@@ -146,12 +146,6 @@ let translate functions =
 
     let rec expr builder (m : (typ * L.llvalue) StringMap.t) ((ty, e) : sexpr) =
 
-      (* TODO(claire) why is this here and why is it never used (gives
-       * warning)? *)
-      let lookup_both n = try StringMap.find n m with
-        Not_found -> raise (Failure ("Variable not found: " ^ n)) 
-      in
-
       let lookup n =
         let (_, llval) = try StringMap.find n m with
           Not_found -> raise (Failure ("Variable not found: " ^ n))
@@ -189,6 +183,12 @@ let translate functions =
       | SFloatLit x -> L.const_float_of_string float_t x
       | SId s -> L.build_load (lookup s) s builder
       | SNoexpr -> L.const_int i32_t 0
+      | SAssign(e1, e2) ->
+          let new_v = expr builder m e2 in
+          (match snd e1 with
+            SId s -> ignore(L.build_store new_v (lookup s) builder); new_v
+          | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
+
       | SBinop (e1, op, e2) -> (*Ref: Justin's codegen.ml*)
         let (t, _) = e1
         and e1' = expr builder m e1
@@ -272,8 +272,7 @@ let translate functions =
 
     let rec stmt builder m = function
       SExpr e -> let _ = expr builder m e in (builder, m)
-    | SVDecl(t, n, Some(e)) ->
-        let e' = expr builder m e in
+    | SVDecl(t, n, se) ->
         let alloc_clsr clsr =
           let func_name = ("f" ^ (string_of_int clsr.ind)) in
           let (_, lfexpr) = StringMap.find func_name function_decls in
@@ -281,13 +280,21 @@ let translate functions =
           let llclosure_struct_t = L.struct_type context [|func_t; void_ptr_t|] in
           L.build_malloc llclosure_struct_t n builder
         in
-        let (_, expr) = e in
-        let local_var = match expr with
-          SClosure(clsr) -> alloc_clsr clsr
-        | _ -> L.build_malloc (ltype_of_typ t) n builder
+        let (builder, local_var) = match se with
+          None -> 
+            let local_var = L.build_malloc (ltype_of_typ t) n builder in
+            (builder, local_var)
+        | Some(e) -> 
+            let (_, ex) = e in
+            let local_var = match ex with
+              SClosure(clsr) -> alloc_clsr clsr
+            | _ -> L.build_malloc (ltype_of_typ t) n builder
+            in
+            let e' = expr builder m e in
+            let _ = L.build_store e' local_var builder in
+            (builder, local_var)
         in
         let m' = StringMap.add n (t, local_var) m in
-        let _ = L.build_store e' local_var builder in
         (builder, m')
       (* Ref: Justin's codegen.ml *)
       | SIf (pred, then_stmts, else_stmts) ->

@@ -1,0 +1,12 @@
+string foo;
+foo = "Hello World";
+string bar = "bar";
+bar = "Hello World";
+func(;string) baz;
+baz = function() string { return "Hello World"; };
+int x = 5;
+x = x + 3;
+println(foo);
+println(bar);
+println(baz());
+println(str_of_int(x));

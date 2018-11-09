@@ -417,9 +417,9 @@ and check_stmt (ctxt : typ StringMap.t list) = function
         | Some(e3) -> (let (nctxt, (t_i, si)) = 
             check_expr ctxt2 e3 in (nctxt, Some((t_i, si))))
      in
-     let (ctxt4, _, st') = check_stmt_list ctxt3 st
+     let (ctxt4, ret_t, st') = check_stmt_list ctxt3 st
      in
-    (ctxt4, Void, SForLoop(s1', e2', e3', st'))
+    (ctxt4, ret_t, SForLoop(s1', e2', e3', st'))
 
 (* Note: Handling the context variable of two branches is kinda tricky because
    it does not follow a linear flow. My assumption is that everything 

@@ -61,17 +61,22 @@ let add_bind m (t, id) = StringMap.add id t m
 let rec dfs_sstmt funcs env sstmt =
   let (funcs', fvs', env', sstmt') =
   match sstmt with
-    SVDecl(lt, name, Some(sexpr)) ->
-      let (funcs', fvs', sexpr') = dfs_sexpr funcs env sexpr ~fname:name in
-      let (rt, _) = sexpr' in
-      let new_typ = match (lt, rt) with
-        Func(_), Func(_) -> lt
-      | _ -> lt in
+    SVDecl(lt, name, i) ->
+      let (new_typ, funcs', fvs', opt_sexpr') = match i with
+        None -> (lt, funcs, [], None)
+      | Some(sexpr) ->
+          let (funcs', fvs', sexpr') = dfs_sexpr funcs env sexpr ~fname:name in
+          let (rt, _) = sexpr' in
+          let new_typ = match (lt, rt) with
+            Func(_), Func(_) -> lt
+          | _ -> lt in
+          (new_typ, funcs', fvs', Some(sexpr'))
+      in
       let env' = {
         variables = StringMap.add name new_typ env.variables;
         parent = env.parent
       } in
-      (funcs', fvs', env', SVDecl(new_typ, name, Some(sexpr')))
+      (funcs', fvs', env', SVDecl(new_typ, name, opt_sexpr'))
   | SReturn e -> 
       let (funcs1, fvs1, e1) = dfs_sexpr funcs env e in
       (funcs1, fvs1, env, SReturn(e1))
@@ -115,11 +120,15 @@ and dfs_sexpr ?fname funcs env (t, expr) =
   let check_scope (_, fv) = not (StringMap.mem fv env.variables) in
   let (funcs', fvs', expr') = match expr with
     SFExpr(fexpr) ->
-    let (funcs', fvs', (t, clsr)) = match fname with
-      Some x -> build_closure funcs env fexpr ~fname:x
-    | None -> build_closure funcs env fexpr in
-    let fvs' = List.filter check_scope fvs' in
-    (funcs', fvs', (t, SClosure(clsr)))
+      let (funcs', fvs', (t, clsr)) = match fname with
+        Some x -> build_closure funcs env fexpr ~fname:x
+      | None -> build_closure funcs env fexpr in
+      let fvs' = List.filter check_scope fvs' in
+      (funcs', fvs', (t, SClosure(clsr)))
+  | SAssign(e1, e2) ->
+      let (funcs', fvs2, e2') = dfs_sexpr funcs env e2 in
+      let (funcs', fvs1, e1') = dfs_sexpr funcs' env e1 in
+      (funcs', List.concat [fvs2; fvs1], (t, SAssign(e1', e2')))
   | SId s1 ->
       let fv =
         if StringMap.mem s1 env.variables || StringMap.mem s1 built_in_decls
