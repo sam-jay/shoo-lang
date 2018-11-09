@@ -232,7 +232,10 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
       else helper StringMap.empty list
     in
     let func_scope = create_scope fexpr.params in
-    let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
+    let (_, return_t, sl) = 
+        (* TODO(claire) why not func_t.return_typ? *)
+        check_stmt_list ((func_scope::ctxt), fexpr.typ) fexpr.body
+    in
     check_asn return_t fexpr.typ;
     (ctxt, (func_t, SFExpr({
       sname = fexpr.name;
@@ -241,19 +244,23 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
       sbody = sl;
       srecursive = false; (* TODO: handle recursion *)
     })))
-
 | Noexpr -> (ctxt, (Void, SNoexpr))
 | _ as x -> print_endline(Ast.fmt_expr x); raise (Failure "not implemented in semant")
 
-and check_stmt_list (ctxt : typ StringMap.t list) = function
-  [] -> (ctxt, Void, [])
+and check_stmt_list (ctxt (*: typ StringMap.t list*), func_ret_typ) = function
+  [] -> (ctxt, func_ret_typ, [])
 | hd::tl -> 
-  let (nctxt, t, ss) = check_stmt ctxt hd in
-  let (nctxt, t_rest, ssl) = check_stmt_list nctxt tl in
+  let (nctxt, t, ss) = check_stmt (ctxt, func_ret_typ) hd in
+  let (nctxt, t_rest, ssl) = check_stmt_list (nctxt, func_ret_typ) tl in
   let ret =
-    if t = Void
-    then t_rest 
-    else (if List.length tl <> 0 then raise (Failure "dead code after return") else (); t)
+    (* All the return types of the statements match the
+     * expected return type. *)
+    if t = func_ret_typ && t_rest = func_ret_typ
+        then func_ret_typ
+    else (if List.length tl <> 0 then 
+            raise (Failure "dead code after return") 
+            (* TODO(claire) will the error below ever happen? *)
+         else raise (Failure "return outside of a function")(*(); func_ret_typ)*))
   in
   (nctxt, ret, ss::ssl) (* returned something *)
 
@@ -264,33 +271,35 @@ and check_bool_expr (ctxt : typ StringMap.t list) e =
     else (nctxt, (t, st)) 
 
 (* returns the map, type, stype *)
-and check_stmt (ctxt : typ StringMap.t list) = function
+and check_stmt (ctxt (*: typ StringMap.t list*), func_ret_typ) = function
   Expr(e) -> let (nctxt, (t, ss)) = 
-      check_expr ctxt e in (nctxt, Void, SExpr((t, ss)))
-| VDecl(ltype, n, i) ->
-  let t = match ltype with 
-    Struct(struct_t) -> find_in_ctxt struct_t.struct_name ctxt 
-    | _ -> ltype
-  in
-  (match i with
-    None -> (add_to_ctxt t n ctxt, Void, SVDecl(t, n, None))
-  | Some(e) ->
-      let (_, (t_i, s_i)) = match e with
-        StructInit(assigns) -> 
-          let struct_t = match t with Struct(st) -> st | _ -> raise (Type_mismatch "type mismatch error") in
-          let check_init (name, exp) =
-            let (_, (t, se)) = check_expr ctxt exp in
-            try
-              let (mt, _) = StringMap.find name struct_t.members in
-              (name, (check_asn t mt, se))
-            with Not_found -> raise (Failure ("struct " ^ struct_t.struct_name ^ " has no member " ^ name))
-          in
-          let slist = List.map check_init assigns in
+      check_expr ctxt e in (nctxt, func_ret_typ, SExpr((t, ss)))
+  | VDecl(ltype, n, i) ->
+    let t = match ltype with 
+        Struct(struct_t) -> find_in_ctxt struct_t.struct_name ctxt 
+        | _ -> ltype
+    in
+    (match i with
+        None -> (add_to_ctxt t n ctxt, func_ret_typ, SVDecl(t, n, None))
+        | Some(e) ->
+            let (_, (t_i, s_i)) = match e with
+                StructInit(assigns) -> 
+                    let struct_t = match t with Struct(st) -> st | _ -> raise (Type_mismatch "type mismatch error") in
+                    let check_init (name, exp) =
+                    let (_, (t, se)) = check_expr ctxt exp in
+                    try
+                        let (mt, _) = 
+                            StringMap.find name struct_t.members in
+                        (name, (check_asn t mt, se))
+                    with Not_found -> raise (Failure ("struct " ^ struct_t.struct_name ^ " has no member " ^ name))
+                    in
+                    let slist = List.map check_init assigns in
           (ctxt, (Struct(struct_t), SStructInit(slist)))
       | _ -> check_expr ctxt e
       in
       let nctxt = add_to_ctxt t n ctxt in
-      (nctxt, Void, SVDecl((check_asn t_i t), n, Some((t_i, s_i)))))
+      (nctxt, func_ret_typ, 
+        SVDecl((check_asn t_i t), n, Some((t_i, s_i)))))
 
 | StructDef(name, fields) ->
     let helper (map, list) (lt, n, i) =
@@ -319,7 +328,7 @@ and check_stmt (ctxt : typ StringMap.t list) = function
       incomplete = false;
     }) in
     let nctxt = add_to_ctxt struct_t name ctxt in
-    (nctxt, Void, SStructDef(name, fields_se))
+    (nctxt, func_ret_typ, SStructDef(name, fields_se))
 
 (*
 | StructDef(name, fields) ->
@@ -400,12 +409,16 @@ and check_stmt (ctxt : typ StringMap.t list) = function
 
 
 | Return(e) -> let (nctxt, (t, ss)) = 
-    check_expr ctxt e in (nctxt, t, SReturn((t, ss)))
+    check_expr ctxt e in 
+    if t = func_ret_typ then (nctxt, t, SReturn((t, ss)))
+    else raise (Failure ("return gives " ^ (fmt_typ t) ^ " but expected " 
+                         ^ (fmt_typ func_ret_typ)))
+    (* TODO(claire) pretty printer error above *)
 | ForLoop (s1, e2, e3, st) -> 
      let (ctxt1, s1') = match s1 with
         None -> (ctxt, None)
-        | Some(s1) -> (let (nctxt, _, ns1) = check_stmt ctxt s1 in
-            (nctxt, Some(ns1)))
+        | Some(s1) -> (let (nctxt, _, ns1) = 
+            check_stmt (ctxt, func_ret_typ) s1 in (nctxt, Some(ns1)))
      in
      let (ctxt2, e2') = match e2 with
         None -> (ctxt1, None)
@@ -417,9 +430,9 @@ and check_stmt (ctxt : typ StringMap.t list) = function
         | Some(e3) -> (let (nctxt, (t_i, si)) = 
             check_expr ctxt2 e3 in (nctxt, Some((t_i, si))))
      in
-     let (ctxt4, ret_t, st') = check_stmt_list ctxt3 st
+     let (ctxt4, _, st') = check_stmt_list (ctxt3, func_ret_typ) st
      in
-    (ctxt4, ret_t, SForLoop(s1', e2', e3', st'))
+    (ctxt4, func_ret_typ, SForLoop(s1', e2', e3', st'))
 
 (* Note: Handling the context variable of two branches is kinda tricky because
    it does not follow a linear flow. My assumption is that everything 
@@ -428,13 +441,13 @@ and check_stmt (ctxt : typ StringMap.t list) = function
 | If (e, st1, st2) ->
      let (ctxt1, e') = check_bool_expr ctxt e
      in
-     let (_, _, st1') = check_stmt_list ctxt1 st1
+     let (_, _, st1') = check_stmt_list (ctxt1, func_ret_typ) st1
      in
-     let (_, _, st2') = check_stmt_list ctxt1 st2
+     let (_, _, st2') = check_stmt_list (ctxt1, func_ret_typ) st2
      in
-    (ctxt, Void, SIf(e', st1', st2'))
+    (ctxt, func_ret_typ, SIf(e', st1', st2'))
     
-| _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
+| _ -> (ctxt, func_ret_typ, SExpr((Void, SNoexpr)))
 
 let builtins = [
   ("println", Func({ param_typs = [String]; return_typ = Void }));
@@ -449,7 +462,7 @@ let def_ctxt =
 
 let check_program (prog : stmt list) =
   let (_, _, ssl) = check_stmt_list 
-  def_ctxt 
+  (def_ctxt, Void) 
   prog 
   in
   ssl

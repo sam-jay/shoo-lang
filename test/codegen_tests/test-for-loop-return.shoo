@@ -1,9 +1,9 @@
 
-
 function foo() string {
   for (int i = 5; i < 10; i = i+1) {
-    return "hello " + str_of_int(i);
+    //return i /*+ str_of_int(i)*/;
   }
+  return "hi";
 }
 
 println(foo());
