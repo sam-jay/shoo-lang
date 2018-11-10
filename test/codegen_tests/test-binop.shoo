@@ -1,2 +1,9 @@
 int x = 5+6;
 println(str_of_int(x));
+int y = 2*3;
+println(str_of_int(y));
+if (x==y) {
+	println("SHOULDNT PRINT THIS");
+} else {
+	println("yes good");
+}

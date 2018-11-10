@@ -245,6 +245,17 @@ let translate functions =
           | _ -> raise (Failure ("operation " ^ (fmt_op op)
                 ^ " not implemented for type " ^ (fmt_typ t))))
          ))
+      | SUnop(op, e) -> (*ref: Justin's LRM*)
+        let (t, _) = e in
+        let e' = expr builder m e in
+          (match op with
+          Neg when t = Float -> L.build_fneg
+        | Neg when t = Int -> L.build_neg
+        | Not when t = Bool -> L.build_not
+        | _ -> raise (Failure ("operation " ^ (fmt_uop op) ^ 
+          " not implemented for type " ^ (fmt_typ t)))) e' "tmp" builder
+
+
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
           L.build_call printf_func [| string_format_str; (expr builder m (typ, sexpr)); |] "" builder

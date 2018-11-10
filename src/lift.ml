@@ -140,6 +140,9 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       let (funcs1, fvs1, se1') = dfs_sexpr funcs env se1 in
       let (funcs2, fvs2, se2') = dfs_sexpr funcs1 env se2 in
         (funcs2, List.concat [fvs1; fvs2], (t, SBinop(se1', op, se2')))
+  | SUnop(op, e1) ->
+           let (funcs1, fvs1, e1') = dfs_sexpr funcs env e1 in
+           (funcs1, fvs1, (t, SUnop(op, e1')))
   | SFCall((lt, se), args) ->
     (match se with
     SId(s1) ->
