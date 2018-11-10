@@ -1,0 +1,11 @@
+function foo() string {
+    string x = "Hello "+"World"+"!";
+    string y = "what";
+    if (x!=y) {
+	    println("GOOD");
+        return "correct";
+    } else {
+	    println("SHOULDNT HAVE PRINTED THIS");
+        return "incorrect";
+    }
+}

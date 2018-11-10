@@ -316,7 +316,7 @@ let translate functions =
         in (builder, m)
     (* TODO(claire) need to handle other cases where parts are
      * missing. *)
-    | SForLoop (init, Some(predicate), incr, body) ->
+    | SForLoop (init, predicate, incr, body) ->
         (* Build a basic block for the init statement. *)
         let init_bb = L.append_block context "init_loop" the_function in
         let (init_builder, m_incr) = 
@@ -347,7 +347,6 @@ let translate functions =
 
         (* Add the increment to the block only if the block doesn't
          * already have a terminator and it has an increment.*)
-        (* See if the for loop has a return statement in it *)
         let incr_for_builder = match incr with
             Some(incr) ->
                 (let has_incr = 
@@ -362,7 +361,12 @@ let translate functions =
         
         (* Generate the predicate code in the predicate block *)
         let pred_builder = L.builder_at_end context pred_bb in
-        let bool_val = expr pred_builder m_incr predicate in
+        let bool_val = match predicate with 
+            Some(predicate) -> let has_predicate = 
+                expr pred_builder m_incr predicate in has_predicate
+            | None -> let always_true = 
+                expr pred_builder m_incr (Bool, SBoolLit(true)) in always_true
+         in
 
         (* Finish the loop *)
         let merge_bb = L.append_block context "merge" the_function in
