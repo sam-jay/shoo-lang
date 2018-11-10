@@ -325,8 +325,6 @@ let translate functions =
           Void -> L.build_ret_void builder
         | _ -> L.build_ret (expr builder m e) builder
         in (builder, m)
-    (* TODO(claire) need to handle other cases where parts are
-     * missing. *)
     | SForLoop (init, predicate, incr, body) ->
         (* Build a basic block for the init statement. *)
         let init_bb = L.append_block context "init_loop" the_function in
