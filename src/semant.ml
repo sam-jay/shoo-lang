@@ -448,9 +448,9 @@ let def_ctxt =
   List.fold_left add_func [StringMap.empty] builtins
 
 let check_program (prog : stmt list) =
-  let (_, _, ssl) = check_stmt_list 
-  def_ctxt 
-  prog 
-  in
-  ssl
+  if List.exists (fun x -> match x with Return(_) -> true | _ -> false) prog
+  then raise (Failure "illegal return statement")
+  else
+    let (_, _, ssl) = check_stmt_list def_ctxt prog in
+    ssl
 
