@@ -316,12 +316,16 @@ let translate functions =
         in (builder, m)
     (* TODO(claire) need to handle other cases where parts are
      * missing. *)
-    | SForLoop (Some(init), Some(predicate), Some(incr), body) ->
+    | SForLoop (init, Some(predicate), incr, body) ->
         (* Build a basic block for the init statement. *)
         let init_bb = L.append_block context "init_loop" the_function in
-        let (init_builder, m_incr) 
-            = stmt (L.builder_at_end context init_bb) m init in
-        let _ = L.build_br init_bb builder in
+        let (init_builder, m_incr) = 
+            (match init with 
+                Some(init) -> 
+                    stmt (L.builder_at_end context init_bb) m init
+                | None -> ((L.builder_at_end context init_bb), m)) 
+        in 
+		let _ = L.build_br init_bb builder in        
 
         (* Build a basic block for the condition checking *)
         let pred_bb = L.append_block context "for" the_function in
@@ -342,14 +346,18 @@ let translate functions =
         in
 
         (* Add the increment to the block only if the block doesn't
-         * already have a terminator. *)
+         * already have a terminator and it has an increment.*)
         (* See if the for loop has a return statement in it *)
-        let incr_for_builder = 
-            (match L.block_terminator (L.insertion_block for_builder) with
-            None -> (let (new_incr_builder, _) = 
-                stmt for_builder m_incr (SExpr(incr)) in
-                new_incr_builder)
-            | Some _ -> for_builder) in
+        let incr_for_builder = match incr with
+            Some(incr) ->
+                (let has_incr = 
+                    match L.block_terminator 
+                        (L.insertion_block for_builder) with
+                    None -> (let (new_incr_builder, _) = 
+                        stmt for_builder m_incr (SExpr(incr)) in
+                        new_incr_builder)
+                    | Some _ -> for_builder in has_incr)
+             | None -> for_builder in
         let() = add_terminal incr_for_builder (L.build_br pred_bb) in
         
         (* Generate the predicate code in the predicate block *)
