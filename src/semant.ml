@@ -233,9 +233,9 @@ let rec check_expr (ctxt : typ StringMap.t list) = function
     in
     let func_scope = create_scope fexpr.params in
     let (_, return_t, sl) = 
-        (* TODO(claire) why not func_t.return_typ? *)
         check_stmt_list ((func_scope::ctxt), fexpr.typ) fexpr.body
     in
+    (* TODO(claire) should this be ignored or used? gives warning *)
     check_asn return_t fexpr.typ;
     (ctxt, (func_t, SFExpr({
       sname = fexpr.name;
