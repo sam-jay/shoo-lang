@@ -413,7 +413,7 @@ and check_stmt (ctxt : typ StringMap.t list) = function
             check_bool_expr ctxt1 e2 in (nctxt, Some((t_i, si))))
      in
      let (ctxt3, e3') = match e3 with
-        None -> (ctxt, None)
+        None -> (ctxt2, None)
         | Some(e3) -> (let (nctxt, (t_i, si)) = 
             check_expr ctxt2 e3 in (nctxt, Some((t_i, si))))
      in
