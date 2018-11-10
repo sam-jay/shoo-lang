@@ -379,6 +379,8 @@ let translate functions =
     (* add a return if the last block falls off the end *)
     add_terminal builder (match lfexpr.lreturn_typ with
       Void -> L.build_ret_void
+    | String -> L.build_ret (L.build_global_stringptr "" "str" builder)
+    | Float -> L.build_ret (L.const_float_of_string float_t "0.0")
     | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
 
   in
