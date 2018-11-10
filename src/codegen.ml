@@ -316,11 +316,15 @@ let translate functions =
         in (builder, m)
     (* TODO(claire) need to handle other cases where parts are
      * missing. *)
-    | SForLoop (Some(init), Some(predicate), Some(incr), body) ->
+    | SForLoop (init, Some(predicate), Some(incr), body) ->
         (* Build a basic block for the init statement. *)
         let init_bb = L.append_block context "init_loop" the_function in
-        let (init_builder, m_incr) 
-            = stmt (L.builder_at_end context init_bb) m init in
+        let (init_builder, m_incr) = 
+            (match init with 
+                Some(init) -> 
+                    stmt (L.builder_at_end context init_bb) m init
+                | None -> ((L.builder_at_end context init_bb), m)) 
+        in 
         let _ = L.build_br init_bb builder in
 
         (* Build a basic block for the condition checking *)
