@@ -35,7 +35,7 @@ let check_asn lvalue_t rvalue_t =
   | _ -> lvalue_t = rvalue_t in
   if found_match
   then lvalue_t
-  else raise (Type_mismatch "type mismatch error")
+  else (print_endline(fmt_typ lvalue_t); print_endline(fmt_typ rvalue_t); raise (Type_mismatch "type mismatch error"))
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
@@ -321,84 +321,6 @@ and check_stmt (ctxt : typ StringMap.t list) = function
     let nctxt = add_to_ctxt struct_t name ctxt in
     (nctxt, Void, SStructDef(name, fields_se))
 
-(*
-| StructDef(name, fields) ->
-    (* Create a map of the member fields. 
-     * See if there are repeat variables. *)
-    let vdecl_repeats_map = List.fold_left (fun map v_field ->
-        let get_name (_,n,_) = n in
-        let v_name = get_name v_field in
-        (* If the variable is in the map, it is a repeat and will have 
-         * a type. *)
-        (let ((t_opt,_), _) = find_in_ctxt v_name map in
-        match t_opt with
-            Some(_) -> 
-                raise (Failure "can't repeat variable names in structs")
-            | None ->
-                 (let get_init (_,_,i) = i in
-                 let v_init = get_init v_field in
-                 let get_type (t,_,_) = t in
-                 let field_type = get_type v_field in
-                 (* Check the type to ensure there isn't a recusrive
-                  * definition. *)
-                 let v_type = 
-                     (* See if there is a recursive struct def by
-                      * comparing the variable type and the struct type *)
-                     if field_type = Struct(name) then
-                        raise (Failure "can't have recursive struct def")
-                     else field_type in 
-                 let add_map = match v_init with
-                    None ->
-                        (* The map is None because you can't define a
-                         * struct inside of a struct. *)
-                        (add_to_ctxt (v_type, None) v_name map)
-                    | Some(e) -> let (_, (t_i, _)) =
-                        (* check_expr doesn't change the map *)
-                        check_expr map e 
-                        in           
-                        let matching_type = 
-                            (* see if the expression matches 
-                             * the given type *)
-                            (* TODO(claire) I am not sure if check_assign 
-                             * deals with struct and array comparision...*)
-                            check_assign v_type t_i
-                            (Failure ("illegal assignment in struct"))
-                            (* TODO(claire) pretty print error above *)
-                        in
-                        add_to_ctxt (matching_type, None) v_name map 
-                  in add_map))
-           ) (* end of function *) [StringMap.empty] fields
-    in
-    (* make a list of all the types in the struct *)
-    let field_types = List.map (fun v_field -> 
-        let get_name (_,n,_) = n in
-        let v_name = get_name v_field in
-        let get_init (_,_,i) = i in
-        let v_init = get_init v_field in
-        (* If there is an expression, get the type of the expression.
-         * Above should have handled the case where the given type and
-         * the expression types don't match. *)
-        let find_expression_type = (match v_init with
-            None -> None
-            | Some(e) ->
-             (let (_, (t_i, si)) =
-             check_expr vdecl_repeats_map e in
-             Some((t_i, si))))
-        in 
-        let get_type (t,_,_) = t in
-        let v_type = get_type v_field in
-        (v_type, v_name, find_expression_type)
-        ) (* end of function for List.map *) fields 
-    in 
-    (* name is the name of the struct type *)
-    (* Add the name of the struct type, its type, and the map of its
-     * members to the ctxt. *)
-    (add_to_ctxt (Struct(name), 
-        Some(List.hd vdecl_repeats_map)) name ctxt, Void,
-        SStructDef(name, field_types))
-*)
-
-
 | Return(e) -> let (nctxt, (t, ss)) = 
     check_expr ctxt e in (nctxt, t, SReturn((t, ss)))
 | ForLoop (s1, e2, e3, st) -> 
@@ -426,13 +348,18 @@ and check_stmt (ctxt : typ StringMap.t list) = function
    defined in the block should not be effective outside of the if block
    and that it should be consistent between For and If. *)
 | If (e, st1, st2) ->
-     let (ctxt1, e') = check_bool_expr ctxt e
-     in
-     let (_, _, st1') = check_stmt_list ctxt1 st1
-     in
-     let (_, _, st2') = check_stmt_list ctxt1 st2
-     in
-    (ctxt, Void, SIf(e', st1', st2'))
+    let (ctxt1, e') = check_bool_expr ctxt e
+    in
+    let (_, rt1, st1') = check_stmt_list ctxt1 st1
+    in
+    let (_, rt2, st2') = check_stmt_list ctxt1 st2
+    in
+    let rt = match rt1, rt2 with
+      (Void, _) -> Void
+    | (_, Void) -> Void
+    | (t1, t2) -> check_asn t1 t2
+    in
+    (ctxt, rt, SIf(e', st1', st2'))
     
 | _ -> (ctxt, Void, SExpr((Void, SNoexpr)))
 

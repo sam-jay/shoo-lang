@@ -52,7 +52,7 @@ stmt:
     { ForLoop($3, $5, $7, List.rev $10) }
 | FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
 | STRUCT STRUCTID LBRACKET mems_opt RBRACKET { StructDef($2, $4) }
-| IF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { If($3, $6, $8) }
+| IF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { If($3, List.rev $6, $8) }
 
 opt_init:
   { None }
@@ -65,10 +65,10 @@ expr_opt:
 false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
 
 elif:
-ELIF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { [If($3, $6, $8)] }
+ELIF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { [If($3, List.rev $6, $8)] }
 
 cf_else:
-ELSE LBRACKET stmt_list RBRACKET { $3 }
+ELSE LBRACKET stmt_list RBRACKET { List.rev $3 }
 
 expr:
 | expr INCREMENT { Pop($1, Inc) }
