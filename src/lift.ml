@@ -196,7 +196,8 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       | _ -> fvs1
       in (funcs1, fvs', (t, SFCall((lt, se), args')))
     | _ ->
-        let (funcs1, fvs1, se1) = dfs_sexpr funcs env (lt, se) in
+        let (funcs1, fvs1, (* TODO need this? (*se1*)*) _) 
+            = dfs_sexpr funcs env (lt, se) in
         let (funcs2, fvs2, args') = dfs_sexprs funcs1 env args in
         (funcs2, fvs1@fvs2, (t, SFCall((lt, se), args'))))
   | _ as x -> (funcs, [], (t, x))
