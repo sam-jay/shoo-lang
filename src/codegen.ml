@@ -190,7 +190,8 @@ let translate functions =
       | SAssign((_, SDot((SStruct(struct_t), SId(s)), name)), e2) ->
           let new_v = expr builder m e2 in
           let lhs = expr builder m (SStruct(struct_t), SId(s)) in
-          let llstruct_t = ltype_of_typ (SStruct(struct_t)) in
+          let (* TODO need this? (*llstruct_t*)*) _ 
+                = ltype_of_typ (SStruct(struct_t)) in
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
           let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
@@ -211,7 +212,8 @@ let translate functions =
           List.fold_left2 (insert_value builder) (L.const_null llstruct_t) idxs vals
       | SDot((SStruct(struct_t), exp), name) ->
           let lhs = expr builder m (SStruct(struct_t), exp) in
-          let llstruct_t = ltype_of_typ (SStruct(struct_t)) in
+          let (* TODO need this? (*llstruct_t*)*) _
+             = ltype_of_typ (SStruct(struct_t)) in
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
           let idxs = List.mapi (fun i (n, _) -> (n, i)) members in

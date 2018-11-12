@@ -110,7 +110,10 @@ let rec fmt_typ = function
   | Float -> "float"
   | Bool -> "bool"
   | String -> "string"
-  | Struct(st) -> fmt_three "struct" st.struct_name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.members))) (string_of_bool st.incomplete)
+  | Struct(st) -> fmt_three "struct" st.struct_name 
+        (fmt_list (List.map (fun (k, (* TODO delete this? (*v*)*)_) -> k) 
+            (StringMap.bindings st.members))) 
+        (string_of_bool st.incomplete)
   | Array(t) -> fmt_one "array" (fmt_typ t)
   | ABSTRACT -> "ABSTRACT"
 
@@ -160,7 +163,7 @@ let rec fmt_expr = function
 | Assign(e1, e2) -> fmt_two "Assign" (fmt_expr e1) (fmt_expr e2)
 | ArrayAccess(s, e) -> fmt_two "ArrayAccess" (fmt_expr s) (fmt_expr e)
 | Dot(e, s) -> fmt_two "Dot" (fmt_expr e) s
-| FCall(n, a) -> "FCall"
+| FCall((* TODO need this? (*n*)*)_, (*a*)_) -> "FCall"
 (* below actually is parsed with {name = e.name; param = e.params;
  * typ = e.typ; body = e.body}. See test programs for examples. *)
 | FExpr(e) -> fmt_three "FExpr" (fmt_params e.params) 
