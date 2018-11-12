@@ -90,7 +90,7 @@ let rec fmt_styp = function
   | SFloat -> "sfloat"
   | SBool -> "sbool"
   | SString -> "sstring"
-  | SStruct(st) -> fmt_three "sstruct" st.sstruct_name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.smembers))) (string_of_bool st.sincomplete)
+  | SStruct(st) -> fmt_three "sstruct" st.sstruct_name (fmt_list (List.map (fun (k, _) -> k) (StringMap.bindings st.smembers))) (string_of_bool st.sincomplete)
   | SArray(t) -> fmt_one "sarray" (fmt_styp t)
   | SABSTRACT -> "SABSTRACT"
 

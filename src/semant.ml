@@ -183,7 +183,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
       in (access_type, st)
     in
     let (_, (t1, se1)) = check_expr ctxt e in
-    let (field_type, st) = check_struct_access t1 field_name 
+    let (field_type, _ ) = check_struct_access t1 field_name 
     in (ctxt, (field_type, SDot((t1, se1), field_name)))
 
 | Binop(e1, op, e2) ->
@@ -254,7 +254,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     (ctxt, (func_t.sreturn_typ, SFCall((t, se), sl)))
 
 | FExpr(fexpr) ->
-    let conv_params (typ, str) = (styp_of_typ ctxt typ) in
+    let conv_params (typ, _ ) = (styp_of_typ ctxt typ) in
     let conv_params_with_both_fields (typ, str) = (styp_of_typ ctxt typ,str) in
     let sfunc_t = SFunc({ sreturn_typ = styp_of_typ ctxt fexpr.typ; sparam_typs = List.map conv_params fexpr.params }) in
     let create_scope list =
@@ -270,7 +270,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     in
     let func_scope = create_scope fexpr.params in
     let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
-    check_asn return_t (styp_of_typ ctxt fexpr.typ);
+    ignore (check_asn return_t (styp_of_typ ctxt fexpr.typ)); (*TODO: ignore this output to get rid of warnings*)
     (ctxt, (sfunc_t, SFExpr({
       sname = fexpr.name;
       styp = styp_of_typ ctxt fexpr.typ;
