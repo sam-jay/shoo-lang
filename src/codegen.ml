@@ -1,4 +1,5 @@
 module L = Llvm
+
 open Ast
 open Sast
 open Lift
@@ -18,7 +19,7 @@ let translate functions =
 
   and the_module = L.create_module context "Shoo" in
 
-  let rec ltype_of_func name (ret_t : typ) param_ts =
+  let rec ltype_of_func name (ret_t : styp) param_ts =
     let param_types = (List.map ltype_of_typ param_ts) in
     let param_types =
       if name = "main" then param_types
@@ -28,32 +29,35 @@ let translate functions =
   and ltype_of_lfexpr name (lfexpr : lfunc) =
     ltype_of_func name lfexpr.lreturn_typ (List.map fst lfexpr.lparams)
 
-  and ltype_of_sfunction name (sfunc : func_typ) =
-    ltype_of_func name sfunc.return_typ sfunc.param_typs
+  and ltype_of_sfunction name (sfunc : sfunc_typ) =
+    ltype_of_func name sfunc.sreturn_typ sfunc.sparam_typs
 
   and ltype_of_clsr name lfexpr =
     let func_t = L.pointer_type (ltype_of_lfexpr name lfexpr) in
     L.struct_type context [|func_t; void_ptr_t|]
   
-  and ltype_of_clsr_func name (sfunc : func_typ) =
+  and ltype_of_clsr_func name (sfunc : sfunc_typ) =
     let func_t = L.pointer_type (ltype_of_sfunction name sfunc) in
     L.struct_type context [|func_t; void_ptr_t|]
   
   and ltype_of_typ = function
-    Int -> i32_t
-  | Float -> float_t
-  | Bool -> i1_t
-  | String -> str_t
-  | Func ftype -> ltype_of_clsr_func "" ftype
-  | Void -> void_t
+    SInt -> i32_t
+  | SFloat -> float_t
+  | SBool -> i1_t
+  | SString -> str_t
+  | SFunc ftype -> ltype_of_clsr_func "" ftype
+  | SVoid -> void_t
+  | SStruct(struct_t) -> 
+      let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
+      L.struct_type context (Array.of_list (List.map ltype_of_typ t_members))
   | _ -> raise (Failure "not yet implemented")
   in
 
   let insert_value builder agg i v = L.build_insertvalue agg v i "tmp__" builder in
 
-  let typ_of_lfexpr lfexpr = Func({
-    return_typ = lfexpr.lreturn_typ;
-    param_typs = List.map fst lfexpr.lparams
+  let typ_of_lfexpr lfexpr = SFunc({
+    sreturn_typ = lfexpr.lreturn_typ;
+    sparam_typs = List.map fst lfexpr.lparams
   }) in
 
   let rec generate_seq n = if n >= 0 then (n :: (generate_seq (n-1))) else [] in
@@ -63,9 +67,9 @@ let translate functions =
     L.declare_function "printf" printf_t the_module in
 
   let builtins = List.fold_left (fun m (name, ty) -> 
-    let ftype = match ty with Func(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
-    let params = List.map ltype_of_typ ftype.param_typs in
-    let ltype = L.function_type (ltype_of_typ ftype.return_typ) (Array.of_list params) in
+    let ftype = match ty with SFunc(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
+    let params = List.map ltype_of_typ ftype.sparam_typs in
+    let ltype = L.function_type (ltype_of_typ ftype.sreturn_typ) (Array.of_list params) in
     StringMap.add name (L.declare_function name ltype the_module) m
   ) StringMap.empty Semant.builtins in
 
@@ -144,7 +148,7 @@ let translate functions =
       StringMap.add lfexpr.lname (func_t, clsr_p) params_fvs
     in
 
-    let rec expr builder (m : (typ * L.llvalue) StringMap.t) ((ty, e) : sexpr) =
+    let rec expr builder (m : (styp * L.llvalue) StringMap.t) ((ty, e) : sexpr) =
 
       let lookup n =
         let (_, llval) = try StringMap.find n m with
@@ -183,12 +187,36 @@ let translate functions =
       | SFloatLit x -> L.const_float_of_string float_t x
       | SId s -> L.build_load (lookup s) s builder
       | SNoexpr -> L.const_int i32_t 0
+      | SAssign((_, SDot((SStruct(struct_t), SId(s)), name)), e2) ->
+          let new_v = expr builder m e2 in
+          let lhs = expr builder m (SStruct(struct_t), SId(s)) in
+          let llstruct_t = ltype_of_typ (SStruct(struct_t)) in
+          let compare_by (n1, _) (n2, _) = compare n1 n2 in
+          let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
+          let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
+          let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
+          let new_struct = L.build_insertvalue lhs new_v idx name builder in
+          ignore(L.build_store new_struct (lookup s) builder); new_v
       | SAssign(e1, e2) ->
           let new_v = expr builder m e2 in
           (match snd e1 with
             SId s -> ignore(L.build_store new_v (lookup s) builder); new_v
           | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
-
+      | SStructInit(SStruct(struct_t), assigns) ->
+          let compare_by (n1, _) (n2, _) = compare n1 n2 in
+          let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
+          let llstruct_t = ltype_of_typ (SStruct(struct_t)) in
+          let vals = List.map (fun (_, e) -> expr builder m e) (List.sort compare_by assigns) in
+          let idxs = List.rev (generate_seq ((List.length members) - 1)) in
+          List.fold_left2 (insert_value builder) (L.const_null llstruct_t) idxs vals
+      | SDot((SStruct(struct_t), exp), name) ->
+          let lhs = expr builder m (SStruct(struct_t), exp) in
+          let llstruct_t = ltype_of_typ (SStruct(struct_t)) in
+          let compare_by (n1, _) (n2, _) = compare n1 n2 in
+          let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
+          let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
+          let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
+          L.build_extractvalue lhs idx name builder
       | SBinop (e1, op, e2) -> (*Ref: Justin's codegen.ml*)
         let (t, _) = e1
         and e1' = expr builder m e1
@@ -196,7 +224,7 @@ let translate functions =
           (match snd e1, snd e2 with
            _ -> (match t with
 
-          Float -> (match op with
+          SFloat -> (match op with
               Add     -> L.build_fadd
             | Sub     -> L.build_fsub
             | Mult    -> L.build_fmul
@@ -210,7 +238,7 @@ let translate functions =
             | _ ->
               raise (Failure "internal error: semant should have rejected and/or on float")
               ) e1' e2' "tmp" builder
-        | Int -> (match op with
+        | SInt -> (match op with
             | Add     -> L.build_add
             | Sub     -> L.build_sub
             | Mult    -> L.build_mul
@@ -225,35 +253,35 @@ let translate functions =
             | Geq     -> L.build_icmp L.Icmp.Sge
             | Mod     -> L.build_srem
               ) e1' e2' "tmp" builder
-        | Bool -> (match op with
+        | SBool -> (match op with
               And     -> L.build_and
             | Or      -> L.build_or
             | _         -> raise (Failure ("operation " ^ (fmt_op op)
-                    ^ " not implemented for type " ^ (fmt_typ t)))
+                    ^ " not implemented for type " ^ (fmt_styp t)))
               ) e1' e2' "tmp" builder
-        | String -> (match op with
+        | SString -> (match op with
             Add -> L.build_call (StringMap.find "string_concat" builtins) [| e1'; e2'|] "string_concat" builder
           | Equal -> (L.build_icmp L.Icmp.Ne) (L.const_int i32_t 0)
                 (L.build_call (StringMap.find "string_equals" builtins) [| e1'; e2'|] "string_equals" builder) "tmp" builder
           | Neq -> (L.build_icmp L.Icmp.Eq) (L.const_int i32_t 0)
                 (L.build_call (StringMap.find "string_equals" builtins) [| e1'; e2'|] "string_equals" builder) "tmp" builder
           | _ -> raise (Failure ("operation " ^ (fmt_op op)
-                ^ " not implemented for type " ^ (fmt_typ t))))
+                ^ " not implemented for type " ^ (fmt_styp t))))
         | _ -> (match op with
             Equal -> (L.build_icmp L.Icmp.Eq) e1' e2' "tmp" builder
           | Neq -> (L.build_icmp L.Icmp.Ne) e1' e2' "tmp" builder
           | _ -> raise (Failure ("operation " ^ (fmt_op op)
-                ^ " not implemented for type " ^ (fmt_typ t))))
+                ^ " not implemented for type " ^ (fmt_styp t))))
          ))
       | SUnop(op, e) -> (*ref: Justin's LRM*)
         let (t, _) = e in
         let e' = expr builder m e in
           (match op with
-          Neg when t = Float -> L.build_fneg
-        | Neg when t = Int -> L.build_neg
-        | Not when t = Bool -> L.build_not
+          Neg when t = SFloat -> L.build_fneg
+        | Neg when t = SInt -> L.build_neg
+        | Not when t = SBool -> L.build_not
         | _ -> raise (Failure ("operation " ^ (fmt_uop op) ^ 
-          " not implemented for type " ^ (fmt_typ t)))) e' "tmp" builder
+          " not implemented for type " ^ (fmt_styp t)))) e' "tmp" builder
 
 
       | SClosure clsr -> build_clsr clsr
@@ -264,13 +292,13 @@ let translate functions =
           L.build_call (StringMap.find name builtins) arg_array "_result" builder
       | SFCall((t, s), args) ->
           let func_t = match t with
-            Func(func_t) -> func_t
+            SFunc(func_t) -> func_t
           | _ -> raise (Failure "wrong type for function call") in
           let clsr_val = expr builder m (t, s) in
           let func_ptr = L.build_extractvalue clsr_val 0 "fp" builder in
           let env_ptr = L.build_extractvalue clsr_val 1 "envp" builder in
           let llargs = env_ptr :: (List.rev (List.map (expr builder m) (List.rev args))) in
-          let result = (match func_t.return_typ with Void -> "" | _ -> "_result") in
+          let result = (match func_t.sreturn_typ with SVoid -> "" | _ -> "_result") in
           L.build_call func_ptr (Array.of_list llargs) result builder
       | _ as x -> print_endline(fmt_sexpr (ty, x));  raise (Failure "not implemented in codegen")
     in
@@ -283,6 +311,13 @@ let translate functions =
 
     let rec stmt builder m = function
       SExpr e -> let _ = expr builder m e in (builder, m)
+    | SStructDef(n, mem) ->
+        let struct_t = SStruct({
+          sstruct_name = n;
+          sincomplete = false;
+          smembers = List.fold_left (fun m (t, n, opt_se) -> StringMap.add n (t, opt_se) m) StringMap.empty mem;
+        }) in
+        (builder, StringMap.add n (struct_t, L.const_int i1_t 0) m)
     | SVDecl(t, n, se) ->
         let alloc_clsr clsr =
           let func_name = ("f" ^ (string_of_int clsr.ind)) in
@@ -322,7 +357,7 @@ let translate functions =
          (L.builder_at_end context merge_bb, m)
     | SReturn e ->
         let _ = match lfexpr.lreturn_typ with
-          Void -> L.build_ret_void builder
+          SVoid -> L.build_ret_void builder
         | _ -> L.build_ret (expr builder m e) builder
         in (builder, m)
     | SForLoop (init, predicate, incr, body) ->
@@ -374,7 +409,7 @@ let translate functions =
             Some(predicate) -> let has_predicate = 
                 expr pred_builder m_incr predicate in has_predicate
             | None -> let always_true = 
-                expr pred_builder m_incr (Bool, SBoolLit(true)) in always_true
+                expr pred_builder m_incr (SBool, SBoolLit(true)) in always_true
          in
 
         (* Finish the loop *)
@@ -399,9 +434,9 @@ let translate functions =
 
     (* add a return if the last block falls off the end *)
     add_terminal builder (match lfexpr.lreturn_typ with
-      Void -> L.build_ret_void
-    | String -> L.build_ret (L.build_global_stringptr "" "str" builder)
-    | Float -> L.build_ret (L.const_float_of_string float_t "0.0")
+      SVoid -> L.build_ret_void
+    | SString -> L.build_ret (L.build_global_stringptr "" "str" builder)
+    | SFloat -> L.build_ret (L.const_float_of_string float_t "0.0")
     | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
 
   in

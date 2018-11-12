@@ -1,5 +1,4 @@
 open Sast
-open Ast
 
 module StringMap = Map.Make(String)
 
@@ -27,24 +26,24 @@ this needs to go into semant.ml once the issues there are cleaned up
 *)
 
 type environment = {
-  variables: typ StringMap.t;
+  variables: styp StringMap.t;
   parent: environment option;
 }
 
 (* Lifted function *)
 type lfunc = {
   lname: string;
-  lfvs: bind list; (* Free variables *)
-  lreturn_typ: typ;
-  lparams: bind list;
+  lfvs: sbind list; (* Free variables *)
+  lreturn_typ: styp;
+  lparams: sbind list;
   lbody: sstmt list;
 }
 
 (* For inbuilt functions, create empty function types *)
 let built_in_decls =
-  let empty_func ty = ({ return_typ = ty; param_typs = [] }) in
-  let add_default map (name, ty) = StringMap.add name (Func ty) map in
-  let builtins = List.map (fun (name, Func(func_t)) -> (name, empty_func func_t.return_typ)) Semant.builtins in
+  let empty_func ty = ({ sreturn_typ = ty; sparam_typs = [] }) in
+  let add_default map (name, ty) = StringMap.add name (SFunc ty) map in
+  let builtins = List.map (fun (name, SFunc(func_t)) -> (name, empty_func func_t.sreturn_typ)) Semant.builtins in
   List.fold_left add_default StringMap.empty builtins
 
 let rec lookup (e : environment) name =
@@ -61,14 +60,32 @@ let add_bind m (t, id) = StringMap.add id t m
 let rec dfs_sstmt funcs env sstmt =
   let (funcs', fvs', env', sstmt') =
   match sstmt with
-    SVDecl(lt, name, i) ->
+    SStructDef(name, members) ->
+      let helper (funcs, fvs, members) (ty, n, sexp_opt) = match sexp_opt with
+        None -> (funcs, fvs, (ty, n, None)::members)
+      | Some(e) ->
+          let (funcs', fvs', e') = dfs_sexpr funcs env e in
+          (funcs', fvs@fvs', (ty, n, Some(e'))::members)
+      in
+      let (funcs', fvs', members') = List.fold_left helper (funcs, [], []) members in
+      let new_typ = SStruct({
+        sstruct_name = name;
+        smembers = List.fold_left (fun m (t, n, e) -> StringMap.add n (t, e) m) StringMap.empty members';
+        sincomplete = false
+      }) in
+      let env' = {
+        variables = StringMap.add name new_typ env.variables;
+        parent = env.parent
+      } in
+      (funcs', fvs', env', SStructDef(name, members'))
+  | SVDecl(lt, name, i) ->
       let (new_typ, funcs', fvs', opt_sexpr') = match i with
         None -> (lt, funcs, [], None)
       | Some(sexpr) ->
           let (funcs', fvs', sexpr') = dfs_sexpr funcs env sexpr ~fname:name in
           let (rt, _) = sexpr' in
           let new_typ = match (lt, rt) with
-            Func(_), Func(_) -> lt
+            SFunc(_), SFunc(_) -> lt
           | _ -> lt in
           (new_typ, funcs', fvs', Some(sexpr'))
       in
@@ -140,6 +157,13 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       | None -> build_closure funcs env fexpr in
       let fvs' = List.filter check_scope fvs' in
       (funcs', fvs', (t, SClosure(clsr)))
+  | SStructInit(ty, assigns) ->
+      let helper (funcs, fvs, assigns) (n, se) =
+        let (funcs', fvs', se') = dfs_sexpr funcs env se in
+        (funcs', fvs@fvs', (n, se')::assigns)
+      in
+      let (funcs', fvs', assigns') = List.fold_left helper (funcs, [], []) assigns in
+      (funcs', fvs', (t, SStructInit(ty, assigns')))
   | SAssign(e1, e2) ->
       let (funcs', fvs2, e2') = dfs_sexpr funcs env e2 in
       let (funcs', fvs1, e1') = dfs_sexpr funcs' env e1 in
@@ -194,7 +218,7 @@ and dfs_sexprs funcs env = function
 and build_closure ?fname funcs env fexpr =
   let vars = List.fold_left add_bind StringMap.empty fexpr.sparams in
   let name = match fname with Some x -> x | None -> "" in
-  let vars_rec = match name with "" -> vars | _ -> StringMap.add name ABSTRACT vars in
+  let vars_rec = match name with "" -> vars | _ -> StringMap.add name SABSTRACT vars in
   let new_env = {
     variables = vars_rec;
     parent = Some env
@@ -212,10 +236,10 @@ and build_closure ?fname funcs env fexpr =
     lbody = body'
   } in
   let func_t = {
-    param_typs = List.map fst fexpr.sparams;
-    return_typ = fexpr.styp
+    sparam_typs = List.map fst fexpr.sparams;
+    sreturn_typ = fexpr.styp
   } in
-  (new_func :: funcs', fvs, (Func(func_t), clsr))
+  (new_func :: funcs', fvs, (SFunc(func_t), clsr))
 
 (* Lift takes a list of sast stmts, and converts to a list of (fname, func) *)
 (* sstmt list -> (string * lfunc) list *)
@@ -225,7 +249,7 @@ let lift sstmts =
   let main_func = {
     lname = "main";
     lfvs = [];
-    lreturn_typ = Int;
+    lreturn_typ = SInt;
     lparams = [];
     lbody = sstmts'
   } in
@@ -244,9 +268,9 @@ type lfunc = {
 }*)
 
 let fmt_lfunc f = String.concat "\n" [
-  " -fvs: " ^ String.concat "" (List.map (fun (t, n) -> (fmt_typ t) ^ " " ^ n) f.lfvs);
-  " -return_t: " ^ fmt_typ f.lreturn_typ;
-  " -params: " ^ String.concat "" (List.map (fun (t, n) -> (fmt_typ t) ^ " " ^ n) f.lparams);
+  " -fvs: " ^ String.concat "" (List.map (fun (t, n) -> (fmt_styp t) ^ " " ^ n) f.lfvs);
+  " -return_t: " ^ fmt_styp f.lreturn_typ;
+  " -params: " ^ String.concat "" (List.map (fun (t, n) -> (fmt_styp t) ^ " " ^ n) f.lparams);
   " -lbody: \n" ^ fmt_sstmt_list f.lbody ~spacer:"    ";
 ]
 

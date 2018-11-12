@@ -1,10 +1,32 @@
 open Ast
 
-type snewable =
-  SNArray of typ * sexpr
+type styp =
+  SVoid
+| SInt
+| SFloat
+| SBool
+| SString
+| SFunc of sfunc_typ
+| SStruct of sstruct_typ
+| SArray of styp
+| SABSTRACT
+
+and sfunc_typ = {
+  sparam_typs: styp list;
+  sreturn_typ: styp;
+}
+
+and sstruct_typ = {
+  sstruct_name: string;
+  smembers: (styp * sexpr option) StringMap.t;
+  sincomplete: bool;
+}
+
+and snewable =
+  SNArray of styp * sexpr
 | SNStruct of string
 
-and sexpr = typ * sx
+and sexpr = styp * sx
 and sx =
   SIntLit of int
 | SFloatLit of string
@@ -18,37 +40,49 @@ and sx =
 | SAssign of sexpr * sexpr
 | SFCall of sexpr * sexpr list
 | SFExpr of sfexpr
-| SStructInit of (string * sexpr) list
+| SStructInit of styp * (string * sexpr) list
 | SDestruct of string list * sexpr
 | SArrayAccess of sexpr * sexpr
 | SDot of sexpr * string
 | SNew of snewable
 | SClosure of sclsr
 | SNoexpr
+and sbind = styp * string
 
 and sfexpr = {
     sname : string;
     srecursive : bool; 
-    styp : typ;
-    sparams: bind list;
+    styp : styp;
+    sparams: sbind list;
     sbody : sstmt list
 }
 
 and sclsr = {
   ind: int;
-  free_vars: bind list;
+  free_vars: sbind list;
 }
 
 and sstmt =
   SExpr of sexpr
-| SVDecl of typ * string * sexpr option
+| SVDecl of styp * string * sexpr option
 | SReturn of sexpr
 | SIf of sexpr * sstmt list * sstmt list
 | SForLoop of (sstmt option) * (sexpr option) * (sexpr option) * sstmt list
-| SStructDef of string * (typ * string * sexpr option) list
-| SEnhancedFor of typ * string * sexpr * sstmt list
+| SStructDef of string * (styp * string * sexpr option) list
+| SEnhancedFor of styp * string * sexpr * sstmt list
 
 type sprogram = sstmt list
+
+let rec styp_of_typ t = match t with
+    Int -> SInt
+  | Bool -> SBool
+  | Float -> SFloat
+  | String -> SString
+  | Void -> SVoid
+  | Func f -> SFunc({ sparam_typs = List.map styp_of_typ f.param_typs; sreturn_typ = styp_of_typ f.return_typ })
+  | Struct s -> SStruct({ sstruct_name = s.struct_name; smembers = StringMap.empty; sincomplete = true; })
+  | ABSTRACT -> SABSTRACT
+  | _ as x -> raise (Failure ("TODO NEED TO convert this typ to styp: " ^ (fmt_typ x)))
 
 let string_of_sstmt = function
 | SExpr(_) -> "SExpr"
@@ -60,9 +94,20 @@ let fmt_rec = function
   true -> "recursive"
 | false -> "not_recursive"
 
+let rec fmt_styp = function
+  SVoid -> "svoid"
+  | SFunc(e) -> "sfunc(" ^ (String.concat "," (List.map fmt_styp e.sparam_typs)) ^ "; " ^ (fmt_styp e.sreturn_typ) ^ ")" 
+  | SInt -> "sint"
+  | SFloat -> "sfloat"
+  | SBool -> "sbool"
+  | SString -> "sstring"
+  | SStruct(st) -> fmt_three "sstruct" st.sstruct_name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.smembers))) (string_of_bool st.sincomplete)
+  | SArray(t) -> fmt_one "sarray" (fmt_styp t)
+  | SABSTRACT -> "SABSTRACT"
+
 let fmt_sparams l =
   let fmt_p = function
-    (t, n) -> String.concat "" ["("; fmt_typ t; ", "; n; ")"] in
+    (t, n) -> String.concat "" ["("; fmt_styp t; ", "; n; ")"] in
   fmt_list (List.map fmt_p l)
 
 let rec fmt_sexpr (t,s) =
@@ -82,23 +127,23 @@ let rec fmt_sexpr (t,s) =
 (* below actually is parsed with {name = e.name; param = e.params;
  * typ = e.typ; body = e.body}. See test programs for examples. *)
 | SFExpr(s) -> fmt_four "FExpr" (fmt_rec s.srecursive) (fmt_sparams s.sparams) 
-        (fmt_typ s.styp) (fmt_sstmt_list s.sbody)
-| SStructInit(l) -> fmt_one "StructInit" (fmt_sinit l)
+        (fmt_styp s.styp) (fmt_sstmt_list s.sbody)
+| SStructInit(_, l) -> fmt_one "StructInit" (fmt_sinit l)
 | SArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_sexpr l))
 | SDestruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_sexpr e)
 | SNew(t) -> fmt_one "New" (fmt_sn t)
-| SClosure(clsr) -> fmt_two "Closure" (string_of_int clsr.ind) (fmt_list (List.map (fun (t, n) -> fmt_typ t ^ " " ^ n) clsr.free_vars))
+| SClosure(clsr) -> fmt_two "Closure" (string_of_int clsr.ind) (fmt_list (List.map (fun (t, n) -> fmt_styp t ^ " " ^ n) clsr.free_vars))
 | SNoexpr -> ""
-          ) ^ "   // " ^ fmt_typ t
+          ) ^ "   // " ^ fmt_styp t
 
 and fmt_sn = function
-  SNArray(t, s) -> fmt_two "NArray" (fmt_typ t) (fmt_sexpr s)
+  SNArray(t, s) -> fmt_two "NArray" (fmt_styp t) (fmt_sexpr s)
 | SNStruct(n) -> fmt_one "NStruct" n
 
 and fmt_smembers l =
   let fmt_m = function
-    (t, n, None) -> fmt_three "" (fmt_typ t) n "None"
-  | (t, n, Some(e)) -> fmt_three "" (fmt_typ t) n (fmt_sexpr e) in
+    (t, n, None) -> fmt_three "" (fmt_styp t) n "None"
+  | (t, n, Some(e)) -> fmt_three "" (fmt_styp t) n (fmt_sexpr e) in
   fmt_list (List.map fmt_m l)
 
 and fmt_sinit l =
@@ -108,14 +153,14 @@ and fmt_sinit l =
 and fmt_sstmt = function
   SExpr(se) -> fmt_sexpr se
 | SReturn(e) -> "Return " ^ (fmt_sexpr e)
-| SVDecl (t, n, l) -> (fmt_typ t) ^ " " ^ n ^ " = " ^ (match l with None -> "" | Some(e) -> fmt_sexpr e)
+| SVDecl (t, n, l) -> (fmt_styp t) ^ " " ^ n ^ " = " ^ (match l with None -> "" | Some(e) -> fmt_sexpr e)
 | SForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 
   (match init with None -> "" | Some(s) -> fmt_sstmt s)
   (fmt_opt_sexpr e2) 
   (fmt_opt_sexpr e3) (fmt_sstmt_list s)
 | SStructDef(n, m) -> fmt_two "StructDef" n (fmt_smembers m)
-| SEnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n (fmt_sexpr e) (fmt_sstmt_list b)
+| SEnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_styp t) n (fmt_sexpr e) (fmt_sstmt_list b)
 | SIf(e, tL, fL) -> fmt_three "If" (fmt_sexpr e) (fmt_sstmt_list tL) (fmt_sstmt_list fL)
 
 and fmt_sstmt_list ?spacer l =
