@@ -28,11 +28,13 @@ exception Undeclared_reference of string
 
 let check_assign lvaluet rvaluet err =
     if lvaluet = rvaluet then lvaluet else raise err
+
+let compare_typs t1 t2 = match t1, t2 with
+    SStruct(s_l), SStruct(s_r) -> s_l.sstruct_name = s_r.sstruct_name
+  | _ -> t1 = t2
   
 let check_asn lvalue_t rvalue_t =
-  let found_match = match lvalue_t, rvalue_t with
-    SStruct(s_l), SStruct(s_r) -> s_l.struct_name = s_r.struct_name
-  | _ -> lvalue_t = rvalue_t in
+  let found_match = compare_typs lvalue_t rvalue_t in
   if found_match
   then lvalue_t
   else (print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t); raise (Type_mismatch "type mismatch error"))
@@ -60,6 +62,12 @@ let rec find_in_ctxt (v_name : string) (ctxt : styp StringMap.t list) =
   with Not_found -> match List.tl ctxt with
     [] -> raise (Undeclared_reference ("undeclared reference " ^ v_name))
   | tail -> find_in_ctxt v_name tail
+
+
+let context_to_bindings (ctxt : styp StringMap.t list) =
+  let combine_scopes s1 s2 = StringMap.union (fun _ v1 _ -> Some(v1)) s1 s2 in
+  let map = List.fold_left combine_scopes StringMap.empty ctxt in
+  StringMap.bindings map
 
 (* This functions gives the member map if the 
  * type given is a struct. *)
@@ -91,6 +99,29 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     in
     if t_e <> SInt then raise (Failure ("array size must be an integer type"))
     else (nctxt, (SArray (styp_of_typ t), SNew(SNArray(styp_of_typ t, (t_e, se_e)))))
+
+| StructInit(assigns) -> 
+    let (struct_t, assigns') = 
+      let assigns' = List.map (fun (n, e) -> let (_, se) = check_expr ctxt e in (n, se)) assigns in
+      let compare = function
+        SStruct(st) ->
+          let mems = List.map (fun (n, (t, _)) -> (n, t)) (StringMap.bindings st.smembers) in
+          let compare_by (n1, _) (n2, _) = compare n1 n2 in
+          let mems = List.sort compare_by mems in
+          let assigns' = List.sort compare_by assigns' in
+          if List.length mems <> List.length assigns' then false
+          else List.for_all2 (fun (n1, t1) (n2, (t2, _)) -> (compare_typs t1 t2) && n1 = n2) mems assigns'
+      | _ -> false
+      in
+      let binds = context_to_bindings ctxt in
+      let types = List.map (fun (_, v) -> v) binds in
+      let struct_ts = List.filter compare types in
+      match struct_ts with
+        [] -> raise (Failure "invalid struct initialization")
+      | hd::[] -> (hd, assigns')
+      | _ -> raise (Failure "shouldn't happen")
+    in
+    (ctxt, (struct_t, SStructInit(struct_t, assigns')))
     
 (* TODO(claire) This doesn't handle arrays of structs I don't think? *)
 (* Go through all the items in the square brackets to see if they match *)
@@ -137,19 +168,19 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
 | Dot(e, field_name) -> 
     let check_struct_access struct_type field_name = 
       (* TODO(claire) need to pretty print errors below *)
-      let (access_type, _) = (match struct_type with
+      let ((access_type, _), st) = (match struct_type with
         (* make sure you were passed a struct *)
         SStruct(s) ->
-          (let t = find_in_ctxt s.struct_name ctxt in (* Get the complete struct with members *)
+          (let t = find_in_ctxt s.sstruct_name ctxt in (* Get the complete struct with members *)
           let struct_t = match t with SStruct(st) -> st | _ -> raise (Failure "shouldn't happen") in
-          try StringMap.find field_name struct_t.members
-          with Not_found -> raise (Failure ("struct " ^ s.struct_name ^ " has no member " ^ field_name)))
+          try (StringMap.find field_name struct_t.smembers, SStruct(struct_t))
+          with Not_found -> raise (Failure ("struct " ^ s.sstruct_name ^ " has no member " ^ field_name)))
       | _ -> print_endline(fmt_styp struct_type); raise (Failure "dot operator used on non-struct type"))
-      in access_type
+      in (access_type, st)
     in
     let (_, (t1, se1)) = check_expr ctxt e in
-    let field_type = check_struct_access t1 field_name 
-    in (ctxt, (field_type, SDot((field_type, se1), field_name)))
+    let (field_type, st) = check_struct_access t1 field_name 
+    in (ctxt, (field_type, SDot((t1, se1), field_name)))
 
 | Binop(e1, op, e2) ->
     let (nctxt, (lt, se1)) = check_expr ctxt e1 in
@@ -209,19 +240,19 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         else raise (Failure "argument type mismatch")
       | _ -> raise (Failure "invalid number of arguments")
       in
-      helper [] (f_type.param_typs, args)
+      helper [] (f_type.sparam_typs, args)
     in
     let (_, (t, se)) = check_expr ctxt expr in
     let (func_t, sl) = match t with
       SFunc(func_t) -> (func_t, check_args func_t args)
     | _ -> raise (Failure "not a function")
     in
-    (ctxt, (func_t.return_typ, SFCall((t, se), sl)))
+    (ctxt, (func_t.sreturn_typ, SFCall((t, se), sl)))
 
 | FExpr(fexpr) ->
     let conv_params (typ, str) = (styp_of_typ typ) in
     let conv_params_with_both_fields (typ, str) = (styp_of_typ typ,str) in
-    let sfunc_t = SFunc({ return_typ = styp_of_typ fexpr.typ; param_typs = List.map conv_params fexpr.params }) in
+    let sfunc_t = SFunc({ sreturn_typ = styp_of_typ fexpr.typ; sparam_typs = List.map conv_params fexpr.params }) in
     let create_scope list =
       let rec helper m = function
         [] -> m
@@ -277,20 +308,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
   (match i with
     None -> (add_to_ctxt t n ctxt, SVoid, SVDecl(t, n, None))
   | Some(e) ->
-      let (_, (t_i, s_i)) = match e with
-        StructInit(assigns) -> 
-          let struct_t = match t with SStruct(st) -> st | _ -> raise (Type_mismatch "type mismatch error") in
-          let check_init (name, exp) =
-            let (_, (t, se)) = check_expr ctxt exp in
-            try
-              let (mt, _) = StringMap.find name struct_t.members in
-              (name, (check_asn t mt, se))
-            with Not_found -> raise (Failure ("struct " ^ struct_t.struct_name ^ " has no member " ^ name))
-          in
-          let slist = List.map check_init assigns in
-          (ctxt, (SStruct(struct_t), SStructInit(slist)))
-      | _ -> check_expr ctxt e
-      in
+      let (_, (t_i, s_i)) = check_expr ctxt e in
       let nctxt = add_to_ctxt t n ctxt in
       (nctxt, SVoid, SVDecl((check_asn t_i t), n, Some((t_i, s_i)))))
 
@@ -299,7 +317,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
     let helper (map, list) (lt, n, i) =
       let lt = conv_typ lt in
       match lt with
-        SStruct(struct_t) when name = struct_t.struct_name -> raise (Failure ("illegal recursive struct " ^ name))
+        SStruct(struct_t) when name = struct_t.sstruct_name -> raise (Failure ("illegal recursive struct " ^ name))
       | _ ->
       try
       match (StringMap.find n map) with
@@ -318,9 +336,9 @@ and check_stmt (ctxt : styp StringMap.t list) = function
     in
     let (members, fields_se) = List.fold_left helper (StringMap.empty, []) fields in
     let struct_t = SStruct({
-      struct_name = name;
-      members = members;
-      incomplete = false;
+      sstruct_name = name;
+      smembers = members;
+      sincomplete = false;
     }) in
     let nctxt = add_to_ctxt struct_t name ctxt in
     (nctxt, SVoid, SStructDef(name, fields_se))
@@ -369,10 +387,10 @@ and check_stmt (ctxt : styp StringMap.t list) = function
 | _ -> (ctxt, SVoid, SExpr((SVoid, SNoexpr)))
 
 let builtins = [
-  ("println", SFunc({ param_typs = [SString]; return_typ = SVoid }));
-  ("str_of_int", SFunc({ param_typs = [SInt]; return_typ = SString }));
-  ("string_concat", SFunc({ param_typs = [SString; SString]; return_typ = SString })); 
-  ("string_equals", SFunc({ param_typs = [SString; SString]; return_typ = SInt })); 
+  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid }));
+  ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString }));
+  ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString })); 
+  ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt })); 
 ]
 
 let def_ctxt =

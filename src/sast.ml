@@ -12,14 +12,14 @@ type styp =
 | SABSTRACT
 
 and sfunc_typ = {
-  param_typs: styp list;
-  return_typ: styp;
+  sparam_typs: styp list;
+  sreturn_typ: styp;
 }
 
 and sstruct_typ = {
-  struct_name: string;
-  members: (styp * sexpr option) StringMap.t;
-  incomplete: bool;
+  sstruct_name: string;
+  smembers: (styp * sexpr option) StringMap.t;
+  sincomplete: bool;
 }
 
 and snewable =
@@ -40,7 +40,7 @@ and sx =
 | SAssign of sexpr * sexpr
 | SFCall of sexpr * sexpr list
 | SFExpr of sfexpr
-| SStructInit of (string * sexpr) list
+| SStructInit of styp * (string * sexpr) list
 | SDestruct of string list * sexpr
 | SArrayAccess of sexpr * sexpr
 | SDot of sexpr * string
@@ -74,13 +74,15 @@ and sstmt =
 type sprogram = sstmt list
 
 let rec styp_of_typ t = match t with
-  Int -> SInt
+    Int -> SInt
   | Bool -> SBool
   | Float -> SFloat
   | String -> SString
   | Void -> SVoid
+  | Func f -> SFunc({ sparam_typs = List.map styp_of_typ f.param_typs; sreturn_typ = styp_of_typ f.return_typ })
+  | Struct s -> SStruct({ sstruct_name = s.struct_name; smembers = StringMap.empty; sincomplete = true; })
   | ABSTRACT -> SABSTRACT
-  | _ -> raise (Failure ("TODO NEED TO convert this typ to styp"))
+  | _ as x -> raise (Failure ("TODO NEED TO convert this typ to styp: " ^ (fmt_typ x)))
 
 let string_of_sstmt = function
 | SExpr(_) -> "SExpr"
@@ -94,12 +96,12 @@ let fmt_rec = function
 
 let rec fmt_styp = function
   SVoid -> "svoid"
-  | SFunc(e) -> "sfunc(" ^ (String.concat "," (List.map fmt_styp e.param_typs)) ^ "; " ^ (fmt_styp e.return_typ) ^ ")" 
+  | SFunc(e) -> "sfunc(" ^ (String.concat "," (List.map fmt_styp e.sparam_typs)) ^ "; " ^ (fmt_styp e.sreturn_typ) ^ ")" 
   | SInt -> "sint"
   | SFloat -> "sfloat"
   | SBool -> "sbool"
   | SString -> "sstring"
-  | SStruct(st) -> fmt_three "sstruct" st.struct_name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.members))) (string_of_bool st.incomplete)
+  | SStruct(st) -> fmt_three "sstruct" st.sstruct_name (fmt_list (List.map (fun (k, v) -> k) (StringMap.bindings st.smembers))) (string_of_bool st.sincomplete)
   | SArray(t) -> fmt_one "sarray" (fmt_styp t)
   | SABSTRACT -> "SABSTRACT"
 
@@ -126,7 +128,7 @@ let rec fmt_sexpr (t,s) =
  * typ = e.typ; body = e.body}. See test programs for examples. *)
 | SFExpr(s) -> fmt_four "FExpr" (fmt_rec s.srecursive) (fmt_sparams s.sparams) 
         (fmt_styp s.styp) (fmt_sstmt_list s.sbody)
-| SStructInit(l) -> fmt_one "StructInit" (fmt_sinit l)
+| SStructInit(_, l) -> fmt_one "StructInit" (fmt_sinit l)
 | SArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_sexpr l))
 | SDestruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_sexpr e)
 | SNew(t) -> fmt_one "New" (fmt_sn t)
