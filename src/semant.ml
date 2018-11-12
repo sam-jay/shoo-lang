@@ -29,8 +29,12 @@ exception Undeclared_reference of string
 let check_assign lvaluet rvaluet err =
     if lvaluet = rvaluet then lvaluet else raise err
 
-let compare_typs t1 t2 = match t1, t2 with
+let rec compare_typs t1 t2 = match t1, t2 with
     SStruct(s_l), SStruct(s_r) -> s_l.sstruct_name = s_r.sstruct_name
+  | SFunc(f1), SFunc(f2) ->
+      let same_ret = compare_typs f1.sreturn_typ f2.sreturn_typ in
+      let same_args = List.for_all2 compare_typs f1.sparam_typs f2.sparam_typs in
+      same_ret && same_args
   | _ -> t1 = t2
   
 let check_asn lvalue_t rvalue_t =
@@ -98,7 +102,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     let (nctxt, (t_e, se_e)) = check_expr ctxt e 
     in
     if t_e <> SInt then raise (Failure ("array size must be an integer type"))
-    else (nctxt, (SArray (styp_of_typ t), SNew(SNArray(styp_of_typ t, (t_e, se_e)))))
+    else (nctxt, (SArray (styp_of_typ ctxt t), SNew(SNArray(styp_of_typ ctxt t, (t_e, se_e)))))
 
 | StructInit(assigns) -> 
     let (struct_t, assigns') = 
@@ -250,14 +254,14 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     (ctxt, (func_t.sreturn_typ, SFCall((t, se), sl)))
 
 | FExpr(fexpr) ->
-    let conv_params (typ, str) = (styp_of_typ typ) in
-    let conv_params_with_both_fields (typ, str) = (styp_of_typ typ,str) in
-    let sfunc_t = SFunc({ sreturn_typ = styp_of_typ fexpr.typ; sparam_typs = List.map conv_params fexpr.params }) in
+    let conv_params (typ, str) = (styp_of_typ ctxt typ) in
+    let conv_params_with_both_fields (typ, str) = (styp_of_typ ctxt typ,str) in
+    let sfunc_t = SFunc({ sreturn_typ = styp_of_typ ctxt fexpr.typ; sparam_typs = List.map conv_params fexpr.params }) in
     let create_scope list =
       let rec helper m = function
         [] -> m
       | (t, n)::tl -> 
-          let new_m = StringMap.add n (styp_of_typ t) m in 
+          let new_m = StringMap.add n (styp_of_typ ctxt t) m in 
               helper new_m tl
       in
       if fexpr.name <> ""
@@ -266,10 +270,10 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     in
     let func_scope = create_scope fexpr.params in
     let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
-    check_asn return_t (styp_of_typ fexpr.typ);
+    check_asn return_t (styp_of_typ ctxt fexpr.typ);
     (ctxt, (sfunc_t, SFExpr({
       sname = fexpr.name;
-      styp = styp_of_typ fexpr.typ;
+      styp = styp_of_typ ctxt fexpr.typ;
       sparams = List.map conv_params_with_both_fields fexpr.params;
       sbody = sl;
       srecursive = false; (* TODO: handle recursion *)
@@ -277,6 +281,17 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
 
 | Noexpr -> (ctxt, (SVoid, SNoexpr))
 | _ as x -> print_endline(Ast.fmt_expr x); raise (Failure "not implemented in semant")
+
+and styp_of_typ ctxt = function
+    Int -> SInt
+  | Bool -> SBool
+  | Float -> SFloat
+  | String -> SString
+  | Void -> SVoid
+  | Func f -> SFunc({ sparam_typs = List.map (styp_of_typ ctxt) f.param_typs; sreturn_typ = styp_of_typ ctxt f.return_typ })
+  | Struct s -> find_in_ctxt s.struct_name ctxt
+  | ABSTRACT -> SABSTRACT
+  | _ as x -> raise (Failure ("TODO NEED TO convert this typ to styp: " ^ (fmt_typ x)))
 
 and check_stmt_list (ctxt : styp StringMap.t list) = function
   [] -> (ctxt, SVoid, [])
@@ -303,7 +318,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
 | VDecl(ltype, n, i) ->
   let t = match ltype with 
     Struct(struct_t) -> find_in_ctxt struct_t.struct_name ctxt 
-    | _ -> styp_of_typ ltype
+    | _ -> styp_of_typ ctxt ltype
   in
   (match i with
     None -> (add_to_ctxt t n ctxt, SVoid, SVDecl(t, n, None))
@@ -313,7 +328,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
       (nctxt, SVoid, SVDecl((check_asn t_i t), n, Some((t_i, s_i)))))
 
 | StructDef(name, fields) ->
-    let conv_typ typ = styp_of_typ typ in
+    let conv_typ typ = styp_of_typ ctxt typ in
     let helper (map, list) (lt, n, i) =
       let lt = conv_typ lt in
       match lt with

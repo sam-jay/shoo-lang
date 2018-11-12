@@ -47,7 +47,7 @@ let translate functions =
   | SString -> str_t
   | SFunc ftype -> ltype_of_clsr_func "" ftype
   | SVoid -> void_t
-  | SStruct(struct_t) -> 
+  | SStruct(struct_t) ->
       let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
       L.struct_type context (Array.of_list (List.map ltype_of_typ t_members))
   | _ -> raise (Failure "not yet implemented")

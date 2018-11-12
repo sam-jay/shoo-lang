@@ -194,7 +194,7 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       let fvs' = match fv' with
         Some(x) -> x :: fvs1
       | _ -> fvs1
-      in (funcs1, fvs', (lt, SFCall((lt, se), args')))
+      in (funcs1, fvs', (t, SFCall((lt, se), args')))
     | _ ->
         let (funcs1, fvs1, se1) = dfs_sexpr funcs env (lt, se) in
         let (funcs2, fvs2, args') = dfs_sexprs funcs1 env args in

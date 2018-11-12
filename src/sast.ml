@@ -73,17 +73,6 @@ and sstmt =
 
 type sprogram = sstmt list
 
-let rec styp_of_typ t = match t with
-    Int -> SInt
-  | Bool -> SBool
-  | Float -> SFloat
-  | String -> SString
-  | Void -> SVoid
-  | Func f -> SFunc({ sparam_typs = List.map styp_of_typ f.param_typs; sreturn_typ = styp_of_typ f.return_typ })
-  | Struct s -> SStruct({ sstruct_name = s.struct_name; smembers = StringMap.empty; sincomplete = true; })
-  | ABSTRACT -> SABSTRACT
-  | _ as x -> raise (Failure ("TODO NEED TO convert this typ to styp: " ^ (fmt_typ x)))
-
 let string_of_sstmt = function
 | SExpr(_) -> "SExpr"
 | _ -> "Other"
