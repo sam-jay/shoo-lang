@@ -1,0 +1,41 @@
+struct Professor {
+  string name;
+}
+
+struct Student {
+  string name;
+  func(Professor;void) greet;
+}
+
+function createProfessor(string name) Professor {
+  return { name = name; };
+}
+
+function createStudentCreator(string defaultGreeting) func(string;Student) {
+  return function(string name) Student {
+    function helper(int i) string {
+      string x = "st";
+      if (i == 0 || i == 4) {
+        x = "th";
+      } elif (i == 2) {
+        x = "nd";
+      } elif (i == 3) {
+        x = "rd";
+      }
+      return str_of_int(i) + x;
+    }
+    return {
+      name = name;
+      greet = function(Professor p) void {
+        for (int i = 0; i < 5; i = i + 1) {
+          println(name + " says " + defaultGreeting + " to " + p.name + " for the " + helper(i) + " time");
+        }
+        return;
+      };
+    };
+  };
+}
+
+Professor stephen = createProfessor("Stephen");
+
+createStudentCreator("hello")("Sam").greet(stephen);
