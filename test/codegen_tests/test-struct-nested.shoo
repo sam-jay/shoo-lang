@@ -1,0 +1,22 @@
+struct Member {
+    string name;
+    int dob;
+}
+
+struct BankAccount {
+    int accountNumber;
+    Member member;
+}
+
+function nestedStruct() string {
+    Member m1;
+    m1.name = "name";
+    m1.dob = 01012020;
+    BankAccount a1;
+    a1.accountNumber = 4;
+    a1.member = m1;
+
+    return a1.member.name;
+}
+
+println(nestedStruct());

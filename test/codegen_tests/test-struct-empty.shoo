@@ -1,0 +1,3 @@
+struct Empty{}
+Empty e;
+println("does nothing");
