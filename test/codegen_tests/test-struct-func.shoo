@@ -1,0 +1,13 @@
+// Struct with function in it.
+function add5(int y) int {
+    return y+5;
+}
+
+struct Math {
+    func(int; int) doAdd = add5;
+}
+
+Math m;
+println(str_of_int(add5(6))); // this is fine
+m.doAdd(6); // this seg faults
+// println(str_of_int(m.doAdd(6)));

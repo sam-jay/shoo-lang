@@ -101,15 +101,17 @@ Check() {
 
     # Report the status and clean up the generated files
 
+    #echo "before rror check"
     if [ $error -eq 0 ] ; then
-	if [ $keep -eq 0 ] ; then
-	    rm -f $generatedfiles
-	fi
-	echo "OK"
-	echo "###### SUCCESS" 1>&2
+        if [ $keep -eq 0 ] ; then
+            rm -f $generatedfiles
+        fi
+        echo "OK"
+        echo "###### SUCCESS" 1>&2
     else
-	echo "###### FAILED" 1>&2
-	globalerror=$error
+        echo "failed - maybe segfault"
+        echo "###### FAILED" 1>&2
+        globalerror=$error
     fi
 }
 
@@ -134,14 +136,15 @@ CheckFail() {
     # Report the status and clean up the generated files
 
     if [ $error -eq 0 ] ; then
-	if [ $keep -eq 0 ] ; then
-	    rm -f $generatedfiles
-	fi
-	echo "OK"
-	echo "###### SUCCESS" 1>&2
+        if [ $keep -eq 0 ] ; then
+            rm -f $generatedfiles
+        fi
+        echo "OK"
+        echo "###### SUCCESS" 1>&2
     else
-	echo "###### FAILED" 1>&2
-	globalerror=$error
+        echo "failed - maybe segfault?"
+        echo "###### FAILED" 1>&2
+        globalerror=$error
     fi
 }
 
