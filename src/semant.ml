@@ -33,22 +33,24 @@ let rec compare_typs t1 t2 = match t1, t2 with
     SStruct(s_l), SStruct(s_r) -> s_l.sstruct_name = s_r.sstruct_name
   | SFunc(f1), SFunc(f2) ->
       let same_ret = compare_typs f1.sreturn_typ f2.sreturn_typ in
-      let same_args = List.for_all2 compare_typs f1.sparam_typs f2.sparam_typs in
-      same_ret && same_args
+      let same_args = List.for_all2 compare_typs f1.sparam_typs f2.sparam_typs
+      in same_ret && same_args
   | _ -> t1 = t2
   
 let check_asn lvalue_t rvalue_t =
   let found_match = compare_typs lvalue_t rvalue_t in
   if found_match
   then lvalue_t
-  else (print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t); raise (Type_mismatch "type mismatch error"))
+  else (print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);
+    raise (Type_mismatch "type mismatch error"))
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
  * The map in the tuple is used for the member fields
  * in structs. The map is None unless you are adding a new
  * struct type. *)    
-let add_to_ctxt (v_type : styp) (v_name : string) (ctxt : styp StringMap.t list) =
+let add_to_ctxt (v_type : styp) (v_name : string) 
+    (ctxt : styp StringMap.t list) =
   let map = List.hd ctxt in
   try
     match (StringMap.find v_name map) with
@@ -102,19 +104,23 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     let (nctxt, (t_e, se_e)) = check_expr ctxt e 
     in
     if t_e <> SInt then raise (Failure ("array size must be an integer type"))
-    else (nctxt, (SArray (styp_of_typ ctxt t), SNew(SNArray(styp_of_typ ctxt t, (t_e, se_e)))))
+    else (nctxt, (SArray (styp_of_typ ctxt t), 
+      SNew(SNArray(styp_of_typ ctxt t, (t_e, se_e)))))
 
 | StructInit(assigns) -> 
     let (struct_t, assigns') = 
-      let assigns' = List.map (fun (n, e) -> let (_, se) = check_expr ctxt e in (n, se)) assigns in
+      let assigns' = List.map (fun (n, e) -> let (_, se) = check_expr ctxt e 
+          in (n, se)) assigns in
       let compare = function
         SStruct(st) ->
-          let mems = List.map (fun (n, (t, _)) -> (n, t)) (StringMap.bindings st.smembers) in
+          let mems = List.map (fun (n, (t, _)) -> (n, t)) 
+            (StringMap.bindings st.smembers) in
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let mems = List.sort compare_by mems in
           let assigns' = List.sort compare_by assigns' in
           if List.length mems <> List.length assigns' then false
-          else List.for_all2 (fun (n1, t1) (n2, (t2, _)) -> (compare_typs t1 t2) && n1 = n2) mems assigns'
+          else List.for_all2 (fun (n1, t1) (n2, (t2, _)) 
+            -> (compare_typs t1 t2) && n1 = n2) mems assigns'
       | _ -> false
       in
       let binds = context_to_bindings ctxt in
@@ -145,14 +151,17 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         let (_, (t1, st1)) = check_expr ctxt e1 in
         (* TODO(claire) need to check both? *)
         if t1 = item_type && st1 = item_s_type then (t1, st1)
-        else raise (Failure ("Multiple types inside an array"))
-        (* TODO(claire) add pretty print for error above *)
+        else raise (Failure("Error: cannot have multiple types in an array ("
+          ^ fmt_styp t1 ^ " and " ^ fmt_styp item_type ))
     ) x in (ctxt, (item_type, SArrayLit t))
 
 | ArrayAccess(expr, int_expr) ->
     let (_, (t1, se1)) = check_expr ctxt expr in
     let (_, (t2, se2)) = check_expr ctxt int_expr in
-    let t3 = match t1 with SArray(t) -> t | _ -> raise (Failure ("not an array")) in
+    let t3 = match t1 with 
+      SArray(t) -> t 
+      | _ -> raise (Failure ("not an array"))
+    in
     if t2 = SInt then (ctxt, (t3, SArrayAccess((t1, se1), (t2, se2))))
     else raise (Failure ("can't access array with non-integer type"))
 
@@ -171,15 +180,21 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
 
 | Dot(e, field_name) -> 
     let check_struct_access struct_type field_name = 
-      (* TODO(claire) need to pretty print errors below *)
       let ((access_type, _), st) = (match struct_type with
         (* make sure you were passed a struct *)
         SStruct(s) ->
-          (let t = find_in_ctxt s.sstruct_name ctxt in (* Get the complete struct with members *)
-          let struct_t = match t with SStruct(st) -> st | _ -> raise (Failure "shouldn't happen") in
+          (let t = find_in_ctxt s.sstruct_name ctxt in 
+            (* Get the complete struct with members *)
+          let struct_t = match t with 
+            SStruct(st) -> st 
+            | _ -> raise (Failure "not a struct")
+          in
           try (StringMap.find field_name struct_t.smembers, SStruct(struct_t))
-          with Not_found -> raise (Failure ("struct " ^ s.sstruct_name ^ " has no member " ^ field_name)))
-      | _ -> print_endline(fmt_styp struct_type); raise (Failure "dot operator used on non-struct type"))
+          with Not_found -> 
+            raise (Failure 
+              ("struct " ^ s.sstruct_name ^ " has no member " ^ field_name)))
+        | _ -> print_endline(fmt_styp struct_type); 
+          raise (Failure "dot operator used on non-struct type"))
       in (access_type, st)
     in
     let (_, (t1, se1)) = check_expr ctxt e in
@@ -191,31 +206,33 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     let (nctxt, (rt, se2)) = check_expr nctxt e2 in
     let sbinop = SBinop((lt, se1), op, (rt, se2)) in
     (match op with
-      Add | Sub | Mult | Div when lt = SInt && rt = SInt -> (nctxt, (SInt, sbinop))
-    | Add | Sub | Mult | Div when lt = SFloat && rt = SFloat -> (nctxt, (SFloat, sbinop))
-    (* Allow for ints and floats to be used together. *)
-    | Add | Sub | Mult | Div when 
+      Add | Sub | Mult | Div when lt = SInt && rt = SInt 
+        -> (nctxt, (SInt, sbinop))
+      | Add | Sub | Mult | Div when lt = SFloat && rt = SFloat 
+        -> (nctxt, (SFloat, sbinop))
+      (* Allow for ints and floats to be used together. *)
+      | Add | Sub | Mult | Div when 
         (lt = SFloat && rt = SInt) ||
         (lt = SInt && rt = SFloat) -> (nctxt, (SFloat, sbinop))
-    (* allow string concatenation TODO(crystal): update LRM *)
-    | Add when lt = SString && rt = SString -> (nctxt, (SString,sbinop))
-    (* TODO(claire): make sure LRM says that we can compare all
+      (* allow string concatenation TODO(crystal): update LRM *)
+      | Add when lt = SString && rt = SString -> (nctxt, (SString,sbinop))
+     (* TODO(claire): make sure LRM says that we can compare all
       * expressions of the same type using ==, including functions, 
       * strings,
       * structs, arrays? *)
-    | Equal | Neq  when lt = rt -> (nctxt, (SBool, sbinop))
-    | Equal | Neq  when 
+      | Equal | Neq  when lt = rt -> (nctxt, (SBool, sbinop))
+      | Equal | Neq  when 
         (lt = SFloat && rt = SInt) ||
         (lt = SInt && rt = SFloat) -> (nctxt, (SBool, sbinop))
-    | Equal | Neq  when lt = SBool && rt = SBool -> 
+      | Equal | Neq  when lt = SBool && rt = SBool -> 
             (nctxt, (SBool, sbinop))
-    | Less | Leq | Greater | Geq  
+      | Less | Leq | Greater | Geq  
                               when (lt = SInt && rt = SInt) 
                               || (lt = SFloat || rt = SFloat) -> 
                                       (nctxt, (SBool, sbinop))
-    | And | Or when rt = SBool && rt = SBool -> (nctxt, (SBool, sbinop))
-    | _ -> raise (Type_mismatch "Type mismatch across binary operator"))
-    (* TODO(claire) need to pretty print error above *)
+      | And | Or when rt = SBool && rt = SBool -> (nctxt, (SBool, sbinop))
+      | _ -> raise (Failure("Error: cannot use " ^ fmt_op op ^ 
+        " with types: "^ fmt_styp rt ^ " and " ^ fmt_styp lt )))
 
 | Unop(op, e) -> 
     let (nctxt, (t, e)) = check_expr ctxt e in 
@@ -307,8 +324,8 @@ and check_stmt_list (ctxt : styp StringMap.t list) = function
 
 and check_bool_expr (ctxt : styp StringMap.t list) e = 
     let (nctxt, (t, st)) = check_expr ctxt e in
-    if (t <> SBool) then raise (Failure "expected Boolean expression")
-    (* TODO(claire) add pretty print above *) 
+    if (t <> SBool) then 
+      raise (Failure("Error: " ^ fmt_styp t ^ " is not a boolean type"))
     else (nctxt, (t, st)) 
 
 (* returns the map, type, stype *)

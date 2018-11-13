@@ -95,17 +95,21 @@ type program = stmt list
 
 let fmt_one name v = String.concat "" [name; "("; v; ")"]
 let fmt_two name v1 v2 = String.concat "" [name; "("; v1; ","; v2; ")"]
-let fmt_three name v1 v2 v3 = String.concat "" [name; "("; v1; ","; v2; ","; v3; ")"]
-let fmt_four name v1 v2 v3 v4 = String.concat "" [name; "("; v1; ","; v2; ","; v3; ","; v4; ")"]
-let fmt_five name v1 v2 v3 v4 v5 = String.concat "" [name; "("; v1; ","; v2; ","; v3; ","; v4; ","; string_of_bool v5; ")"]
+let fmt_three name v1 v2 v3 = String.concat "" 
+  [name; "("; v1; ","; v2; ","; v3; ")"]
+let fmt_four name v1 v2 v3 v4 = String.concat "" 
+  [name; "("; v1; ","; v2; ","; v3; ","; v4; ")"]
+let fmt_five name v1 v2 v3 v4 v5 = String.concat "" 
+  [name; "("; v1; ","; v2; ","; v3; ","; v4; ","; string_of_bool v5; ")"]
 
 let fmt_list l =
-  let items = String.concat ";" l in
+  let items = String.concat ";" l in 
   String.concat "" ["["; items; "]"]
 
 let rec fmt_typ = function
   Void -> "void"
-  | Func(e) -> "func(" ^ (String.concat "," (List.map fmt_typ e.param_typs)) ^ "; " ^ (fmt_typ e.return_typ) ^ ")" 
+  | Func(e) -> "func(" ^ (String.concat "," (List.map fmt_typ e.param_typs)) 
+    ^ "; " ^ (fmt_typ e.return_typ) ^ ")" 
   | Int -> "int"
   | Float -> "float"
   | Bool -> "bool"
@@ -191,15 +195,18 @@ and fmt_init l =
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
 | Return(e) -> fmt_one "Return" (fmt_expr e)
-| VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with None -> "" | Some(e) -> fmt_expr e)
+| VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with 
+  None -> "" | Some(e) -> fmt_expr e)
 | ForLoop (init, e2, e3, s) -> 
   fmt_four "ForLoop" 
   (match init with None -> "" | Some(s) -> fmt_stmt s)
   (fmt_opt_expr e2) 
   (fmt_opt_expr e3) (fmt_stmt_list s)
 | StructDef(n, m) -> fmt_two "StructDef" n (fmt_members m)
-| EnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n (fmt_expr e) (fmt_stmt_list b)
-| If(e, tL, fL) -> fmt_three "If" (fmt_expr e) (fmt_stmt_list tL) (fmt_stmt_list fL)
+| EnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n 
+  (fmt_expr e) (fmt_stmt_list b)
+| If(e, tL, fL) -> fmt_three "If" (fmt_expr e) (fmt_stmt_list tL) 
+  (fmt_stmt_list fL)
 
 and fmt_stmt_list l =
   let stmts = List.map fmt_stmt l in
