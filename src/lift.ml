@@ -43,7 +43,11 @@ type lfunc = {
 let built_in_decls =
   let empty_func ty = ({ sreturn_typ = ty; sparam_typs = [] }) in
   let add_default map (name, ty) = StringMap.add name (SFunc ty) map in
-  let builtins = List.map (fun (name, SFunc(func_t)) -> (name, empty_func func_t.sreturn_typ)) Semant.builtins in
+  let builtins = List.map (fun (name, func_t) -> 
+      let is_func = match func_t with 
+        SFunc(func_t) -> (name, empty_func func_t.sreturn_typ) 
+        | _ -> raise (Failure ("not a built-in function")) in is_func)
+      Semant.builtins in
   List.fold_left add_default StringMap.empty builtins
 
 let rec lookup (e : environment) name =
