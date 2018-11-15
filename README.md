@@ -30,44 +30,52 @@ $ make
 
 ## Introduction
 
-Shoo is a programming language similar to Go which provides intuitive primitives for concurrent programming.
+Shoo is a programming language with C-like syntax while supporting first class functions, structs, and type inferences.
 
 Here is an example program written in Shoo:
 
 ```
-pipe<int> messages = make(pipe<int>);
-
-array< array<int>[10] >[2] tasks = [
-  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-];
-  
-function int sum(int x, int y) {
-  return x + y;
+struct Professor {
+  string name;
 }
 
-function any foldl(func f, any acc, array<any> items) {
-  if (length(items) == 0) { //length is a built-in function
-    return acc;
-  } else {
-    return foldl(f, f(acc, first(items)), rest(items));
-  }
+struct Student {
+  string name;
+  func(Professor;void) greet;
 }
 
-for (int i; i < length(tasks); i++) {
-  shoo function(array<int> task) {
-    messages <- foldl(sum, 0, task);
-  }(tasks[i]);
+function createProfessor(string name) Professor {
+  return { name = name; };
 }
 
-int final = 0;
-
-for (int i; i < length(tasks); i++) {
-  int result <- messages;
-  final += result;
+function createStudentCreator(string defaultGreeting) func(string;Student) {
+  return function(string name) Student {
+    function helper(int i) string {
+      string x = "st";
+      if (i == 0 || i == 4) {
+        x = "th";
+      } elif (i == 2) {
+        x = "nd";
+      } elif (i == 3) {
+        x = "rd";
+      }
+      return str_of_int(i) + x;
+    }
+    return {
+      name = name;
+      greet = function(Professor p) void {
+        for (int i = 0; i < 5; i = i + 1) {
+          println(name + " says " + defaultGreeting + " to " + p.name + " for the " + helper(i) + " time");
+        }
+        return;
+      };
+    };
+  };
 }
 
-println(final);
+Professor stephen = createProfessor("Stephen");
+
+createStudentCreator("hello")("Sam").greet(stephen);
 ```
 
 ## Running tests
