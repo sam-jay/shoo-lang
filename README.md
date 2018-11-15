@@ -72,7 +72,10 @@ println(final);
 
 ## Running tests
 
+Take a look inside testall.sh for the variables which set the path to the LLVM interpreter as variable "lli". 
+Set the path to the LLVM compiler as "llc". Set the path to the C compiler as "cc".
+
 ```sh
-$ make test
-$ ./test.native
+$ make
+$ ./testall.sh
 ```
