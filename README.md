@@ -30,9 +30,9 @@ $ make
 
 ## Introduction
 
-Shoo is a programming language with C-like syntax while supporting first class functions, structs, and type inferences.
+Shoo is a programming language with C-like syntax while supporting first class functions, structs, and type inference.
 
-Here is an example program written in Shoo:
+Here is a sample program written in Shoo:
 
 ```
 struct Professor {
