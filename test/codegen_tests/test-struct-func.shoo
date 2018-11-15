@@ -8,6 +8,8 @@ struct Math {
 }
 
 Math m;
+m.doAdd = add5; // this fixes the seg fault
+
 println(str_of_int(add5(6))); // this is fine
 m.doAdd(6); // this seg faults
 // println(str_of_int(m.doAdd(6)));
