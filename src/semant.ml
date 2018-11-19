@@ -146,7 +146,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
      * So many in the parser we should add something to reject if they
      * try to use [] to init an array and [] is empty. They should just
      * used new instead. *)
-    let (_, (item_type, item_s_type)) = check_expr ctxt (List.hd x) in
+    let (_, (item_type, _)) = check_expr ctxt (List.hd x) in
     let t = List.map (fun e1 ->
         let (_, (t1, st1)) = check_expr ctxt e1 in
         (* TODO(claire) need to check both? *)

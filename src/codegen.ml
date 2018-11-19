@@ -56,15 +56,6 @@ let translate functions =
 
   let insert_value builder agg i v = L.build_insertvalue agg v i "tmp__" builder in
 
-  let llstore builder lval laddr = 
-      let ptr = L.build_pointercast laddr 
-        (L.pointer_type (L.type_of lval)) "" builder
-      in
- 
-      (*let store_inst =*) (L.build_store lval ptr builder) (*in*)
-      (*(L.string_of_llvalue store_inst);*)
-      (*()*)
-  in
   let typ_of_lfexpr lfexpr = SFunc({
     sreturn_typ = lfexpr.lreturn_typ;
     sparam_typs = List.map fst lfexpr.lparams
@@ -223,32 +214,26 @@ let translate functions =
           List.fold_left2 (insert_value builder) (L.const_null llarray_t) idxs vals*)
 
           if List.length sexpr_list = 0
-              then raise (Failure "Empty array init is not supported")
+            then raise (Failure "Empty array init is not supported")
           else
-                let (array_type, _) = List.hd sexpr_list in
-               (* let llarray_t = ltype_of_typ (SArray(array_type)) in*)
-                let all_elem = List.map (fun e ->
-                    expr builder m e) sexpr_list in
-                (*let array_type = L.type_of (List.hd all_elem) in*)
-                let llarray_t = L.type_of (List.hd all_elem) in
-                let num_elems = List.length sexpr_list in
-                let ptr = L.build_array_malloc (*array_type*) llarray_t
-                    (L.const_int i32_t num_elems)
-                    ""
-                    builder in
-                let idxs = (*(print_endline (L.string_of_llvalue ptr));*) List.rev (generate_seq (num_elems - 1))
-                in
-                let llidxs = List.map (L.const_int i32_t) idxs in
-               ignore (List.fold_left (fun i elem ->
-                    let idx = L.const_int i32_t i in
-                    let eptr = L.build_gep ptr [|idx|] "" builder in
-                    let cptr = L.build_pointercast eptr 
-                        (L.pointer_type ((*ltype_of_typ*) L.type_of elem) (*i32_t*)) "" builder in
-                    let store_inst = (L.build_store elem cptr builder) 
-                    in i+1)
-               0 all_elem); (*(print_endline (L.string_of_llvalue ptr))*) ptr
-     (* let pcptr = L.build_pointercast ptr (L.pointer_type llarray_t) "" builder in pcptr*)
-                    
+            let all_elem = List.map (fun e ->
+                expr builder m e) sexpr_list in
+            let llarray_t = L.type_of (List.hd all_elem) in
+            let num_elems = List.length sexpr_list in
+            let ptr = L.build_array_malloc llarray_t
+                (L.const_int i32_t num_elems)
+                ""
+                builder 
+            in
+            ignore (List.fold_left (fun i elem ->
+                let idx = L.const_int i32_t i in
+                let eptr = L.build_gep ptr [|idx|] "" builder in
+                let cptr = L.build_pointercast eptr 
+                    (L.pointer_type (L.type_of elem)) "" builder in
+                let _ = (L.build_store elem cptr builder) 
+                in i+1)
+           0 all_elem); ptr
+                
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
