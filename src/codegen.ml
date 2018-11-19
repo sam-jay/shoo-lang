@@ -50,11 +50,21 @@ let translate functions =
   | SStruct(struct_t) ->
       let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
       L.struct_type context (Array.of_list (List.map ltype_of_typ t_members))
+  | SArray(array_typ) -> L.pointer_type (ltype_of_typ array_typ) 
   | _ -> raise (Failure "not yet implemented")
   in
 
   let insert_value builder agg i v = L.build_insertvalue agg v i "tmp__" builder in
 
+  let llstore builder lval laddr = 
+      let ptr = L.build_pointercast laddr 
+        (L.pointer_type (L.type_of lval)) "" builder
+      in
+ 
+      (*let store_inst =*) (L.build_store lval ptr builder) (*in*)
+      (*(L.string_of_llvalue store_inst);*)
+      (*()*)
+  in
   let typ_of_lfexpr lfexpr = SFunc({
     sreturn_typ = lfexpr.lreturn_typ;
     sparam_typs = List.map fst lfexpr.lparams
@@ -203,6 +213,41 @@ let translate functions =
           (match snd e1 with
             SId s -> ignore(L.build_store new_v (lookup s) builder); new_v
           | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
+      | SArrayLit(sexpr_list) -> 
+        (* below seg faults *)  
+        (*let (array_type,_) = List.hd sexpr_list in 
+          let llarray_t = ltype_of_typ (SArray(array_type)) in
+          let vals = List.map (fun e -> expr builder m e) 
+            sexpr_list in
+          let idxs = List.rev (generate_seq ((List.length sexpr_list) - 1)) in
+          List.fold_left2 (insert_value builder) (L.const_null llarray_t) idxs vals*)
+
+          (*if List.length sexpr_list = 0
+              then raise (Failure "Empty array init is not supported")
+              else*)
+                let (array_type, _) = List.hd sexpr_list in
+                let llarray_t = ltype_of_typ (SArray(array_type)) in
+                let all_elem = List.map (fun e ->
+                    expr builder m e) sexpr_list in
+                (*let array_type = L.type_of (List.hd all_elem) in*)
+                let num_elems = List.length sexpr_list in
+                let ptr = L.build_array_malloc (*array_type*) llarray_t
+                    (L.const_int i32_t num_elems)
+                    ""
+                    builder in
+                let idxs = List.rev (generate_seq (num_elems - 1))
+                in
+                let llidxs = List.map (L.const_int i32_t) idxs in
+                (*List.fold_left2 (insert_value builder) 
+                    (*(L.const_null array_type)*) ptr idxs all_elem*)
+                List.fold_left2 (fun i idx elem -> 
+                    (*let ind = L.const_int i32_t i in*)
+                    let eptr = L.build_gep ptr [|idx|] "" builder in
+                    let ptr = L.build_pointercast eptr 
+                        (L.pointer_type (*(ltype_of_typ idx)*) i32_t) "" builder in
+                    let store_inst = (L.build_store elem ptr builder) 
+                    in store_inst)
+                ptr llidxs all_elem
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
@@ -288,7 +333,8 @@ let translate functions =
 
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
-          L.build_call printf_func [| string_format_str; (expr builder m (typ, sexpr)); |] "" builder
+          L.build_call printf_func [| string_format_str; 
+            (expr builder m (typ, sexpr)); |] "" builder
       | SFCall((_, SId(name)), args) when StringMap.mem name builtins ->
           let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
           L.build_call (StringMap.find name builtins) arg_array "_result" builder
