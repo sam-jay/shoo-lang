@@ -41,7 +41,7 @@ let translate functions =
     L.struct_type context [|func_t; void_ptr_t|]
   
   and ltype_of_typ = function
-    SInt -> i32_t
+      SInt -> i32_t
   | SFloat -> float_t
   | SBool -> i1_t
   | SString -> str_t
@@ -226,28 +226,29 @@ let translate functions =
               then raise (Failure "Empty array init is not supported")
           else
                 let (array_type, _) = List.hd sexpr_list in
-                let llarray_t = ltype_of_typ (SArray(array_type)) in
+               (* let llarray_t = ltype_of_typ (SArray(array_type)) in*)
                 let all_elem = List.map (fun e ->
                     expr builder m e) sexpr_list in
                 (*let array_type = L.type_of (List.hd all_elem) in*)
+                let llarray_t = L.type_of (List.hd all_elem) in
                 let num_elems = List.length sexpr_list in
                 let ptr = L.build_array_malloc (*array_type*) llarray_t
                     (L.const_int i32_t num_elems)
                     ""
                     builder in
-                let idxs = List.rev (generate_seq (num_elems - 1))
+                let idxs = (*(print_endline (L.string_of_llvalue ptr));*) List.rev (generate_seq (num_elems - 1))
                 in
                 let llidxs = List.map (L.const_int i32_t) idxs in
-                (*List.fold_left2 (insert_value builder) 
-                    (*(L.const_null array_type)*) ptr idxs all_elem*)
-                ignore (List.fold_left2 (fun i idx elem -> 
-                    (*let ind = L.const_int i32_t i in*)
+               ignore (List.fold_left (fun i elem ->
+                    let idx = L.const_int i32_t i in
                     let eptr = L.build_gep ptr [|idx|] "" builder in
                     let cptr = L.build_pointercast eptr 
                         (L.pointer_type ((*ltype_of_typ*) L.type_of elem) (*i32_t*)) "" builder in
                     let store_inst = (L.build_store elem cptr builder) 
-                    in store_inst)
-                ptr llidxs all_elem); ptr
+                    in i+1)
+               0 all_elem); (*(print_endline (L.string_of_llvalue ptr))*) ptr
+     (* let pcptr = L.build_pointercast ptr (L.pointer_type llarray_t) "" builder in pcptr*)
+                    
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
@@ -376,7 +377,7 @@ let translate functions =
         in
         let (builder, local_var) = match se with
           None -> 
-            let local_var = L.build_malloc (ltype_of_typ t) n builder in
+              let local_var = L.build_malloc (ltype_of_typ t) n builder in
             (builder, local_var)
         | Some(e) -> 
             let (_, ex) = e in
