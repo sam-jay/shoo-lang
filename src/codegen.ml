@@ -222,9 +222,9 @@ let translate functions =
           let idxs = List.rev (generate_seq ((List.length sexpr_list) - 1)) in
           List.fold_left2 (insert_value builder) (L.const_null llarray_t) idxs vals*)
 
-          (*if List.length sexpr_list = 0
+          if List.length sexpr_list = 0
               then raise (Failure "Empty array init is not supported")
-              else*)
+          else
                 let (array_type, _) = List.hd sexpr_list in
                 let llarray_t = ltype_of_typ (SArray(array_type)) in
                 let all_elem = List.map (fun e ->
@@ -240,14 +240,14 @@ let translate functions =
                 let llidxs = List.map (L.const_int i32_t) idxs in
                 (*List.fold_left2 (insert_value builder) 
                     (*(L.const_null array_type)*) ptr idxs all_elem*)
-                List.fold_left2 (fun i idx elem -> 
+                ignore (List.fold_left2 (fun i idx elem -> 
                     (*let ind = L.const_int i32_t i in*)
                     let eptr = L.build_gep ptr [|idx|] "" builder in
-                    let ptr = L.build_pointercast eptr 
-                        (L.pointer_type (*(ltype_of_typ idx)*) i32_t) "" builder in
-                    let store_inst = (L.build_store elem ptr builder) 
+                    let cptr = L.build_pointercast eptr 
+                        (L.pointer_type ((*ltype_of_typ*) L.type_of elem) (*i32_t*)) "" builder in
+                    let store_inst = (L.build_store elem cptr builder) 
                     in store_inst)
-                ptr llidxs all_elem
+                ptr llidxs all_elem); ptr
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
