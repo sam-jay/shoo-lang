@@ -205,14 +205,6 @@ let translate functions =
             SId s -> ignore(L.build_store new_v (lookup s) builder); new_v
           | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
       | SArrayLit(sexpr_list) -> 
-        (* below seg faults *)  
-        (*let (array_type,_) = List.hd sexpr_list in 
-          let llarray_t = ltype_of_typ (SArray(array_type)) in
-          let vals = List.map (fun e -> expr builder m e) 
-            sexpr_list in
-          let idxs = List.rev (generate_seq ((List.length sexpr_list) - 1)) in
-          List.fold_left2 (insert_value builder) (L.const_null llarray_t) idxs vals*)
-
           if List.length sexpr_list = 0
             then raise (Failure "Empty array init is not supported")
           else
