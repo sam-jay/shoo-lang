@@ -199,6 +199,14 @@ let translate functions =
           let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
           let new_struct = L.build_insertvalue lhs new_v idx name builder in
           ignore(L.build_store new_struct (lookup s) builder); new_v
+      | SAssign((_, SArrayAccess(arr, i)), e2) ->
+          let new_v = expr builder m e2 in
+          let arr_var = expr builder m arr in
+          let idx = expr builder m i in 
+          let ptr = 
+            L.build_gep arr_var [| idx |] "" builder 
+            in 
+            ignore(L.build_store new_v ptr builder); new_v
       | SAssign(e1, e2) ->
           let new_v = expr builder m e2 in
           (match snd e1 with
@@ -226,6 +234,27 @@ let translate functions =
                 in i+1)
            0 all_elem); ptr
                 
+      | SArrayAccess(arr, i) ->
+              (* TODO TODO this doesn't work because it isn't finding the
+               * name of the array to lookup --> it is looking up the LLVM
+               * code for the array, which isn't helpful. Why is the first
+               * part of this expression another expression instead of
+               * a string? *)
+         (* let (array_t, array_et) = arr in
+          let (array_name) = match array_et with
+            SArray(styp) -> styp
+            | _ -> raise (Failure "not array type so can't access element")
+          in*)
+          let arr_var = expr builder m arr in
+          let arr_name = (*print_endline (L.string_of_llvalue arr_var);*)
+            L.string_of_llvalue arr_var in
+          let idx = expr builder m i in 
+          let ptr = (*print_endline ("here " ^ L.string_of_llvalue (L.build_gep arr_var
+            [| (*(L.const_int i32_t 0);*) idx |] "" builder));*) 
+            L.build_load (L.build_gep (*(lookup arr_name)*) arr_var 
+            [| (*(L.const_int i32_t 0);*) idx |] (*arr_name*) "" builder) 
+            "" builder 
+          in ptr
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
