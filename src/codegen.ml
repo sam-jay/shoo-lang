@@ -206,7 +206,7 @@ let translate functions =
           | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
       | SArrayLit(sexpr_list) -> 
           if List.length sexpr_list = 0
-            then raise (Failure "Empty array init is not supported")
+            then raise (Failure "empty array init is not supported")
           else
             let all_elem = List.map (fun e ->
                 expr builder m e) sexpr_list in

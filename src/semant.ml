@@ -146,14 +146,17 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
      * So many in the parser we should add something to reject if they
      * try to use [] to init an array and [] is empty. They should just
      * used new instead. *)
-    let (_, (item_type, _)) = check_expr ctxt (List.hd x) in
-    let t = List.map (fun e1 ->
-        let (_, (t1, st1)) = check_expr ctxt e1 in
-        (* TODO(claire) need to check both? *)
-        if (t1 = item_type) (*&& (st1 = item_s_type)*) then (t1, st1)
-        else raise (Failure("Error: cannot have multiple types in an array ("
-          ^ fmt_styp t1 ^ " and " ^ fmt_styp item_type ))
-    ) x in (ctxt, (SArray(item_type), SArrayLit t))
+    if List.length x = 0
+        then raise (Failure "empty array init is not supported")
+    else 
+        let (_, (item_type, _)) = check_expr ctxt (List.hd x) in
+        let t = List.map (fun e1 ->
+            let (_, (t1, st1)) = check_expr ctxt e1 in
+            (* TODO(claire) need to check both? *)
+            if (t1 = item_type) (*&& (st1 = item_s_type)*) then (t1, st1)
+            else raise (Failure("Error: cannot have multiple types in an array ("
+              ^ fmt_styp t1 ^ " and " ^ fmt_styp item_type ))
+        ) x in (ctxt, (SArray(item_type), SArrayLit t))
 
 | ArrayAccess(expr, int_expr) ->
     let (_, (t1, se1)) = check_expr ctxt expr in

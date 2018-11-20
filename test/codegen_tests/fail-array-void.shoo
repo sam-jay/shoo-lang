@@ -1,0 +1,2 @@
+// arrays can't be of type void
+array<void> a;

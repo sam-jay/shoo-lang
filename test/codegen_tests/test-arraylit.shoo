@@ -1,9 +1,43 @@
-string z;
-z = "hi";
 [5,6];
 
-array<string> y;
-y = ["4","3"];
-y = ["2","5","6"]; // arrays are kind of dynamic 
+array<string> a;
+a = ["4","3"];
+a = ["2","5","6"]; // arrays are kind of dynamic 
 
 array<float> b = [0.6,2.22,5.6,7.0];
+
+array<int> c = [1, 3+4, 2];
+
+array<bool> d = [true, false, true, 3 < 4];
+
+struct A {
+    int a;
+    int b = 5;
+}
+
+A z;
+A x;
+A y;
+A w;
+array<A> e = [z, x, y, w];
+
+function foo() string {
+    return "hi";
+}
+
+function bar() string {
+    return "bye";
+}
+
+function baz() string {
+    return "bye bye";
+}
+
+array<func(; string)> q;
+q = [foo, bar, baz];
+
+array<string> p;
+p = [foo(), bar(), baz()];
+
+array<array<string>> f = [["hi","ki"], ["ok"], ["l","r","m"]];
+
