@@ -227,6 +227,11 @@ let translate functions =
            0 all_elem); ptr
                 
       | SArrayAccess(arr, i) ->
+              (* TODO TODO this doesn't work because it isn't finding the
+               * name of the array to lookup --> it is looking up the LLVM
+               * code for the array, which isn't helpful. Why is the first
+               * part of this expression another expression instead of
+               * a string? *)
          (* let (array_t, array_et) = arr in
           let (array_name) = match array_et with
             SArray(styp) -> styp
