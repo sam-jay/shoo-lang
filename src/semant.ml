@@ -146,14 +146,17 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
      * So many in the parser we should add something to reject if they
      * try to use [] to init an array and [] is empty. They should just
      * used new instead. *)
-    let (_, (item_type, item_s_type)) = check_expr ctxt (List.hd x) in
-    let t = List.map (fun e1 ->
-        let (_, (t1, st1)) = check_expr ctxt e1 in
-        (* TODO(claire) need to check both? *)
-        if t1 = item_type && st1 = item_s_type then (t1, st1)
-        else raise (Failure("Error: cannot have multiple types in an array ("
-          ^ fmt_styp t1 ^ " and " ^ fmt_styp item_type ))
-    ) x in (ctxt, (item_type, SArrayLit t))
+    if List.length x = 0
+        then raise (Failure "empty array init is not supported")
+    else 
+        let (_, (item_type, _)) = check_expr ctxt (List.hd x) in
+        let t = List.map (fun e1 ->
+            let (_, (t1, st1)) = check_expr ctxt e1 in
+            (* TODO(claire) need to check both? *)
+            if (t1 = item_type) (*&& (st1 = item_s_type)*) then (t1, st1)
+            else raise (Failure("Error: cannot have multiple types in an array ("
+              ^ fmt_styp t1 ^ " and " ^ fmt_styp item_type ))
+        ) x in (ctxt, (SArray(item_type), SArrayLit t))
 
 | ArrayAccess(expr, int_expr) ->
     let (_, (t1, se1)) = check_expr ctxt expr in
@@ -307,8 +310,9 @@ and styp_of_typ ctxt = function
   | Void -> SVoid
   | Func f -> SFunc({ sparam_typs = List.map (styp_of_typ ctxt) f.param_typs; sreturn_typ = styp_of_typ ctxt f.return_typ })
   | Struct s -> find_in_ctxt s.struct_name ctxt
+  | Array t -> SArray(styp_of_typ ctxt t) 
   | ABSTRACT -> SABSTRACT
-  | _ as x -> raise (Failure ("TODO NEED TO convert this typ to styp: " ^ (fmt_typ x)))
+  (*| _ as x -> raise (Failure ("TODO NEED TO convert this typ to styp: " ^ (fmt_typ x)))*)
 
 and check_stmt_list (ctxt : styp StringMap.t list) = function
   [] -> (ctxt, SVoid, [])

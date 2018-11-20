@@ -41,7 +41,7 @@ let translate functions =
     L.struct_type context [|func_t; void_ptr_t|]
   
   and ltype_of_typ = function
-    SInt -> i32_t
+      SInt -> i32_t
   | SFloat -> float_t
   | SBool -> i1_t
   | SString -> str_t
@@ -50,6 +50,7 @@ let translate functions =
   | SStruct(struct_t) ->
       let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
       L.struct_type context (Array.of_list (List.map ltype_of_typ t_members))
+  | SArray(array_typ) -> L.pointer_type (ltype_of_typ array_typ) 
   | _ -> raise (Failure "not yet implemented")
   in
 
@@ -203,6 +204,28 @@ let translate functions =
           (match snd e1 with
             SId s -> ignore(L.build_store new_v (lookup s) builder); new_v
           | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
+      | SArrayLit(sexpr_list) -> 
+          if List.length sexpr_list = 0
+            then raise (Failure "empty array init is not supported")
+          else
+            let all_elem = List.map (fun e ->
+                expr builder m e) sexpr_list in
+            let llarray_t = L.type_of (List.hd all_elem) in
+            let num_elems = List.length sexpr_list in
+            let ptr = L.build_array_malloc llarray_t
+                (L.const_int i32_t num_elems)
+                ""
+                builder 
+            in
+            ignore (List.fold_left (fun i elem ->
+                let idx = L.const_int i32_t i in
+                let eptr = L.build_gep ptr [|idx|] "" builder in
+                let cptr = L.build_pointercast eptr 
+                    (L.pointer_type (L.type_of elem)) "" builder in
+                let _ = (L.build_store elem cptr builder) 
+                in i+1)
+           0 all_elem); ptr
+                
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
@@ -303,7 +326,8 @@ let translate functions =
 
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
-          L.build_call printf_func [| string_format_str; (expr builder m (typ, sexpr)); |] "" builder
+          L.build_call printf_func [| string_format_str; 
+            (expr builder m (typ, sexpr)); |] "" builder
       | SFCall((_, SId(name)), args) when StringMap.mem name builtins ->
           let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
           L.build_call (StringMap.find name builtins) arg_array "_result" builder
@@ -345,7 +369,7 @@ let translate functions =
         in
         let (builder, local_var) = match se with
           None -> 
-            let local_var = L.build_malloc (ltype_of_typ t) n builder in
+              let local_var = L.build_malloc (ltype_of_typ t) n builder in
             (builder, local_var)
         | Some(e) -> 
             let (_, ex) = e in
