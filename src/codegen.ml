@@ -238,13 +238,14 @@ let translate functions =
             | _ -> raise (Failure "not array type so can't access element")
           in*)
           let arr_var = expr builder m arr in
-          let arr_name = print_endline (L.string_of_llvalue arr_var);
+          let arr_name = (*print_endline (L.string_of_llvalue arr_var);*)
             L.string_of_llvalue arr_var in
           let idx = expr builder m i in 
-          let ptr = 
-            L.build_load (L.build_gep (lookup arr_name) 
-            [| (L.const_int i32_t 0); idx |] arr_name builder) 
-            arr_name builder 
+          let ptr = (*print_endline ("here " ^ L.string_of_llvalue (L.build_gep arr_var
+            [| (*(L.const_int i32_t 0);*) idx |] "" builder));*) 
+            L.build_load (L.build_gep (*(lookup arr_name)*) arr_var 
+            [| (*(L.const_int i32_t 0);*) idx |] (*arr_name*) "" builder) 
+            "" builder 
           in ptr
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
