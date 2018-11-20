@@ -249,12 +249,12 @@ let translate functions =
           | Inc -> L.build_store (L.build_add e' (L.const_int i32_t 1) "tmp" builder)
             (lookup (match snd e with
                 SId s -> ignore(L.build_store e' (lookup s) builder); s
-              | _ -> raise (Failure ("A"))
+              | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e) ^ "not implemented in codegen"))
             )) builder
           | Dec -> L.build_store (L.build_sub e' (L.const_int i32_t 1) "tmp" builder)
             (lookup(match snd e with
                 SId s -> ignore(L.build_store e' (lookup s) builder); s
-              | _ -> raise (Failure ("A"))
+              | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e) ^ "not implemented in codegen"))
             )) builder
           | _ -> raise (Failure ("B")))
       | SBinop (e1, op, e2) -> (*Ref: Justin's codegen.ml*)
