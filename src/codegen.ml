@@ -226,6 +226,21 @@ let translate functions =
                 in i+1)
            0 all_elem); ptr
                 
+      | SArrayAccess(arr, i) ->
+         (* let (array_t, array_et) = arr in
+          let (array_name) = match array_et with
+            SArray(styp) -> styp
+            | _ -> raise (Failure "not array type so can't access element")
+          in*)
+          let arr_var = expr builder m arr in
+          let arr_name = print_endline (L.string_of_llvalue arr_var);
+            L.string_of_llvalue arr_var in
+          let idx = expr builder m i in 
+          let ptr = 
+            L.build_load (L.build_gep (lookup arr_name) 
+            [| (L.const_int i32_t 0); idx |] arr_name builder) 
+            arr_name builder 
+          in ptr
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
