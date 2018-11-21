@@ -259,7 +259,6 @@ let translate functions =
           let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
           L.build_extractvalue lhs idx name builder
       | SPop (e, op) ->
-        (*  TODO check what happens to "(5+7)--"; need a test case *)
         let (t, _) = e in
         let e' = expr builder m e in
           (match op with
