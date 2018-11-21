@@ -1,0 +1,7 @@
+function countdown(int n) int {
+    if (n == 1) { return 1; }
+    
+    return countdown(n - 1) + 1;
+}
+
+println(str_of_int(countdown(3)));
