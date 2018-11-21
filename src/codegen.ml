@@ -199,6 +199,14 @@ let translate functions =
           let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
           let new_struct = L.build_insertvalue lhs new_v idx name builder in
           ignore(L.build_store new_struct (lookup s) builder); new_v
+      | SAssign((_, SArrayAccess(arr, i)), e2) ->
+          let new_v = expr builder m e2 in
+          let arr_var = expr builder m arr in
+          let idx = expr builder m i in 
+          let ptr = 
+            L.build_gep arr_var [| idx |] "" builder 
+            in 
+            ignore(L.build_store new_v ptr builder); new_v
       | SAssign(e1, e2) ->
           let new_v = expr builder m e2 in
           (match snd e1 with
@@ -226,6 +234,14 @@ let translate functions =
                 in i+1)
            0 all_elem); ptr
                 
+      | SArrayAccess(arr, i) ->
+          let arr_var = expr builder m arr in
+          let idx = expr builder m i in 
+          let ptr = 
+            L.build_load (L.build_gep arr_var 
+            [| idx |] "" builder) 
+            "" builder 
+          in ptr
       | SStructInit(SStruct(struct_t), assigns) ->
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in

@@ -1,0 +1,16 @@
+array<int> a = [0,1,2];
+println(str_of_int(a[0]));
+println(str_of_int(a[1]));
+println(str_of_int(a[2]));
+
+a[2] = 3;
+println(str_of_int(a[2]));
+
+function foo() array<int> {
+    array<int> a = [4,5,6];
+    return a;
+}
+
+println(str_of_int(foo()[0]));
+println(str_of_int(foo()[1]));
+println(str_of_int(foo()[2]));
