@@ -1,0 +1,3 @@
+array<int> a = [1,2];
+a[0+1] = 3;
+println(str_of_int(a[1]));

@@ -98,7 +98,7 @@ expr:
 
 accessor:
   accessor LPAREN args_opt RPAREN { FCall($1, $3) }
-| accessor LSQBRACE accessor RSQBRACE { ArrayAccess($1, $3) }
+| accessor LSQBRACE expr RSQBRACE { ArrayAccess($1, $3) }
 | accessor DOT ID { Dot($1, $3) }
 | atom { $1 }
 
@@ -114,8 +114,6 @@ newable:
 | STRUCTID { NStruct($1) }
 
 function_expr:
-    /* TODO(claire) shouldn't you not have an ID for the function 
-        * declaration? */
     FUNCTION LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list 
     RBRACKET
     { { name = "";
