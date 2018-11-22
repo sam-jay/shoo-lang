@@ -88,6 +88,7 @@ and stmt =
 | Return of expr
 | If of expr * stmt list * stmt list
 | ForLoop of (stmt option) * (expr option) * (expr option) * stmt list
+| WhileLoop of (expr option) * stmt list
 | StructDef of string * (typ * string * expr option) list
 | EnhancedFor of typ * string * expr * stmt list
 
@@ -202,6 +203,8 @@ and fmt_stmt = function
   (match init with None -> "" | Some(s) -> fmt_stmt s)
   (fmt_opt_expr e2) 
   (fmt_opt_expr e3) (fmt_stmt_list s)
+| WhileLoop (e, s) ->
+  fmt_two "WhileLoop" (fmt_opt_expr e) (fmt_stmt_list s)
 | StructDef(n, m) -> fmt_two "StructDef" n (fmt_members m)
 | EnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n 
   (fmt_expr e) (fmt_stmt_list b)
