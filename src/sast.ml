@@ -77,11 +77,7 @@ let string_of_sstmt = function
 | SExpr(_) -> "SExpr"
 | _ -> "Other"
 
-(*PRETTY PRINTING based off of printer.ml*)
-
-let fmt_rec = function
-  true -> "recursive"
-| false -> "not_recursive"
+(* PRETTY PRINTING based off of printer.ml *)
 
 let rec fmt_styp = function
   SVoid -> "svoid"
@@ -121,7 +117,7 @@ let rec fmt_sexpr (t,s) =
   ^ fmt_list (List.map fmt_sexpr a) ^ "\n    )")
 (* below actually is parsed with {name = e.name; param = e.params;
  * typ = e.typ; body = e.body}. See test programs for examples. *)
-| SFExpr(s) -> fmt_four "FExpr" (fmt_rec s.srecursive) (fmt_sparams s.sparams)
+| SFExpr(s) -> fmt_three "FExpr" (fmt_sparams s.sparams)
         (fmt_styp s.styp) (fmt_sstmt_list s.sbody)
 | SStructInit(_, l) -> fmt_one "StructInit" (fmt_sinit l)
 | SArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_sexpr l))
