@@ -212,6 +212,12 @@ let translate functions =
           (match snd e1 with
             SId s -> ignore(L.build_store new_v (lookup s) builder); new_v
           | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
+      | SNew(SNArray(array_type, int_expr)) ->
+          let array_size = expr builder m int_expr in
+          let llarray_t = ltype_of_typ array_type in
+          let ptr = L.build_array_malloc llarray_t
+            array_size "" builder
+          in ptr
       | SArrayLit(sexpr_list) -> 
           if List.length sexpr_list = 0
             then raise (Failure "empty array init is not supported")
@@ -221,9 +227,7 @@ let translate functions =
             let llarray_t = L.type_of (List.hd all_elem) in
             let num_elems = List.length sexpr_list in
             let ptr = L.build_array_malloc llarray_t
-                (L.const_int i32_t num_elems)
-                ""
-                builder 
+                (L.const_int i32_t num_elems) "" builder 
             in
             ignore (List.fold_left (fun i elem ->
                 let idx = L.const_int i32_t i in

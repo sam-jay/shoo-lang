@@ -1,0 +1,26 @@
+array<int> a = new(array<int>[5]);
+a[0] = 0;
+a[1] = 1;
+a[2] = 2;
+a[3] = 3;
+a[4] = 4;
+
+for (int i = 0; i < 5; i++) {
+    println(str_of_int(a[i]));
+}
+
+a[3] = 100;
+println(str_of_int(a[3]));
+
+array<string> b = new(array<string>[1]);
+b[0] = "hi";
+println(b[0]);
+
+array<float> c = new(array<float>[100]);
+c[22] = 6.0;
+
+array<bool> d = new(array<bool>[3]);
+d[2] = true;
+
+// array of struct type is another test
+// because the array and struct access together is complicated
