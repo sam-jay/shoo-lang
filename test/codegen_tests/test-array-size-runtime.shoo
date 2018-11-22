@@ -1,0 +1,10 @@
+function set_size(int n) array<bool> {
+    array<bool> b = new(array<bool>[n]);
+    return b;
+}
+
+array<bool> c = set_size(10);
+c[9] = true;
+println(str_of_bool(c[9]));
+c[9] = false;
+println(str_of_bool(c[9]));

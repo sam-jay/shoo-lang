@@ -9,6 +9,20 @@ char* str_of_int(int x) {
   return str;
 }
 
+char* str_of_bool(int x) {
+  int length;  
+  char* str;
+  if (x) {
+    str = malloc(sizeof("true") + 1);
+    snprintf(str, sizeof("true") + 1, "%s", "true");
+  } else {
+    str = malloc(sizeof("false") + 1);
+    snprintf(str, sizeof("false") + 1, "%s", "false");
+  }
+  return str;
+}
+
+
 char* string_concat(char * str1, char* str2) {
 	int totalLength = strlen(str1) + strlen(str2) + 1;
 	char* result = calloc( totalLength, 1 );

@@ -425,6 +425,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
 let builtins = [
   ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid }));
   ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString }));
+  ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString }));
   ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString })); 
   ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt })); 
 ]
