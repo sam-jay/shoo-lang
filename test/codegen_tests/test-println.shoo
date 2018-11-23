@@ -1,0 +1,19 @@
+int a = 5;
+println(str_of_int(a));
+println(str_of_int(5));
+
+// TODO need to implement str_of_float
+/*float b = 1.234567;
+println(str_of_float(b));
+println(str_of_float(1.234567));*/
+
+bool c = false;
+println(str_of_bool(c));
+println(str_of_bool(false));
+bool d = true;
+println(str_of_bool(d));
+println(str_of_bool(true));
+
+string e = "hello";
+println(e);
+println("hello");
