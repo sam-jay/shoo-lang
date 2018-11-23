@@ -17,3 +17,7 @@ println(str_of_bool(true));
 string e = "hello";
 println(e);
 println("hello");
+
+string f = "hi";
+print(f);
+println("");

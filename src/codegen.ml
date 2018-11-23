@@ -88,6 +88,7 @@ let translate functions =
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     let string_format_str = L.build_global_stringptr "%s\n" "fmt" builder
+    and string_noln_format_str = L.build_global_stringptr "%s" "fmt" builder
     (*and int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
     and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder
     and char_format_str = L.build_global_stringptr "%c\n" "fmt" builder*)
@@ -263,7 +264,7 @@ let translate functions =
           let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
           L.build_extractvalue lhs idx name builder
       | SPop (e, op) ->
-        let (t, _) = e in
+        (*let (t, _) = e in TODO need this? *)
         let e' = expr builder m e in
           (match op with
           | Inc -> L.build_store (L.build_add e' (L.const_int i32_t 1) "tmp" builder)
@@ -275,8 +276,7 @@ let translate functions =
             (lookup(match snd e with
                 SId s -> ignore(L.build_store e' (lookup s) builder); s
               | _ -> raise (Failure ("assignment not implemented in codegen"))
-            )) builder
-          | _ -> raise (Failure ("Undefined postfix operator")))
+            )) builder)
       | SBinop (e1, op, e2) -> (*Ref: Justin's codegen.ml*)
         let (t, _) = e1
         and e1' = expr builder m e1
@@ -347,6 +347,9 @@ let translate functions =
       | SClosure clsr -> build_clsr clsr
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
           L.build_call printf_func [| string_format_str; 
+            (expr builder m (typ, sexpr)); |] "" builder
+      | SFCall((_, SId("print")), [(typ, sexpr)]) ->
+          L.build_call printf_func [| string_noln_format_str; 
             (expr builder m (typ, sexpr)); |] "" builder
       | SFCall((_, SId(name)), args) when StringMap.mem name builtins ->
           let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
