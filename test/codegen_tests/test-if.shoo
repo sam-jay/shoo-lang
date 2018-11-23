@@ -11,3 +11,11 @@ int j = 0;
 if(i==j) {
 	println("JOB");
 }
+
+if (i > 1) {
+    println("no");
+} elif (i == 0) {
+    println("yes");
+} else {
+    println("none");
+}
