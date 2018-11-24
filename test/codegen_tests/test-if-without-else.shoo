@@ -1,0 +1,16 @@
+bool b = 5 < 6;
+if (!b) {
+    println("no");
+}
+
+println("Yes");
+
+if (b) {
+    println("yes");
+}
+
+if (!!b) {
+    println("not not");
+} elif (!b) {
+    println("not");
+}

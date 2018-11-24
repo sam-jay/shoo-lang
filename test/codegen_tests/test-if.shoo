@@ -19,3 +19,24 @@ if (i > 1) {
 } else {
     println("none");
 }
+
+if (i == 0) {
+
+} else {
+
+}
+
+
+if (i == 4) {
+    println(str_of_int(4));
+} elif (i == 3) {
+    println(str_of_int(3));
+} elif (i == 2) {
+    println(str_of_int(2));
+} elif (i == 1) {
+    println(str_of_int(1));
+} elif (i == 0) {
+    println(str_of_int(0));
+} else {
+    println("what??");
+}

@@ -8,3 +8,18 @@ function foo() string {
     }
 }
 println(foo());
+
+function bar() string {
+    float x = 1.0909;
+    float y = 2.898;
+    if (x==y) {
+        return "incorrect";
+    } elif (x > y) {
+        return "incorrect";
+    } elif (x < y) {
+        return "correct";
+    } else {
+        return "incorrect";
+    }
+}
+println(bar());
