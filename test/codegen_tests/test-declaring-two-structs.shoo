@@ -1,0 +1,23 @@
+struct B {
+   int a;
+   float c;
+}
+
+struct C {
+   int a;
+   float b;
+}
+
+B h = { a = 0; c = 2.09; };
+
+B g = { a = 3; c = 3.09; };
+
+C k = { a = 5; b = 1.23; };
+C w;
+w = { a = 6; b = 2.456; };
+
+if (5 == 5) {
+   println("no");
+} else {
+   println("yes");
+}
