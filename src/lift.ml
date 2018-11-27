@@ -75,7 +75,8 @@ let rec dfs_sstmt funcs env sstmt =
       let new_typ = SStruct({
         sstruct_name = name;
         smembers = List.fold_left (fun m (t, n, e) -> StringMap.add n (t, e) m) StringMap.empty members';
-        sincomplete = false
+        sincomplete = false;
+        signore = false
       }) in
       let env' = {
         variables = StringMap.add name new_typ env.variables;
