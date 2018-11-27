@@ -316,6 +316,12 @@ let translate functions =
         | SBool -> (match op with
               And     -> L.build_and
             | Or      -> L.build_or
+            | Equal   -> L.build_icmp L.Icmp.Eq
+            | Neq     -> L.build_icmp L.Icmp.Ne
+            | Less    -> L.build_icmp L.Icmp.Slt
+            | Leq     -> L.build_icmp L.Icmp.Sle
+            | Greater -> L.build_icmp L.Icmp.Sgt
+            | Geq     -> L.build_icmp L.Icmp.Sge
             | _         -> raise (Failure ("operation " ^ (fmt_op op)
                     ^ " not implemented for type " ^ (fmt_styp t)))
               ) e1' e2' "tmp" builder
