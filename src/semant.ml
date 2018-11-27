@@ -75,6 +75,17 @@ let context_to_bindings (ctxt : styp StringMap.t list) =
   let map = List.fold_left combine_scopes StringMap.empty ctxt in
   StringMap.bindings map
 
+let rec ignore_structs t = match t with
+  SStruct(st) ->
+    SStruct({
+      sstruct_name = st.sstruct_name;
+      smembers = st.smembers;
+      sincomplete = st.sincomplete;
+      signore = true;
+    })
+| SArray(t) -> SArray(ignore_structs t)
+| _ -> t
+
 (* This functions gives the member map if the 
  * type given is a struct. *)
 (*let get_members_if_struct v_type ctxt = match v_type with  
@@ -112,7 +123,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
       let assigns' = List.map (fun (n, e) -> let (_, se) = check_expr ctxt e 
           in (n, se)) assigns in
       let compare = function
-        SStruct(st) ->
+        SStruct(st) when not st.signore ->
           let mems = List.map (fun (n, (t, _)) -> (n, t)) 
             (StringMap.bindings st.smembers) in
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
@@ -150,6 +161,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         then raise (Failure "empty array init is not supported")
     else 
         let (_, (item_type, _)) = check_expr ctxt (List.hd x) in
+        let item_type = ignore_structs item_type in (* recursively do this everywhere *)
         let t = List.map (fun e1 ->
             let (_, (t1, st1)) = check_expr ctxt e1 in
             (* TODO(claire) need to check both? *)
@@ -260,7 +272,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         ([], []) -> sl
       | (p_typ::pl, arg::al) ->
         let (_, (a_typ, se)) = check_expr ctxt arg in
-        if p_typ = a_typ then helper ((a_typ, se)::sl) (pl, al)
+        if compare_typs p_typ a_typ then helper ((a_typ, se)::sl) (pl, al)
         else raise (Failure "argument type mismatch")
       | _ -> raise (Failure "invalid number of arguments")
       in
@@ -341,6 +353,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
     Struct(struct_t) -> find_in_ctxt struct_t.struct_name ctxt 
     | _ -> styp_of_typ ctxt ltype
   in
+  let t = ignore_structs t in
   (match i with
     None -> (add_to_ctxt t n ctxt, SVoid, SVDecl(t, n, None))
   | Some(e) ->
@@ -375,6 +388,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
       sstruct_name = name;
       smembers = members;
       sincomplete = false;
+      signore = false;
     }) in
     let nctxt = add_to_ctxt struct_t name ctxt in
     (nctxt, SVoid, SStructDef(name, fields_se))
