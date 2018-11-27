@@ -197,7 +197,7 @@ and dfs_sexpr ?fname funcs env (t, expr) =
         then None
         else Some(lookup env s1, s1)
       in
-      let (funcs1, fvs1, args') = dfs_sexprs funcs env args in
+      let (funcs1, fvs1, args') = dfs_sexprs funcs env (List.rev args) in
       let fvs' = match fv' with
         Some(x) -> x :: fvs1
       | _ -> fvs1
