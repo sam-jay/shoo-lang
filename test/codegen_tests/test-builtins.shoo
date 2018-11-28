@@ -1,0 +1,21 @@
+int x = int_of_float(4.5);
+float y = float_of_int(4);
+
+if(x==5){
+	println("HI");
+}
+
+if(y==4.0){
+	println("BYE");
+}
+float result = y + 1.0;
+
+if(result < 6.0){
+	println("GOOD");
+}
+
+string hello = str_of_float(4.5);
+println(hello);
+
+string hello1 = str_of_float(1.245);
+println(hello1);
