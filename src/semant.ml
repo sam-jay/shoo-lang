@@ -225,10 +225,6 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         -> (nctxt, (SInt, sbinop))
       | Add | Sub | Mult | Div when lt = SFloat && rt = SFloat 
         -> (nctxt, (SFloat, sbinop))
-      (* Allow for ints and floats to be used together. *)
-      | Add | Sub | Mult | Div when 
-        (lt = SFloat && rt = SInt) ||
-        (lt = SInt && rt = SFloat) -> (nctxt, (SFloat, sbinop))
       (* allow string concatenation TODO(crystal): update LRM *)
       | Add when lt = SString && rt = SString -> (nctxt, (SString,sbinop))
      (* TODO(claire): make sure LRM says that we can compare all
@@ -236,16 +232,11 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
       * strings,
       * structs, arrays? *)
       | Equal | Neq  when lt = rt -> (nctxt, (SBool, sbinop))
-      | Equal | Neq  when 
-        (lt = SFloat && rt = SInt) ||
-        (lt = SInt && rt = SFloat) -> (nctxt, (SBool, sbinop))
-      | Equal | Neq  when lt = SBool && rt = SBool -> 
-            (nctxt, (SBool, sbinop))
       | Less | Leq | Greater | Geq  
                               when (lt = SInt && rt = SInt) 
                               || (lt = SFloat || rt = SFloat) -> 
                                       (nctxt, (SBool, sbinop))
-      | And | Or when rt = SBool && rt = SBool -> (nctxt, (SBool, sbinop))
+      | And | Or when lt = SBool && rt = SBool -> (nctxt, (SBool, sbinop))
       | _ -> raise (Failure("Error: cannot use " ^ fmt_op op ^ 
         " with types: "^ fmt_styp rt ^ " and " ^ fmt_styp lt )))
 

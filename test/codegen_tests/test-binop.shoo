@@ -32,3 +32,69 @@ if (x!=y) {
 } else {
 	println("SHOULDNT PRINT THIS");
 }
+
+
+// AND, OR, NOT
+bool i = true;
+bool j = false;
+
+if (j && i) {
+    println("&& doesn't work");
+} else {
+    println("&& works");
+}
+
+if (i && j) {
+    println("&& doesn't work");
+} else {
+    println("&& works");
+}
+
+if (i && true) {
+    println("&& works");
+} else {
+    println("&& doesn't work");
+}
+
+if (j && false) {
+    println("&& doesn't work");
+} else {
+    println("&& works");
+}
+
+if (i || j) {
+    println("|| works");
+} else {
+    println("|| doesn't work");
+}
+
+if (j || i) {
+    println("|| works");
+} else {
+    println("|| doesn't work");
+}
+
+if (true || i) {
+    println("|| works");
+} else {
+    println("|| doesn't work");
+}
+
+if (j || false) {
+    println("|| doesn't work");
+} else {
+    println("|| works");
+}
+
+if (!i) {
+    println("! doesn't work");
+} else {
+    println("! works");
+}
+
+if (!j) {
+    println("! works");
+} else {
+    println("! doesn't work");
+}
+

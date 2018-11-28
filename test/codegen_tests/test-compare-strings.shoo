@@ -9,7 +9,7 @@ if (q == z) {
 
 function something(string s) string {
     string h = "h";
-    string j = string_concat(h,s);
+    string j = h + s;
     return j;
 }
 

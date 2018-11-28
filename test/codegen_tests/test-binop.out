@@ -8,3 +8,13 @@ true
 true
 yes good
 yes good
+&& works
+&& works
+&& works
+&& works
+|| works
+|| works
+|| works
+|| works
+! works
+! works
