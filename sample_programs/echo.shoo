@@ -1,0 +1,2 @@
+string result = scan_line(25);
+println(result);
