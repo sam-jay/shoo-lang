@@ -1,0 +1,10 @@
+function thing(float p, float q) void {
+    if (p == q) {
+        println("equal");
+    } else {
+        println("not equal");
+    }
+    return;
+}
+
+thing(6.0989, 6.0989);
