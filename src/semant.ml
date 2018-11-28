@@ -41,8 +41,8 @@ let check_asn lvalue_t rvalue_t =
   let found_match = compare_typs lvalue_t rvalue_t in
   if found_match
   then lvalue_t
-  else (print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);
-    raise (Type_mismatch "type mismatch error"))
+  else (*(print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);*)
+    raise (Type_mismatch ("type mismatch error " ^ fmt_styp lvalue_t ^ " " ^ fmt_styp rvalue_t))
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
@@ -221,7 +221,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     let (nctxt, (rt, se2)) = check_expr nctxt e2 in
     let sbinop = SBinop((lt, se1), op, (rt, se2)) in
     (match op with
-      Add | Sub | Mult | Div when lt = SInt && rt = SInt 
+      Add | Sub | Mult | Div | Mod when lt = SInt && rt = SInt 
         -> (nctxt, (SInt, sbinop))
       | Add | Sub | Mult | Div when lt = SFloat && rt = SFloat 
         -> (nctxt, (SFloat, sbinop))
