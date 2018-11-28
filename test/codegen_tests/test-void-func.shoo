@@ -8,3 +8,13 @@ function thing(float p, float q) void {
 }
 
 thing(6.0989, 6.0989);
+
+
+function more(int q, func(float, float; void) p, string h) void {
+    float a = /*float_of_int(q);*/ 4.09;
+    p(a, a*5.0);
+    println(h);
+    // no return
+}
+
+more(9, thing, "okay");

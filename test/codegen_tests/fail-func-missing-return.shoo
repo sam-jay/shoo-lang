@@ -1,0 +1,5 @@
+function hi(int q) int {
+    q+5;
+}
+
+hi(8);
