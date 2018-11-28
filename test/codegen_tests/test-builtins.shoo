@@ -14,8 +14,10 @@ if(result < 6.0){
 	println("GOOD");
 }
 
-string hello = str_of_float(4.5);
+string hello = str_of_float(4.5+1.0);
 println(hello);
 
-string hello1 = str_of_float(1.245);
+string hello1 = str_of_float(y+1.245);
 println(hello1);
+
+println(str_of_float(2.456));
