@@ -115,8 +115,8 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     let (nctxt, (t_e, se_e)) = check_expr ctxt e 
     in
     if t_e <> SInt then raise (Failure ("array size must be an integer type"))
-    else (nctxt, (SArray (styp_of_typ ctxt t), 
-      SNew(SNArray(styp_of_typ ctxt t, (t_e, se_e)))))
+    else let st = ignore_structs(styp_of_typ ctxt t) in (nctxt, (SArray (st), 
+      SNew(SNArray(st, (t_e, se_e)))))
 
 | StructInit(assigns) -> 
     let (struct_t, assigns') = 
