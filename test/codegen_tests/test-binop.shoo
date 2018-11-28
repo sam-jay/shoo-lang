@@ -2,8 +2,99 @@ int x = 5+6;
 println(str_of_int(x));
 int y = 2*3;
 println(str_of_int(y));
+
+int z = y % 4;
+println(str_of_int(z));
+
+z = z % 4;
+println(str_of_int(z));
+
+bool q = z < x;
+println(str_of_bool(z < x));
+
+q = z > x; 
+println(str_of_bool(q));
+
+q = z >= 2;
+println(str_of_bool(q));
+
+q = z <= 2;
+println(str_of_bool(q));
+
 if (x==y) {
 	println("SHOULDNT PRINT THIS");
 } else {
 	println("yes good");
 }
+
+if (x!=y) {
+	println("yes good");
+} else {
+	println("SHOULDNT PRINT THIS");
+}
+
+
+// AND, OR, NOT
+bool i = true;
+bool j = false;
+
+if (j && i) {
+    println("&& doesn't work");
+} else {
+    println("&& works");
+}
+
+if (i && j) {
+    println("&& doesn't work");
+} else {
+    println("&& works");
+}
+
+if (i && true) {
+    println("&& works");
+} else {
+    println("&& doesn't work");
+}
+
+if (j && false) {
+    println("&& doesn't work");
+} else {
+    println("&& works");
+}
+
+if (i || j) {
+    println("|| works");
+} else {
+    println("|| doesn't work");
+}
+
+if (j || i) {
+    println("|| works");
+} else {
+    println("|| doesn't work");
+}
+
+if (true || i) {
+    println("|| works");
+} else {
+    println("|| doesn't work");
+}
+
+if (j || false) {
+    println("|| doesn't work");
+} else {
+    println("|| works");
+}
+
+if (!i) {
+    println("! doesn't work");
+} else {
+    println("! works");
+}
+
+if (!j) {
+    println("! works");
+} else {
+    println("! doesn't work");
+}
+

@@ -1,0 +1,10 @@
+
+struct B {
+  int i;
+}
+
+array<B> e = new(array<B>[3]);
+
+e[0] = { i = 10; };
+
+println(str_of_int(e[0].i));

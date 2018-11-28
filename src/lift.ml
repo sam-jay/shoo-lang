@@ -75,7 +75,8 @@ let rec dfs_sstmt funcs env sstmt =
       let new_typ = SStruct({
         sstruct_name = name;
         smembers = List.fold_left (fun m (t, n, e) -> StringMap.add n (t, e) m) StringMap.empty members';
-        sincomplete = false
+        sincomplete = false;
+        signore = false
       }) in
       let env' = {
         variables = StringMap.add name new_typ env.variables;
@@ -197,7 +198,7 @@ and dfs_sexpr ?fname funcs env (t, expr) =
         then None
         else Some(lookup env s1, s1)
       in
-      let (funcs1, fvs1, args') = dfs_sexprs funcs env args in
+      let (funcs1, fvs1, args') = dfs_sexprs funcs env (List.rev args) in
       let fvs' = match fv' with
         Some(x) -> x :: fvs1
       | _ -> fvs1

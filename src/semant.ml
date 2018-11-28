@@ -41,8 +41,8 @@ let check_asn lvalue_t rvalue_t =
   let found_match = compare_typs lvalue_t rvalue_t in
   if found_match
   then lvalue_t
-  else (print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);
-    raise (Type_mismatch "type mismatch error"))
+  else (*(print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);*)
+    raise (Type_mismatch ("type mismatch error " ^ fmt_styp lvalue_t ^ " " ^ fmt_styp rvalue_t))
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
@@ -75,6 +75,17 @@ let context_to_bindings (ctxt : styp StringMap.t list) =
   let map = List.fold_left combine_scopes StringMap.empty ctxt in
   StringMap.bindings map
 
+let rec ignore_structs t = match t with
+  SStruct(st) ->
+    SStruct({
+      sstruct_name = st.sstruct_name;
+      smembers = st.smembers;
+      sincomplete = st.sincomplete;
+      signore = true;
+    })
+| SArray(t) -> SArray(ignore_structs t)
+| _ -> t
+
 (* This functions gives the member map if the 
  * type given is a struct. *)
 (*let get_members_if_struct v_type ctxt = match v_type with  
@@ -104,15 +115,15 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     let (nctxt, (t_e, se_e)) = check_expr ctxt e 
     in
     if t_e <> SInt then raise (Failure ("array size must be an integer type"))
-    else (nctxt, (SArray (styp_of_typ ctxt t), 
-      SNew(SNArray(styp_of_typ ctxt t, (t_e, se_e)))))
+    else let st = ignore_structs(styp_of_typ ctxt t) in (nctxt, (SArray (st), 
+      SNew(SNArray(st, (t_e, se_e)))))
 
 | StructInit(assigns) -> 
     let (struct_t, assigns') = 
       let assigns' = List.map (fun (n, e) -> let (_, se) = check_expr ctxt e 
           in (n, se)) assigns in
       let compare = function
-        SStruct(st) ->
+        SStruct(st) when not st.signore ->
           let mems = List.map (fun (n, (t, _)) -> (n, t)) 
             (StringMap.bindings st.smembers) in
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
@@ -150,6 +161,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         then raise (Failure "empty array init is not supported")
     else 
         let (_, (item_type, _)) = check_expr ctxt (List.hd x) in
+        let item_type = ignore_structs item_type in (* recursively do this everywhere *)
         let t = List.map (fun e1 ->
             let (_, (t1, st1)) = check_expr ctxt e1 in
             (* TODO(claire) need to check both? *)
@@ -209,14 +221,10 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     let (nctxt, (rt, se2)) = check_expr nctxt e2 in
     let sbinop = SBinop((lt, se1), op, (rt, se2)) in
     (match op with
-      Add | Sub | Mult | Div when lt = SInt && rt = SInt 
+      Add | Sub | Mult | Div | Mod when lt = SInt && rt = SInt 
         -> (nctxt, (SInt, sbinop))
       | Add | Sub | Mult | Div when lt = SFloat && rt = SFloat 
         -> (nctxt, (SFloat, sbinop))
-      (* Allow for ints and floats to be used together. *)
-      | Add | Sub | Mult | Div when 
-        (lt = SFloat && rt = SInt) ||
-        (lt = SInt && rt = SFloat) -> (nctxt, (SFloat, sbinop))
       (* allow string concatenation TODO(crystal): update LRM *)
       | Add when lt = SString && rt = SString -> (nctxt, (SString,sbinop))
      (* TODO(claire): make sure LRM says that we can compare all
@@ -224,16 +232,11 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
       * strings,
       * structs, arrays? *)
       | Equal | Neq  when lt = rt -> (nctxt, (SBool, sbinop))
-      | Equal | Neq  when 
-        (lt = SFloat && rt = SInt) ||
-        (lt = SInt && rt = SFloat) -> (nctxt, (SBool, sbinop))
-      | Equal | Neq  when lt = SBool && rt = SBool -> 
-            (nctxt, (SBool, sbinop))
       | Less | Leq | Greater | Geq  
                               when (lt = SInt && rt = SInt) 
                               || (lt = SFloat || rt = SFloat) -> 
                                       (nctxt, (SBool, sbinop))
-      | And | Or when rt = SBool && rt = SBool -> (nctxt, (SBool, sbinop))
+      | And | Or when lt = SBool && rt = SBool -> (nctxt, (SBool, sbinop))
       | _ -> raise (Failure("Error: cannot use " ^ fmt_op op ^ 
         " with types: "^ fmt_styp rt ^ " and " ^ fmt_styp lt )))
 
@@ -260,7 +263,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         ([], []) -> sl
       | (p_typ::pl, arg::al) ->
         let (_, (a_typ, se)) = check_expr ctxt arg in
-        if p_typ = a_typ then helper ((a_typ, se)::sl) (pl, al)
+        if compare_typs p_typ a_typ then helper ((a_typ, se)::sl) (pl, al)
         else raise (Failure "argument type mismatch")
       | _ -> raise (Failure "invalid number of arguments")
       in
@@ -341,6 +344,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
     Struct(struct_t) -> find_in_ctxt struct_t.struct_name ctxt 
     | _ -> styp_of_typ ctxt ltype
   in
+  let t = ignore_structs t in
   (match i with
     None -> (add_to_ctxt t n ctxt, SVoid, SVDecl(t, n, None))
   | Some(e) ->
@@ -375,6 +379,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
       sstruct_name = name;
       smembers = members;
       sincomplete = false;
+      signore = false;
     }) in
     let nctxt = add_to_ctxt struct_t name ctxt in
     (nctxt, SVoid, SStructDef(name, fields_se))

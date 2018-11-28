@@ -1,0 +1,12 @@
+function myPrint(func(string; string) printme, string mystring) void {
+    printme(mystring);
+    return;
+}
+
+
+function hello(string s) string {
+    println(s);
+    return s;
+}
+
+myPrint(hello, "bye");

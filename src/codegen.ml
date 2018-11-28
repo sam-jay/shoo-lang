@@ -316,6 +316,12 @@ let translate functions =
         | SBool -> (match op with
               And     -> L.build_and
             | Or      -> L.build_or
+            | Equal   -> L.build_icmp L.Icmp.Eq
+            | Neq     -> L.build_icmp L.Icmp.Ne
+            | Less    -> L.build_icmp L.Icmp.Slt
+            | Leq     -> L.build_icmp L.Icmp.Sle
+            | Greater -> L.build_icmp L.Icmp.Sgt
+            | Geq     -> L.build_icmp L.Icmp.Sge
             | _         -> raise (Failure ("operation " ^ (fmt_op op)
                     ^ " not implemented for type " ^ (fmt_styp t)))
               ) e1' e2' "tmp" builder
@@ -379,6 +385,7 @@ let translate functions =
         let struct_t = SStruct({
           sstruct_name = n;
           sincomplete = false;
+          signore = false;
           smembers = List.fold_left (fun m (t, n, opt_se) -> StringMap.add n (t, opt_se) m) StringMap.empty mem;
         }) in
         (builder, StringMap.add n (struct_t, L.const_int i1_t 0) m)

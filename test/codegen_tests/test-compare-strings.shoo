@@ -1,0 +1,21 @@
+string z = "hijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj";
+string q = "hijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj";
+
+if (q == z) {
+    println("strings are equal");
+} else {
+    println("strings aren't equal");
+}
+
+function something(string s) string {
+    string h = "h";
+    string j = h + s;
+    return j;
+}
+
+string p = something("ijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
+if (p == z) {
+    println("strings are equal");
+} else {
+    println("strings aren't equal");
+} 
