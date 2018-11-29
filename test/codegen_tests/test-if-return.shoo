@@ -23,3 +23,31 @@ function bar() string {
     }
 }
 println(bar());
+
+
+function someReturn(float a) string {
+    if (a == 25.9) {
+        return "okay";
+    } else {
+        
+    }
+    
+    return "maybe";
+}
+
+someReturn(25.9);
+
+function other(bool b) int {
+    int a = 1;
+    if (b) {
+        a++;
+    } elif (false) {
+        a = 0;
+    } else {
+        return a + other(true);
+    }
+    return a;
+}
+
+println(str_of_int(other(true)));
+println(str_of_int(other(false)));
