@@ -170,13 +170,13 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       let (funcs', fvs', assigns') = List.fold_left helper (funcs, [], []) assigns in
       (funcs', fvs', (t, SStructInit(ty, assigns')))
   | SArrayLit(sexpr_list) ->
-     let helper (funcs, fvs, sexpr_list) (*(n, se)*) se =
+     let helper (funcs, fvs, sexpr_list) se =
         let (funcs', fvs', se') = dfs_sexpr funcs env se in
-        (funcs', fvs@fvs', (*(n, se')*)se'::sexpr_list)
+        (funcs', fvs@fvs', se'::sexpr_list)
       in
       let (funcs', fvs', sexpr_list') = 
           List.fold_left helper (funcs, [], []) sexpr_list in
-      (funcs', fvs', (t, SArrayLit(sexpr_list')))
+      (funcs', fvs', (t, SArrayLit(List.rev sexpr_list')))
   | SArrayAccess(expr, int_expr) ->
       let (funcs', fvs2, expr') = dfs_sexpr funcs env expr in
       let (funcs', fvs1, int_expr') = dfs_sexpr funcs' env int_expr in
