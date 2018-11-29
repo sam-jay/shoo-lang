@@ -1,0 +1,16 @@
+struct B {
+    int i;
+}
+
+array<B> e = new(array<B>[3]);
+B a = e[0];
+a.i = 5;
+println(str_of_int(a.i));
+
+B b = e[1];
+b.i = 6;
+println(str_of_int(b.i));
+
+B c = e[2];
+c.i = 7;
+println(str_of_int(c.i));
