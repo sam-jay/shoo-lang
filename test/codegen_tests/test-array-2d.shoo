@@ -1,0 +1,2 @@
+array<array<int>> a = new(array<array<int>[3]>[2]);
+
