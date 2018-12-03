@@ -169,6 +169,21 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       in
       let (funcs', fvs', assigns') = List.fold_left helper (funcs, [], []) assigns in
       (funcs', fvs', (t, SStructInit(ty, assigns')))
+  | SArrayLit(sexpr_list) ->
+     let helper (funcs, fvs, sexpr_list) se =
+        let (funcs', fvs', se') = dfs_sexpr funcs env se in
+        (funcs', fvs@fvs', se'::sexpr_list)
+      in
+      let (funcs', fvs', sexpr_list') = 
+          List.fold_left helper (funcs, [], []) sexpr_list in
+      (funcs', fvs', (t, SArrayLit(List.rev sexpr_list')))
+  | SArrayAccess(expr, int_expr) ->
+      let (funcs', fvs2, expr') = dfs_sexpr funcs env expr in
+      let (funcs', fvs1, int_expr') = dfs_sexpr funcs' env int_expr in
+      (funcs', List.concat [fvs2; fvs1], (t, SArrayAccess(expr', int_expr')))
+  | SNew(SNArray(st, expr)) ->
+      let (funcs', fvs1, expr') = dfs_sexpr funcs env expr in
+      (funcs', fvs1, (t, SNew(SNArray(st, expr'))))
   | SAssign(e1, e2) ->
       let (funcs', fvs2, e2') = dfs_sexpr funcs env e2 in
       let (funcs', fvs1, e1') = dfs_sexpr funcs' env e1 in

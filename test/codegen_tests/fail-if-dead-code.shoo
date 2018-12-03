@@ -1,0 +1,17 @@
+struct C {
+    int a;
+    int b;
+}
+
+function deadCode (C something) string {
+    if (something.a != something.b) {
+        return "not same";
+    } else {
+        return "same";
+    }   
+
+    return "neither";
+}
+
+C thing = { a = 5; b = 5;};
+deadCode(thing);

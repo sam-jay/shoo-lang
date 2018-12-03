@@ -153,10 +153,19 @@ let translate functions =
     let rec expr builder (m : (styp * L.llvalue) StringMap.t) ((ty, e) : sexpr) =
 
       let lookup n =
-        let (_, llval) = try StringMap.find n m with
+        (*let llval = 
+            if StringMap.mem n builtins then StringMap.find n builtins 
+            else 
+        let (_, llval') =
+        (*let (_, llval) =*)  
+            try StringMap.find n m with
           Not_found -> raise (Failure ("Variable not found: " ^ n))
-        in llval
-      in
+            in llval'
+        in llval*)
+      let (_, llval) = try StringMap.find n m with
+        Not_found -> raise (Failure ("Variable not found: " ^ n)) 
+      in llval
+     in
 
       let build_clsr clsr =
         let fvs = List.map snd clsr.free_vars in
