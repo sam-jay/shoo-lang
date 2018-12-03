@@ -21,3 +21,8 @@ string hello1 = str_of_float(y+1.245);
 println(hello1);
 
 println(str_of_float(2.456));
+
+//test regular exit
+exit_success(1);
+
+println("THIS SHOULDNT PRINT");

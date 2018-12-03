@@ -70,3 +70,15 @@ char* scan_line(int max_size){
     return str;
 }
 
+// regular successful exit
+int exit_success(int code){
+  exit(0);
+  return 0;
+}
+
+// exit with error message
+int die(char * error_msg){
+  printf("%s\n", error_msg);
+  exit(1);
+  return 0;
+}
