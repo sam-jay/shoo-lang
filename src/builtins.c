@@ -77,8 +77,8 @@ int exit_success(int code){
 }
 
 // exit with error message
-int die(char * error_msg){
+int die(char * error_msg, int code){
   printf("%s\n", error_msg);
-  exit(1);
+  exit(code);
   return 0;
 }
