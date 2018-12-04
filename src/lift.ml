@@ -145,7 +145,8 @@ let rec dfs_sstmt funcs env sstmt =
 and dfs_sstmts funcs env = function
   [] -> (funcs, [], env, [])
 | sstmt :: rest ->
-  let (funcs1, fvs1, env1, sstmts1) = dfs_sstmt funcs env sstmt in
+  let (funcs1, fvs1, env1, sstmts1) = 
+        dfs_sstmt funcs env sstmt in
   let new_env = {
     variables = List.fold_left add_bind env1.variables fvs1;
     parent = env1.parent
@@ -169,6 +170,10 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       in
       let (funcs', fvs', assigns') = List.fold_left helper (funcs, [], []) assigns in
       (funcs', fvs', (t, SStructInit(ty, assigns')))
+  | SDot(se1, field_name) ->
+      (* TODO need to do something with field name? *)
+      let (funcs', fvs', expr') = dfs_sexpr funcs env se1 in
+      (funcs', fvs', (t, SDot(expr', field_name))) 
   | SArrayLit(sexpr_list) ->
      let helper (funcs, fvs, sexpr_list) se =
         let (funcs', fvs', se') = dfs_sexpr funcs env se in
@@ -219,7 +224,8 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       | _ -> fvs1
       in (funcs1, fvs', (t, SFCall((lt, se), args')))
     | _ ->
-        let (funcs1, fvs1, (* TODO need this? (*se1*)*) _) 
+        (* Need this for recursion. *)
+        let (funcs1, fvs1, (* TODO need this? (*se1*)*)_) 
             = dfs_sexpr funcs env (lt, se) in
         let (funcs2, fvs2, args') = dfs_sexprs funcs1 env args in
         (funcs2, fvs1@fvs2, (t, SFCall((lt, se), args'))))
@@ -263,7 +269,7 @@ and build_closure ?fname funcs env fexpr =
     sparam_typs = List.map fst fexpr.sparams;
     sreturn_typ = fexpr.styp
   } in
-  (new_func :: funcs', fvs, (SFunc(func_t), clsr))
+(new_func :: funcs', fvs, (SFunc(func_t), clsr))
 
 (* Lift takes a list of sast stmts, and converts to a list of (fname, func) *)
 (* sstmt list -> (string * lfunc) list *)
