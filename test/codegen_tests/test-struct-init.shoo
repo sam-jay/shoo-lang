@@ -1,0 +1,18 @@
+struct FunStuff {
+	string hello;
+	int five;
+}
+FunStuff hi;
+
+function test_if_malloc() int {
+	hi = {hello = "hello"; five = 5;};
+	return 5;
+}
+
+test_if_malloc();
+if (hi.five == 5){
+	println("MALLOC DOES WORK");
+}
+
+println(str_of_int(hi.five));
+println(hi.hello);
