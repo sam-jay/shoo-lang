@@ -340,7 +340,26 @@ and check_bool_expr (ctxt : styp StringMap.t list) e =
 (* returns the map, type, stype *)
 and check_stmt (ctxt : styp StringMap.t list) = function
   Expr(e) -> let (nctxt, (t, ss)) = 
-      check_expr ctxt e in (nctxt, SVoid, SExpr((t, ss)))
+    check_expr ctxt e in (nctxt, SVoid, SExpr((t, ss)))
+| Destruct(keys, src, inner) ->
+    let (_, (t, se)) = check_expr ctxt src in
+    let tmp_n = "__tmp" ^ inner in
+    let nctxt = add_to_ctxt t tmp_n ctxt in
+    let init = SVDecl(t, tmp_n, Some((t, se))) in
+    let members = match t with 
+        SStruct(struct_t) -> struct_t.smembers
+      | _ -> raise (Failure "cannot destruct non-struct")
+    in
+    let helper = function
+      Expr(Id(x)) -> 
+        let (ty, _) = StringMap.find x members in
+        let (_, v) = check_expr nctxt (Dot(Id(tmp_n), x)) in
+        (ty, x, SVDecl(ty, x, Some(v)))
+    (*| Destruct(keys2, Id(y), inner2) -> check_stmt nctxt (Destruct(keys2, Dot(Id(tmp_n, Id(y)), y)))*)
+    | _ -> raise (Failure "should've been caught in parser")
+    in
+    let (nctxt, decls) = List.fold_left (fun (ctxt, decls) k -> let (t, n, decl) = helper k in (add_to_ctxt t n ctxt, decl::decls)) (nctxt, [init]) keys in
+    (nctxt, SVoid, SVBlock(List.rev decls))
 | VDecl(ltype, n, i) ->
   let t = match ltype with 
     Struct(struct_t) -> find_in_ctxt struct_t.struct_name ctxt 
@@ -454,5 +473,5 @@ let check_program (prog : stmt list) =
   then raise (Failure "illegal return statement")
   else
     let (_, _, ssl) = check_stmt_list def_ctxt prog in
-    ssl
+    List.flatten (List.map (fun s -> match s with SVBlock(sl) -> sl | _ as x -> [x]) ssl)
 

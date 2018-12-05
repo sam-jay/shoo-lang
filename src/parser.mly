@@ -42,6 +42,7 @@ stmt_list:
 
 stmt:
   expr SEMI { Expr $1 }
+| LBRACKET destruct RBRACKET ASSIGN expr SEMI { Destruct(List.rev $2, $5, "") }
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
 | RETURN expr_opt SEMI { Return($2) }
 | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET {
@@ -103,7 +104,6 @@ expr:
 | MINUS expr %prec NEG { Unop(Neg, $2) }
 | NOT expr { Unop(Not, $2) }
 | NEW LPAREN newable RPAREN { New($3) }
-| LBRACKET destruct RBRACKET ASSIGN expr { Destruct(List.rev $2, $5) }
 | function_expr { FExpr($1) }
 | LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
@@ -196,8 +196,12 @@ arg_list:
 | arg_list COMMA expr { $3 :: $1 }
 
 destruct:
-  ID SEMI { [$1] }
-| destruct ID SEMI { $2 :: $1 }
+  dest_mem SEMI { [$1] }
+| destruct dest_mem SEMI { $2 :: $1 }
+
+dest_mem:
+  ID { Expr(Id($1)) }
+| ID COLON LBRACKET destruct RBRACKET { Destruct(List.rev $4, Id($1), "") }
 
 mems_opt:
   { [] }

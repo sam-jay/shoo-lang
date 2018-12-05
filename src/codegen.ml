@@ -40,7 +40,7 @@ let translate functions =
     let func_t = L.pointer_type (ltype_of_sfunction name sfunc) in
     L.struct_type context [|func_t; void_ptr_t|]
   
-  and ltype_of_typ alloc = function
+  and ltype_of_typ = function
       SInt -> i32_t
   | SFloat -> float_t
   | SBool -> i1_t
@@ -240,12 +240,12 @@ let translate functions =
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
           let llstruct_t = st in
 
-          let vals = List.map (fun (_, (t, opt_e)) -> match opt_e with Some(e) -> Some(expr builder m e) | None -> None) (List.sort compare_by members) in
+          let vals = List.map (fun (_, (_, opt_e)) -> match opt_e with Some(e) -> Some(expr builder m e) | None -> None) (List.sort compare_by members) in
           let idxs = List.rev (generate_seq ((List.length members) - 1)) in
           let v = List.fold_left2 (fun agg i opt_v -> match opt_v with Some(v) -> insert_value builder agg i v | None -> agg) (L.const_null llstruct_t) idxs vals in
 
           let ptr = L.build_malloc llstruct_t "structlit" builder in
-          L.build_store v ptr builder;
+          ignore(L.build_store v ptr builder);
           ptr
           
       | SArrayLit(sexpr_list) -> 
@@ -289,7 +289,7 @@ let translate functions =
           let v = List.fold_left2 (insert_value builder) (L.const_null llstruct_t) idxs vals in
 
           let ptr = L.build_malloc llstruct_t "structlit" builder in
-          L.build_store v ptr builder;
+          ignore(L.build_store v ptr builder);
           ptr
 
       | SDot((SStruct(struct_t), exp), name) ->

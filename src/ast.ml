@@ -69,7 +69,6 @@ and expr =
 | FCall of expr * expr list
 | FExpr of fexpr
 | StructInit of (string * expr) list
-| Destruct of string list * expr
 | ArrayAccess of expr * expr
 | ArrayLength of expr
 | Dot of expr * string
@@ -85,6 +84,7 @@ and fexpr = {
 
 and stmt =
   Expr of expr
+| Destruct of stmt list * expr * string
 | VDecl of typ * string * expr option
 | Return of expr
 | If of expr * stmt list * stmt list
@@ -176,9 +176,9 @@ let rec fmt_expr = function
         (fmt_typ e.typ) (fmt_stmt_list e.body)
 | StructInit(l) -> fmt_one "StructInit" (fmt_init l)
 | ArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_expr l))
-| Destruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_expr e)
 | New(t) -> fmt_one "New" (fmt_n t)
 | Noexpr -> ""
+| ArrayLength(e) -> fmt_one "ArrayLength" (fmt_expr e)
 
 and fmt_n = function
   NArray(t, s) -> fmt_two "NArray" (fmt_typ t) (fmt_expr s)
@@ -196,6 +196,7 @@ and fmt_init l =
 
 and fmt_stmt = function
   Expr(e) -> fmt_expr e
+| Destruct(_, _, _) -> "Destruct"
 | Return(e) -> fmt_one "Return" (fmt_expr e)
 | VDecl (t, n, l) -> fmt_three "VDecl" (fmt_typ t) n (match l with 
   None -> "" | Some(e) -> fmt_expr e)
