@@ -40,7 +40,7 @@ let translate functions =
     let func_t = L.pointer_type (ltype_of_sfunction name sfunc) in
     L.struct_type context [|func_t; void_ptr_t|]
   
-  and ltype_of_typ = function
+  and ltype_of_typ alloc = function
       SInt -> i32_t
   | SFloat -> float_t
   | SBool -> i1_t
@@ -49,7 +49,8 @@ let translate functions =
   | SVoid -> void_t
   | SStruct(struct_t) ->
       let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
-      L.struct_type context (Array.of_list (List.map ltype_of_typ t_members))
+      let st = L.struct_type context (Array.of_list (List.map ltype_of_typ t_members)) in
+      L.pointer_type st
   | SArray(array_typ) -> L.pointer_type (ltype_of_typ array_typ) 
   | _ -> raise (Failure "not yet implemented")
   in
@@ -68,10 +69,12 @@ let translate functions =
     L.declare_function "printf" printf_t the_module in
 
   let builtins = List.fold_left (fun m (name, ty) -> 
-    let ftype = match ty with SFunc(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
-    let params = List.map ltype_of_typ ftype.sparam_typs in
-    let ltype = L.function_type (ltype_of_typ ftype.sreturn_typ) (Array.of_list params) in
-    StringMap.add name (L.declare_function name ltype the_module) m
+    if name = "length" then m
+    else 
+      let ftype = match ty with SFunc(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
+      let params = List.map ltype_of_typ ftype.sparam_typs in
+      let ltype = L.function_type (ltype_of_typ ftype.sreturn_typ) (Array.of_list params) in
+      StringMap.add name (L.declare_function name ltype the_module) m
   ) StringMap.empty Semant.builtins in
 
   (* Build each function signature without building the body *)
@@ -201,14 +204,15 @@ let translate functions =
       | SAssign((_, SDot((SStruct(struct_t), SId(s)), name)), e2) ->
           let new_v = expr builder m e2 in
           let lhs = expr builder m (SStruct(struct_t), SId(s)) in
+          let st = L.build_load lhs "structval" builder in
           let (* TODO need this? (*llstruct_t*)*) _ 
                 = ltype_of_typ (SStruct(struct_t)) in
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
           let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
           let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
-          let new_struct = L.build_insertvalue lhs new_v idx name builder in
-          ignore(L.build_store new_struct (lookup s) builder); new_v
+          let new_struct = L.build_insertvalue st new_v idx name builder in
+          ignore(L.build_store new_struct (lhs) builder); new_v
       | SAssign((_, SArrayAccess(arr, i)), e2) ->
           let new_v = expr builder m e2 in
           let arr_var = expr builder m arr in
@@ -228,6 +232,22 @@ let translate functions =
           let ptr = L.build_array_malloc llarray_t
             array_size "" builder
           in ptr
+      | SNew(SNStruct(SStruct(struct_t))) ->
+          let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
+          let st = L.struct_type context (Array.of_list (List.map ltype_of_typ t_members)) in
+
+          let compare_by (n1, _) (n2, _) = compare n1 n2 in
+          let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
+          let llstruct_t = st in
+
+          let vals = List.map (fun (_, (t, opt_e)) -> match opt_e with Some(e) -> Some(expr builder m e) | None -> None) (List.sort compare_by members) in
+          let idxs = List.rev (generate_seq ((List.length members) - 1)) in
+          let v = List.fold_left2 (fun agg i opt_v -> match opt_v with Some(v) -> insert_value builder agg i v | None -> agg) (L.const_null llstruct_t) idxs vals in
+
+          let ptr = L.build_malloc llstruct_t "structlit" builder in
+          L.build_store v ptr builder;
+          ptr
+          
       | SArrayLit(sexpr_list) -> 
           if List.length sexpr_list = 0
             then raise (Failure "empty array init is not supported")
@@ -257,21 +277,31 @@ let translate functions =
             "" builder 
           in ptr
       | SStructInit(SStruct(struct_t), assigns) ->
+          let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
+          let st = L.struct_type context (Array.of_list (List.map ltype_of_typ t_members)) in
+
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
-          let llstruct_t = ltype_of_typ (SStruct(struct_t)) in
+          let llstruct_t = st in
+
           let vals = List.map (fun (_, e) -> expr builder m e) (List.sort compare_by assigns) in
           let idxs = List.rev (generate_seq ((List.length members) - 1)) in
-          List.fold_left2 (insert_value builder) (L.const_null llstruct_t) idxs vals
+          let v = List.fold_left2 (insert_value builder) (L.const_null llstruct_t) idxs vals in
+
+          let ptr = L.build_malloc llstruct_t "structlit" builder in
+          L.build_store v ptr builder;
+          ptr
+
       | SDot((SStruct(struct_t), exp), name) ->
           let lhs = expr builder m (SStruct(struct_t), exp) in
+          let s = L.build_load lhs "structval" builder in
           let (* TODO need this? (*llstruct_t*)*) _
              = ltype_of_typ (SStruct(struct_t)) in
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
           let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
           let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
-          L.build_extractvalue lhs idx name builder
+          L.build_extractvalue s idx name builder
       | SPop (e, op) ->
         (*let (t, _) = e in TODO need this? *)
         let e' = expr builder m e in
@@ -360,6 +390,11 @@ let translate functions =
 
 
       | SClosure clsr -> build_clsr clsr
+      | SFCall((_, SId("length")), [(typ, sexpr)]) ->
+          let p = expr builder m (typ, sexpr) in
+          let e' = L.build_load p "" builder in
+          let n = (L.array_length (L.type_of e')) in
+          L.const_int i32_t n
       | SFCall((_, SId("println")), [(typ, sexpr)]) ->
           L.build_call printf_func [| string_format_str; 
             (expr builder m (typ, sexpr)); |] "" builder

@@ -31,6 +31,8 @@ let check_assign lvaluet rvaluet err =
 
 let rec compare_typs t1 t2 = match t1, t2 with
     SStruct(s_l), SStruct(s_r) -> s_l.sstruct_name = s_r.sstruct_name
+  | SArray(SAny), SArray(_) -> true
+  | SArray(_), SArray(SAny) -> true
   | SFunc(f1), SFunc(f2) ->
       let same_ret = compare_typs f1.sreturn_typ f2.sreturn_typ in
       let same_args = List.for_all2 compare_typs f1.sparam_typs f2.sparam_typs
@@ -110,7 +112,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
 
 | New(NStruct(name)) ->
     let t = find_in_ctxt name ctxt in
-    (ctxt, (t, SNew(SNStruct(name))))
+    (ctxt, (t, SNew(SNStruct(t))))
 | New(NArray(t,e)) ->
     let (nctxt, (t_e, se_e)) = check_expr ctxt e 
     in
@@ -434,6 +436,7 @@ let builtins = [
   ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString }));
   ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString })); 
   ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt })); 
+  ("length", SFunc({ sparam_typs = [SArray(SAny)]; sreturn_typ = SInt })); 
   ("str_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SString })); 
   ("int_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SInt })); 
   ("float_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SFloat })); 

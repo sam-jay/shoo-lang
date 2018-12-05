@@ -71,6 +71,7 @@ and expr =
 | StructInit of (string * expr) list
 | Destruct of string list * expr
 | ArrayAccess of expr * expr
+| ArrayLength of expr
 | Dot of expr * string
 | New of newable
 | Noexpr

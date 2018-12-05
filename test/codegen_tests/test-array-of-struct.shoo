@@ -3,6 +3,11 @@ struct B {
 }
 
 array<B> e = new(array<B>[3]);
+
+for(int i = 0; i < 3; i++) {
+    e[i] = new(B);
+}
+
 B a = e[0];
 a.i = 5;
 println(str_of_int(a.i));

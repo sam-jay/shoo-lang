@@ -1,0 +1,13 @@
+array<array<int>> a = new(array<array<int>>[2]);
+
+a[0] = new(array<int>[3]);
+a[1] = new(array<int>[3]);
+
+for (int i = 0; i < 2; i++) {
+  for (int j = 0; j < 3; j++) {
+    a[i][j] = i * j;
+  }
+}
+
+println(str_of_int(a[0][0]));
+println(str_of_int(a[1][2]));

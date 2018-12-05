@@ -9,10 +9,10 @@ struct BankAccount {
 }
 
 function nestedStruct() string {
-    Member m1;
+    Member m1 = new(Member);
     m1.name = "name";
     m1.dob = 01012020;
-    BankAccount a1;
+    BankAccount a1 = new(BankAccount);
     a1.accountNumber = 4;
     a1.member = m1;
 
