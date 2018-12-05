@@ -43,7 +43,6 @@ and sx =
 | SFCall of sexpr * sexpr list
 | SFExpr of sfexpr
 | SStructInit of styp * (string * sexpr) list
-| SDestruct of string list * sexpr
 | SArrayAccess of sexpr * sexpr
 | SDot of sexpr * string
 | SNew of snewable
@@ -66,6 +65,7 @@ and sclsr = {
 
 and sstmt =
   SExpr of sexpr
+| SVBlock of sstmt list
 | SVDecl of styp * string * sexpr option
 | SReturn of sexpr
 | SIf of sexpr * sstmt list * sstmt list
@@ -103,7 +103,7 @@ let fmt_sparams l =
     (t, n) -> String.concat "" ["("; fmt_styp t; ", "; n; ")"] in
   fmt_list (List.map fmt_p l)
 
-let rec fmt_sexpr (t,s) =
+let rec fmt_sexpr (_,s) =
 (match s with
   SIntLit(l) -> fmt_one "IntLit" (string_of_int l)
 | SFloatLit(l) -> fmt_one "FloatLit" l
@@ -125,7 +125,6 @@ let rec fmt_sexpr (t,s) =
         (fmt_styp s.styp) (fmt_sstmt_list s.sbody)
 | SStructInit(_, l) -> fmt_one "StructInit" (fmt_sinit l)
 | SArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_sexpr l))
-| SDestruct(l, e) -> fmt_two "Destruct" (fmt_list l) (fmt_sexpr e)
 | SNew(t) -> fmt_one "New" (fmt_sn t)
 | SClosure(clsr) -> fmt_two "Closure" (string_of_int clsr.ind) 
   (fmt_list (List.map (fun (t, n) -> fmt_styp t ^ " " ^ n) clsr.free_vars))
@@ -161,6 +160,7 @@ and fmt_sstmt = function
   (fmt_styp t) n (fmt_sexpr e) (fmt_sstmt_list b)
 | SIf(e, tL, fL) -> fmt_three "If" (fmt_sexpr e) (fmt_sstmt_list tL) 
   (fmt_sstmt_list fL)
+| SVBlock(_) -> "SVBlock"
 
 and fmt_sstmt_list ?spacer l =
   let sstmts = List.map fmt_sstmt l in

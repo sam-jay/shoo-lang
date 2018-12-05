@@ -1,0 +1,12 @@
+struct Foo {
+  int x = 10;
+  int y = 5;
+}
+
+Foo myFoo = new(Foo);
+
+
+{ x; y; } = myFoo;
+
+println(str_of_int(x));
+println(str_of_int(y));
