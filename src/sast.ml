@@ -130,7 +130,7 @@ let rec fmt_sexpr (t,s) =
 | SClosure(clsr) -> fmt_two "Closure" (string_of_int clsr.ind) 
   (fmt_list (List.map (fun (t, n) -> fmt_styp t ^ " " ^ n) clsr.free_vars))
 | SNoexpr -> ""
-          ) ^ "   // " ^ fmt_styp t
+          ) (*^ "   // " ^ fmt_styp t*)
 
 and fmt_sn = function
   SNArray(t, s) -> fmt_two "NArray" (fmt_styp t) (fmt_sexpr s)

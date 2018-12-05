@@ -11,5 +11,5 @@ f=$1
 n=${f%.shoo*}
 cat $f | ./shoo.native > "$n.ll"
 llc -relocation-model=pic "$n.ll"
-cc -o "$n" "$n.s" "builtins.o"
+cc -o "$n" "$n.s" "builtins.o" "-lm"
 "./$n"

@@ -1,0 +1,3 @@
+println("Hello");
+die("AHH!!!!",0);
+println("this shouldn't print");

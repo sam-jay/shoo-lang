@@ -1,0 +1,31 @@
+// Returns a function to return the value at a specific, static index for an array
+function indexValue (array<int> arr, int index1)  func(; string) {
+    // Assume the index is vaild.
+    return function() string {
+        return str_of_int(arr[index1]);
+        //return problem.s[index];
+    };
+}
+
+array<int> a = [1,2,3];
+func(; string) print1ForArray = indexValue(a, 1);
+println(print1ForArray()); // should print 2
+
+struct MyArray {
+    array<string> s;
+    int size;
+}
+
+MyArray a1 = { s = ["hi", "bye", "okay"]; size = 3; };
+
+// Returns a function to return the value at a specific, static index for struct
+function indexValueStruct (MyArray problem, int index2)  func(; string) {
+    // Assume the index is vaild.
+    return function() string {
+        return problem.s[index2]; // TODO the issue is here; can't find
+                                 // var "problem". But works find for arrays...
+    };
+}
+
+func(; string) print1ForStruct = indexValueStruct(a1, 1);
+println(print1ForStruct()); // should print bye

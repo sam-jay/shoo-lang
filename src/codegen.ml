@@ -3,7 +3,6 @@ module L = Llvm
 open Ast
 open Sast
 open Lift
-open Printexc
 
 module StringMap = Map.Make(String)
 
@@ -41,7 +40,7 @@ let translate functions =
     let func_t = L.pointer_type (ltype_of_sfunction name sfunc) in
     L.struct_type context [|func_t; void_ptr_t|]
   
-  and ltype_of_typ = function
+  and ltype_of_typ alloc = function
       SInt -> i32_t
   | SFloat -> float_t
   | SBool -> i1_t
@@ -157,10 +156,19 @@ let translate functions =
     let rec expr builder (m : (styp * L.llvalue) StringMap.t) ((ty, e) : sexpr) =
 
       let lookup n =
-        let (_, llval) = try StringMap.find n m with
+        (*let llval = 
+            if StringMap.mem n builtins then StringMap.find n builtins 
+            else 
+        let (_, llval') =
+        (*let (_, llval) =*)  
+            try StringMap.find n m with
           Not_found -> raise (Failure ("Variable not found: " ^ n))
-        in llval
-      in
+            in llval'
+        in llval*)
+      let (_, llval) = try StringMap.find n m with
+        Not_found -> raise (Failure ("Codegen Variable not found: " ^ n)) 
+      in llval
+     in
 
       let build_clsr clsr =
         let fvs = List.map snd clsr.free_vars in
@@ -406,7 +414,7 @@ let translate functions =
           let llargs = env_ptr :: (List.rev (List.map (expr builder m) (List.rev args))) in
           let result = (match func_t.sreturn_typ with SVoid -> "" | _ -> "_result") in
           L.build_call func_ptr (Array.of_list llargs) result builder
-      | _ as x -> print_endline(Printexc.raw_backtrace_to_string(Printexc.get_callstack 100)); print_endline(fmt_sexpr (ty, x));  raise (Failure "not implemented in codegen")
+      | _ as x -> print_endline(fmt_sexpr (ty, x));  raise (Failure "not implemented in codegen")
     in
 
     let add_terminal builder instr =

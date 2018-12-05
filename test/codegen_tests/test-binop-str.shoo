@@ -1,2 +1,12 @@
 string x = "Hello "+"World"+"!";
 println(x);
+
+string y = string_concat("Hello ","World");
+y = string_concat(y, "!");
+println(y);
+
+if (x == y) {
+     println("yay");
+} else {
+    println("not yay");
+}

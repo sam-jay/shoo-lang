@@ -14,7 +14,7 @@ shoo.native :
 		shoo.native
 
 builtins.o :
-	cc -c -o builtins.o src/builtins.c
+	cc -c -o builtins.o src/builtins.c -lm
 
 .PHONY : printer
 printer:

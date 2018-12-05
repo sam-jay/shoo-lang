@@ -1,0 +1,10 @@
+int a = 5;
+float b = 6;
+
+float c = a + b;
+
+if (c == 11) {
+    println("oh no");
+} else {
+    println("okay");
+}

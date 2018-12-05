@@ -1,0 +1,41 @@
+array<int> a = [1,2,3,4,5];
+array<int> b = [1,2,3,4,5];
+array<int> c = [5,4,3,2,1];
+array<int> d = [2,3];
+
+function temp(array<int> g) void{
+    if (g == a) {
+        println("same ptr");
+    } else {
+        println("diff ptr");
+    }
+}
+
+temp(a);
+
+if (a == a) {
+    println("same");
+} else {
+    println("what");
+}
+
+if (a == b) {
+    println("same values");
+} else {
+    println("same value not same ptr"); 
+}
+
+if (a == c) {
+    println("equal?");
+} else {
+    println("not equal at all");
+}
+
+if (b == d) {
+    println("no");
+} else {
+    println("yes");
+}
+
+
+

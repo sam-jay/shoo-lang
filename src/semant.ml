@@ -43,8 +43,8 @@ let check_asn lvalue_t rvalue_t =
   let found_match = compare_typs lvalue_t rvalue_t in
   if found_match
   then lvalue_t
-  else (print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);
-    raise (Type_mismatch "type mismatch error"))
+  else (*(print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);*)
+    raise (Type_mismatch ("type mismatch error " ^ fmt_styp lvalue_t ^ " " ^ fmt_styp rvalue_t))
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
@@ -223,14 +223,10 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     let (nctxt, (rt, se2)) = check_expr nctxt e2 in
     let sbinop = SBinop((lt, se1), op, (rt, se2)) in
     (match op with
-      Add | Sub | Mult | Div when lt = SInt && rt = SInt 
+      Add | Sub | Mult | Div | Mod when lt = SInt && rt = SInt 
         -> (nctxt, (SInt, sbinop))
       | Add | Sub | Mult | Div when lt = SFloat && rt = SFloat 
         -> (nctxt, (SFloat, sbinop))
-      (* Allow for ints and floats to be used together. *)
-      | Add | Sub | Mult | Div when 
-        (lt = SFloat && rt = SInt) ||
-        (lt = SInt && rt = SFloat) -> (nctxt, (SFloat, sbinop))
       (* allow string concatenation TODO(crystal): update LRM *)
       | Add when lt = SString && rt = SString -> (nctxt, (SString,sbinop))
      (* TODO(claire): make sure LRM says that we can compare all
@@ -238,16 +234,11 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
       * strings,
       * structs, arrays? *)
       | Equal | Neq  when lt = rt -> (nctxt, (SBool, sbinop))
-      | Equal | Neq  when 
-        (lt = SFloat && rt = SInt) ||
-        (lt = SInt && rt = SFloat) -> (nctxt, (SBool, sbinop))
-      | Equal | Neq  when lt = SBool && rt = SBool -> 
-            (nctxt, (SBool, sbinop))
       | Less | Leq | Greater | Geq  
                               when (lt = SInt && rt = SInt) 
                               || (lt = SFloat || rt = SFloat) -> 
                                       (nctxt, (SBool, sbinop))
-      | And | Or when rt = SBool && rt = SBool -> (nctxt, (SBool, sbinop))
+      | And | Or when lt = SBool && rt = SBool -> (nctxt, (SBool, sbinop))
       | _ -> raise (Failure("Error: cannot use " ^ fmt_op op ^ 
         " with types: "^ fmt_styp rt ^ " and " ^ fmt_styp lt )))
 
@@ -446,6 +437,12 @@ let builtins = [
   ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString })); 
   ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt })); 
   ("length", SFunc({ sparam_typs = [SArray(SAny)]; sreturn_typ = SInt })); 
+  ("str_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SString })); 
+  ("int_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SInt })); 
+  ("float_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SFloat })); 
+  ("scan_line", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString })); 
+  ("exit_success", SFunc({ sparam_typs = [SInt]; sreturn_typ = SInt })); 
+  ("die", SFunc({ sparam_typs = [SString; SInt]; sreturn_typ = SInt })); 
 ]
 
 let def_ctxt =

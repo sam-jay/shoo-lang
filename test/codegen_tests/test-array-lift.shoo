@@ -1,0 +1,33 @@
+function redeclareArray(array<bool> b) array<bool> {
+    b = [true,false,true];
+    return b;
+}
+
+array<bool> z;
+redeclareArray(z);
+
+array<int> x = [5,10];
+function bar() void {
+    x[0] = 9;
+    return;
+}
+
+array<string> s;
+function car() void {
+    s = new(array<string>[5]);
+}
+car();
+s[0] = "hi";
+println(s[23-23]);
+
+function declareArray(int size) array<bool> {
+    array<bool> b = new(array<bool>[size]);
+    return b;
+}
+
+array<bool> c = declareArray(2);
+c[1] = true;
+println(str_of_bool(c[1]));
+
+c = redeclareArray(c);
+println(str_of_bool(c[1]));
