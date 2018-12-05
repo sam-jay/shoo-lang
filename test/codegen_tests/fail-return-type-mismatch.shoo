@@ -1,0 +1,4 @@
+function test() int {
+	int a = 4;
+	return "hello";
+}

@@ -1,0 +1,33 @@
+//add tests to declare any variable of any type in the for loop; and add failure tests to not allow anything except initializations and assignments
+
+
+int i = 0;
+// test to show any statement can be in for loop initializer
+for(println("hello"); i<5; i++){
+	println("bye");
+}
+
+println(str_of_int(i));
+println("NICE");
+int counter = 0;
+
+// test to use other variables than int
+for(bool x = true; x; println("how about this?")){
+	if(counter > 3){
+		x = false;
+	}
+	counter++;
+	println(str_of_bool(x));
+}
+println("END");
+
+// while loop testing
+bool f = true;
+while(f){
+	println("stuff");
+	f = false;
+}
+
+while(f){
+	println("uh shouldnt print");
+}

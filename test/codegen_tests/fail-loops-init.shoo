@@ -1,0 +1,6 @@
+//add tests to declare any variable of any type in the for loop; and add failure tests to not allow anything except initializations and assignments
+
+
+while(1){
+	println("hello");
+}
