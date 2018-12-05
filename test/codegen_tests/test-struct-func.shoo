@@ -7,7 +7,7 @@ struct Math {
     func(int; int) doAdd = add5;
 }
 
-Math m;
+Math m = new(Math);
 m.doAdd = add5; // this fixes the seg fault
 
 println(str_of_int(add5(6))); // this is fine

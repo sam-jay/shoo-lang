@@ -162,6 +162,9 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       | None -> build_closure funcs env fexpr in
       let fvs' = List.filter check_scope fvs' in
       (funcs', fvs', (t, SClosure(clsr)))
+  | SNew(SNStruct(SStruct(struct_t))) ->
+      let sstruct = lookup env struct_t.sstruct_name in
+      (funcs, [], (sstruct, SNew(SNStruct(sstruct))))
   | SStructInit(ty, assigns) ->
       let helper (funcs, fvs, assigns) (n, se) =
         let (funcs', fvs', se') = dfs_sexpr funcs env se in

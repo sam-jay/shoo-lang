@@ -10,6 +10,7 @@ type styp =
 | SStruct of sstruct_typ
 | SArray of styp
 | SABSTRACT
+| SAny
 
 and sfunc_typ = {
   sparam_typs: styp list;
@@ -25,7 +26,7 @@ and sstruct_typ = {
 
 and snewable =
   SNArray of styp * sexpr
-| SNStruct of string
+| SNStruct of styp
 
 and sexpr = styp * sx
 and sx =
@@ -95,6 +96,7 @@ let rec fmt_styp = function
     (string_of_bool st.signore)
   | SArray(t) -> fmt_one "sarray" (fmt_styp t)
   | SABSTRACT -> "SABSTRACT"
+  | SAny -> "SAny"
 
 let fmt_sparams l =
   let fmt_p = function
@@ -132,7 +134,7 @@ let rec fmt_sexpr (t,s) =
 
 and fmt_sn = function
   SNArray(t, s) -> fmt_two "NArray" (fmt_styp t) (fmt_sexpr s)
-| SNStruct(n) -> fmt_one "NStruct" n
+| SNStruct(n) -> fmt_one "NStruct" (fmt_styp n)
 
 and fmt_smembers l =
   let fmt_m = function

@@ -50,7 +50,18 @@ stmt:
 }
 | FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
     { ForLoop($3, $5, $7, List.rev $10) }
-| FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET { EnhancedFor($3, $4, $6, List.rev $9) }
+| FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET {
+
+    If(Binop(FCall(Id("length"), [$6]), Greater, IntLit(0)), [
+      VDecl(Int, "_len", Some(FCall(Id("length"), [$6])));
+      ForLoop(
+        Some(VDecl(Int, "_i", Some(IntLit(0)))),
+        Some(Binop(Id("_i"), Less, Id("_len"))),
+        Some(Pop(Id("_i"), Inc)),
+        [VDecl($3, $4, Some(ArrayAccess($6, Id("_i"))))] @ (List.rev $9))
+    ], [])
+  
+  }
 | WHILE LPAREN opt_expr RPAREN LBRACKET stmt_list RBRACKET { 
   ForLoop(None, $3, None, List.rev $6) }
 | STRUCT STRUCTID LBRACKET mems_opt RBRACKET { StructDef($2, $4) }

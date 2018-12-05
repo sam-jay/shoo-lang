@@ -1,0 +1,10 @@
+struct A {
+  int x = 10;
+  func(;string) hello = function() string {
+    return "Hello World";
+  };
+}
+
+A foo = new(A);
+
+println(foo.hello());
