@@ -1,2 +1,8 @@
 string result = scan_line(25);
+println("you inputted:");
 println(result);
+if (int_of_str(result)!=-1){
+	println("That's a number!");
+} else {
+	println("Not a number");
+}

@@ -4,6 +4,7 @@
 #include <math.h>
 
 #define MAXFLOATSIZE 50
+#define MAXINTSTRSIZE 10
 
 char* str_of_int(int x) {
   int length = snprintf( NULL, 0, "%d", x );
@@ -33,6 +34,38 @@ char* str_of_float(double x) {
   return str;
 }
 
+// returns -1 if the string is not a valid integer.
+// expects a null terminated string -- if the string is not
+// null terminated, undefined behavior will occur. 
+// If the integer is beyond INT_MAX as defined by C, that is, 2147483647,
+// overflow may occur and the result is undefined.
+int int_of_str(char *str){
+  // reference: https://www.geeksforgeeks.org/write-your-own-atoi/
+    int res = 0;  // Initialize result 
+    int sign = 1;  // Initialize sign as positive 
+    int i = 0;  // Initialize index of first digit 
+       
+    // If number is negative, then update sign 
+    if (str[0] == '-') 
+    { 
+        sign = -1;   
+        i++;  // Also update index of first digit 
+    } 
+       
+    // Iterate through all digits and update the result 
+    for (; str[i] != '\0'; ++i) {
+        if(str[i]<48 || str[i]>57) {
+          // not a digit
+          return -1;
+        }
+        res = res*10 + str[i] - '0'; 
+    }
+     
+    // Return result with sign 
+    return sign*res; 
+
+}
+
 // rounds float to nearest int
 int int_of_float(double x){
   return (int) round(x);
@@ -60,13 +93,17 @@ int string_equals(char * str1, char* str2) {
 
 // max_size doesn't have to include the terminating \0
 // takes a size to malloc and which the string must be shorter than
-// this max size capped at 4096
+// this max size capped at 4096.
+// will remove any trailing newline characters
 char* scan_line(int max_size){
   if (max_size > 4096){
     return NULL;
   }
     char *str = (char*)malloc(sizeof(char)*(max_size+1));
     fgets(str,max_size, stdin);
+    if (str[strlen(str)-1] == '\n') {
+      str[strlen(str)-1] = '\0'; // remove terminating newline
+    }
     return str;
 }
 

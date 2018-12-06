@@ -462,6 +462,7 @@ let builtins = [
   ("scan_line", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString })); 
   ("exit_success", SFunc({ sparam_typs = [SInt]; sreturn_typ = SInt })); 
   ("die", SFunc({ sparam_typs = [SString; SInt]; sreturn_typ = SInt })); 
+  ("int_of_str", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt })); 
 ]
 
 let def_ctxt =
