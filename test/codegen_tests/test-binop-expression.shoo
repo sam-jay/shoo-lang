@@ -1,0 +1,3 @@
+int x;
+x =  5 + (4-2)/2;
+println(str_of_int(x));

@@ -4,7 +4,6 @@
 #include <math.h>
 
 #define MAXFLOATSIZE 50
-#define MAXINTSTRSIZE 10
 
 char* str_of_int(int x) {
   int length = snprintf( NULL, 0, "%d", x );
@@ -94,7 +93,7 @@ int string_equals(char * str1, char* str2) {
 // max_size doesn't have to include the terminating \0
 // takes a size to malloc and which the string must be shorter than
 // this max size capped at 4096.
-// will remove any trailing newline characters
+// will remove the final trailing newline character
 char* scan_line(int max_size){
   if (max_size > 4096){
     return NULL;

@@ -108,6 +108,7 @@ expr:
 | LBRACKET init_list RBRACKET { StructInit(List.rev $2) }
 | LSQBRACE opt_items RSQBRACE { ArrayLit($2) }
 | accessor { $1 }
+| LPAREN expr RPAREN { $2 }
 
 accessor:
   accessor LPAREN args_opt RPAREN { FCall($1, $3) }

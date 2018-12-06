@@ -64,6 +64,7 @@ and comment level = parse
 
 and linec = parse
   '\n' { token lexbuf }
+| eof {token lexbuf}
 | _ { linec lexbuf }
 
 and str buf = parse
