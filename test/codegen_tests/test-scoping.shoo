@@ -1,0 +1,17 @@
+//scoping for globals vs locals
+
+string msg = "comment ca va";
+
+function hello() void {
+	string msg = "ca va bien";
+	println(msg);
+}
+
+hello();
+
+// globals vs parameters
+function hello2(string msg) void {
+	println(msg);
+}
+
+hello2("ca va mal");

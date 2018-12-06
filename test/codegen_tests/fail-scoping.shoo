@@ -1,0 +1,8 @@
+string msg = "comment ca va?";
+// scoping for parameters vs locals
+function hello1(string message) void {
+	string message = "comme ci comme ca";
+	println(message);
+}
+
+hello1(msg);
