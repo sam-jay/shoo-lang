@@ -1,0 +1,24 @@
+
+struct Foo {
+  array<int> foo = [1, 2, 3];
+}
+
+struct Bar {
+  array<Foo> bar = [new(Foo), new(Foo), new(Foo)];
+}
+
+struct Baz {
+  array<Bar> baz = [new(Bar), new(Bar), new(Bar)];
+}
+
+Baz b = new(Baz);
+
+function setItem(Baz x) void {
+  x.baz[0].bar[0].foo[1] = 100;
+  return;
+}
+
+setItem(b);
+
+println(str_of_int(b.baz[0].bar[0].foo[1]));
+

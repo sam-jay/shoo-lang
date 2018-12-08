@@ -44,7 +44,8 @@ let check_asn lvalue_t rvalue_t =
   if found_match
   then lvalue_t
   else (*(print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);*)
-    raise (Type_mismatch ("type mismatch error " ^ fmt_styp lvalue_t ^ " " ^ fmt_styp rvalue_t))
+    (print_endline(Printexc.raw_backtrace_to_string(Printexc.get_callstack 100));
+    raise (Type_mismatch ("type mismatch error " ^ fmt_styp lvalue_t ^ " " ^ fmt_styp rvalue_t)))
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
@@ -86,6 +87,10 @@ let rec ignore_structs t = match t with
       signore = true;
     })
 | SArray(t) -> SArray(ignore_structs t)
+| SFunc(f) -> SFunc({
+    sparam_typs = List.map ignore_structs f.sparam_typs;
+    sreturn_typ = ignore_structs f.sreturn_typ;
+  })
 | _ -> t
 
 (* This functions gives the member map if the 
@@ -167,6 +172,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         let t = List.map (fun e1 ->
             let (_, (t1, st1)) = check_expr ctxt e1 in
             (* TODO(claire) need to check both? *)
+            let t1 = ignore_structs t1 in
             if (t1 = item_type) (*&& (st1 = item_s_type)*) then (t1, st1)
             else raise (Failure("Error: cannot have multiple types in an array ("
               ^ fmt_styp t1 ^ " and " ^ fmt_styp item_type ))
@@ -279,9 +285,9 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     (ctxt, (func_t.sreturn_typ, SFCall((t, se), sl)))
 
 | FExpr(fexpr) ->
-    let conv_params (typ, _ ) = (styp_of_typ ctxt typ) in
-    let conv_params_with_both_fields (typ, str) = (styp_of_typ ctxt typ,str) in
-    let sfunc_t = SFunc({ sreturn_typ = styp_of_typ ctxt fexpr.typ; sparam_typs = List.map conv_params fexpr.params }) in
+    let conv_params (typ, _ ) = (ignore_structs (styp_of_typ ctxt typ)) in
+    let conv_params_with_both_fields (typ, str) = (ignore_structs (styp_of_typ ctxt typ),str) in
+    let sfunc_t = SFunc({ sreturn_typ = ignore_structs (styp_of_typ ctxt fexpr.typ); sparam_typs = List.map conv_params fexpr.params }) in
     let create_scope list =
       let rec helper m = function
         [] -> m
@@ -295,10 +301,10 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     in
     let func_scope = create_scope fexpr.params in
     let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
-    ignore (check_asn return_t (styp_of_typ ctxt fexpr.typ)); (*TODO: ignore this output to get rid of warnings*)
+    ignore (check_asn return_t (ignore_structs (styp_of_typ ctxt fexpr.typ)));
     (ctxt, (sfunc_t, SFExpr({
       sname = fexpr.name;
-      styp = styp_of_typ ctxt fexpr.typ;
+      styp = ignore_structs(styp_of_typ ctxt fexpr.typ);
       sparams = List.map conv_params_with_both_fields fexpr.params;
       sbody = sl;
       srecursive = false; (* TODO: handle recursion *)
@@ -370,11 +376,12 @@ and check_stmt (ctxt : styp StringMap.t list) = function
     None -> (add_to_ctxt t n ctxt, SVoid, SVDecl(t, n, None))
   | Some(e) ->
       let (_, (t_i, s_i)) = check_expr ctxt e in
+      let t_i = ignore_structs t_i in
       let nctxt = add_to_ctxt t n ctxt in
       (nctxt, SVoid, SVDecl((check_asn t_i t), n, Some((t_i, s_i)))))
 
 | StructDef(name, fields) ->
-    let conv_typ typ = styp_of_typ ctxt typ in
+    let conv_typ typ = ignore_structs (styp_of_typ ctxt typ) in
     let helper (map, list) (lt, n, i) =
       let lt = conv_typ lt in
       match lt with
@@ -388,7 +395,7 @@ and check_stmt (ctxt : styp StringMap.t list) = function
           None -> (None, None)
         | Some e ->
           let (_, (rt, se)) = check_expr ctxt e in
-          let _ = check_asn lt rt in
+          let _ = check_asn (lt) rt in
           (Some(rt, se), Some(rt, se)) (*this was changed to make it compile...idk if it's right*)
         in
         let new_map = StringMap.add n (lt, init) map in
