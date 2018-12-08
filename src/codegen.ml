@@ -201,12 +201,10 @@ let translate functions =
       | SFloatLit x -> L.const_float_of_string float_t x
       | SId s -> L.build_load (lookup s) s builder
       | SNoexpr -> L.const_int i32_t 0
-      | SAssign((_, SDot((SStruct(struct_t), SId(s)), name)), e2) ->
-          let new_v = expr builder m e2 in
-          let lhs = expr builder m (SStruct(struct_t), SId(s)) in
+      | SAssign((_, SDot((SStruct(struct_t), e), name)), rhs) ->
+          let new_v = expr builder m rhs in
+          let lhs = expr builder m (SStruct(struct_t), e) in
           let st = L.build_load lhs "structval" builder in
-          let (* TODO need this? (*llstruct_t*)*) _ 
-                = ltype_of_typ (SStruct(struct_t)) in
           let compare_by (n1, _) (n2, _) = compare n1 n2 in
           let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
           let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
