@@ -271,7 +271,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
         ([], []) -> sl
       | (p_typ::pl, arg::al) ->
         let (_, (a_typ, se)) = check_expr ctxt arg in
-        if compare_typs p_typ a_typ then helper ((a_typ, se)::sl) (pl, al)
+        if compare_typs p_typ (ignore_structs a_typ) then helper ((a_typ, se)::sl) (pl, al)
         else raise (Failure "argument type mismatch")
       | _ -> raise (Failure "invalid number of arguments")
       in
