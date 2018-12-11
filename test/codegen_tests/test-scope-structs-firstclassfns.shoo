@@ -1,0 +1,25 @@
+// struct of same name inside firstclass fn inside struct of same name
+struct Fancy {
+	int field;
+	string hello;
+	func(int;string) anon = function (int x) string {
+		struct Fancy {
+			string diff;
+			string diff2;
+			int storeStuff;
+		}
+		Fancy innerFancy = new(Fancy);
+		innerFancy.diff = "secret message is here";
+		innerFancy.diff2 = "second secret message";
+
+		return innerFancy.diff + innerFancy.diff2 + str_of_int(x);
+	};
+}
+
+Fancy myNew;
+myNew = new(Fancy);
+
+myNew.hello = "HI";
+string result = myNew.anon(6);
+println(myNew.hello);
+println(result);
