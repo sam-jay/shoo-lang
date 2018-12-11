@@ -1,0 +1,20 @@
+struct TestStruct {
+	int hello = 5;
+	string msg = "PRINTING THIS";
+	string num = "10";
+	func(int;int) intToInt;
+}
+
+// all struct use requires new
+TestStruct temp = new(TestStruct);
+
+int numAsInt = int_of_str(temp.num);
+println(str_of_int(numAsInt));
+
+println(temp.msg);
+
+if (temp.hello==5) {
+	println("GOOD WE WANT TO PRINT");
+} else {
+	println("BOO");
+}
