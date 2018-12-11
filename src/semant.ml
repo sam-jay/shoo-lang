@@ -151,7 +151,6 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     in
     (struct_t, SStructInit(struct_t, assigns'))
     
-(* TODO(claire) This doesn't handle arrays of structs I don't think? *)
 (* Go through all the items in the square brackets to see if they match *)
 (* TODO(claire) check_expr never changes the map so we shouldn't pass
  * it around all the time. Change this so there is a function above that
@@ -456,13 +455,12 @@ and check_stmt (ctxt : styp StringMap.t list) = function
 | _ -> (ctxt, SVoid, SExpr((SVoid, SNoexpr)))
 
 let builtins = [
-  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid }));
-  ("print", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid }));
+  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt }));
+  ("print", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt }));
   ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString }));
   ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString }));
   ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString })); 
   ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt })); 
-  ("length", SFunc({ sparam_typs = [SArray(SAny)]; sreturn_typ = SInt })); 
   ("str_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SString })); 
   ("int_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SInt })); 
   ("float_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SFloat })); 

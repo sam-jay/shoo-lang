@@ -118,3 +118,16 @@ int die(char * error_msg, int code){
   exit(code);
   return 0;
 }
+
+// assumes the str that's based in is correctly null terminated
+int println(char * str){
+  printf("%s\n",str);
+  return 0;
+}
+
+// assumes the str that's based in is correctly null terminated
+int print(char * str){
+  printf("%s",str);
+  return 0;
+}
+

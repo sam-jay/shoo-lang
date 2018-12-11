@@ -10,7 +10,6 @@ let translate functions =
   let context = L.global_context () in
   
   let i32_t      = L.i32_type    context
-  and i8_t       = L.i8_type     context
   and i1_t       = L.i1_type     context
   and float_t    = L.double_type context
   and void_t     = L.void_type   context
@@ -64,13 +63,7 @@ let translate functions =
 
   let rec generate_seq n = if n >= 0 then (n :: (generate_seq (n-1))) else [] in
 
-  let printf_func : L.llvalue =
-    let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-    L.declare_function "printf" printf_t the_module in
-
   let builtins = List.fold_left (fun m (name, ty) -> 
-    if name = "length" then m
-    else 
       let ftype = match ty with SFunc(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
       let params = List.map ltype_of_typ ftype.sparam_typs in
       let ltype = L.function_type (ltype_of_typ ftype.sreturn_typ) (Array.of_list params) in
@@ -89,13 +82,6 @@ let translate functions =
   let build_function_body (name, lfexpr) =
     let (the_function, _) = StringMap.find name function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-
-    let string_format_str = L.build_global_stringptr "%s\n" "fmt" builder
-    and string_noln_format_str = L.build_global_stringptr "%s" "fmt" builder
-    (*and int_format_str = L.build_global_stringptr "%d\n" "fmt" builder
-    and float_format_str = L.build_global_stringptr "%g\n" "fmt" builder
-    and char_format_str = L.build_global_stringptr "%c\n" "fmt" builder*)
-    in
 
     (* Unpacking args and env vars,
       skip for main as its env is empty and has no params *)
@@ -386,19 +372,7 @@ let translate functions =
         | _ -> raise (Failure ("operation " ^ (fmt_uop op) ^ 
           " not implemented for type " ^ (fmt_styp t)))) e' "tmp" builder
 
-
       | SClosure clsr -> build_clsr clsr
-      | SFCall((_, SId("length")), [(typ, sexpr)]) ->
-          let p = expr builder m (typ, sexpr) in
-          let e' = L.build_load p "" builder in
-          let n = (L.array_length (L.type_of e')) in
-          L.const_int i32_t n
-      | SFCall((_, SId("println")), [(typ, sexpr)]) ->
-          L.build_call printf_func [| string_format_str; 
-            (expr builder m (typ, sexpr)); |] "" builder
-      | SFCall((_, SId("print")), [(typ, sexpr)]) ->
-          L.build_call printf_func [| string_noln_format_str; 
-            (expr builder m (typ, sexpr)); |] "" builder
       | SFCall((_, SId(name)), args) when StringMap.mem name builtins ->
           let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
           L.build_call (StringMap.find name builtins) arg_array "_result" builder
