@@ -373,9 +373,15 @@ let translate functions =
           " not implemented for type " ^ (fmt_styp t)))) e' "tmp" builder
 
       | SClosure clsr -> build_clsr clsr
-      | SFCall((_, SId(name)), args) when StringMap.mem name builtins ->
-          let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
-          L.build_call (StringMap.find name builtins) arg_array "_result" builder
+      | SFCall((t, SId(name)), args) when StringMap.mem name builtins ->
+          (let func_t = match t with
+            SFunc(func_t) -> func_t 
+            | _ -> raise (Failure "This should never happen")  in
+              (match func_t.sreturn_typ with 
+                SVoid -> (let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
+                  L.build_call (StringMap.find name builtins) arg_array "" builder)
+                | _ -> (let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
+                  L.build_call (StringMap.find name builtins) arg_array "_result" builder)))
       | SFCall((t, s), args) ->
           let func_t = match t with
             SFunc(func_t) -> func_t
