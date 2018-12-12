@@ -1,0 +1,36 @@
+struct Box {
+	int width;
+	int length;
+}
+
+Box box1 = new(Box);
+box1.width = 8;
+box1.length = 40;
+
+Box box2 = new(Box);
+box2.width = 2;
+box2.length = 3;
+
+Box box3 = new(Box);
+box3.width = 9;
+box3.length = 70;
+
+Box box4 = new(Box);
+box4.width = 3;
+box4.length = 5;
+
+function fun(array<Box> tester, int sz) void {
+	tester[0].width = 5;
+	println(str_of_int(tester[sz-1].width));
+}
+
+
+array<Box> test = [box1, box2];
+
+array<Box> test2;
+test2 = new(array<Box>[2]);
+test2[0] = box3;
+test2[1] = box4;
+
+fun(test, 2);
+fun(test2, 2);

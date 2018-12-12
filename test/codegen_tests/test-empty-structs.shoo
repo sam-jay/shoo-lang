@@ -1,0 +1,6 @@
+struct Empty{
+}
+
+Empty temp;
+
+Empty temp2 = new(Empty);

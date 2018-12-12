@@ -107,14 +107,27 @@ char* scan_line(int max_size){
 }
 
 // regular successful exit
-int exit_success(int code){
+void exit_success(int code){
   exit(0);
-  return 0;
+  return;
 }
 
 // exit with error message
-int die(char * error_msg, int code){
+void die(char * error_msg, int code){
   printf("%s\n", error_msg);
   exit(code);
-  return 0;
+  return;
 }
+
+// assumes the str that's based in is correctly null terminated
+void println(char * str){
+  printf("%s\n",str);
+  return;
+}
+
+// assumes the str that's based in is correctly null terminated
+void print(char * str){
+  printf("%s",str);
+  return;
+}
+

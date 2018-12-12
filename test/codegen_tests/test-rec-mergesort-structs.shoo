@@ -1,0 +1,127 @@
+struct Box {
+	int width;
+	int length;
+}
+
+// perform mergesort on an array of box structs
+Box box1 = new(Box);
+box1.width = 8;
+box1.length = 40;
+
+Box box2 = new(Box);
+box2.width = 2;
+box2.length = 3;
+
+Box box3 = new(Box);
+box3.width = 10;
+box3.length = 16;
+
+Box box4 = new(Box);
+box4.width = 12;
+box4.length = 8;
+
+// reference: https://www.geeksforgeeks.org/merge-sort/
+function merge(array<Box> arr, int l, int m, int r) void {
+	int i;
+	int j;
+	int k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+  
+    /* create temp arrays */
+    array<Box> leftArr;
+    array<Box> rightArr;
+
+    leftArr = new(array<Box>[n1]);
+    rightArr = new(array<Box>[n2]);
+  
+    /* Copy data to temp arrays L[] and R[] */
+    for (i = 0; i < n1; i++) {
+ 		leftArr[i] = arr[l+i];
+    }
+
+    for (j = 0; j < n2; j++){
+        rightArr[j] = arr[m + 1+ j];
+    }
+  
+    /* Merge the temp arrays back into arr[l..r]*/
+    i = 0; // Initial index of first subarray 
+    j = 0; // Initial index of second subarray 
+    k = l; // Initial index of merged subarray 
+    while (i < n1 && j < n2) 
+    { 
+        if (leftArr[i].width <= rightArr[j].width) 
+        { 
+            arr[k] = leftArr[i]; 
+            i++; 
+        } 
+        else
+        { 
+            arr[k] = rightArr[j]; 
+            j++; 
+        } 
+        k++; 
+    }
+  
+    /* Copy the remaining elements of L[], if there 
+       are any */
+    while (i < n1) { 
+        arr[k] = leftArr[i]; 
+        i++; 
+        k++; 
+    }
+  
+    /* Copy the remaining elements of R[], if there 
+       are any */
+    while (j < n2) { 
+        arr[k] = rightArr[j]; 
+        j++; 
+        k++; 
+    }
+}
+
+// we are mergesorting on the width of the box
+function mergeSort(array<Box> boxArr, int l, int r) void {
+	// code from reference link
+	if (l < r) { 
+        // Same as (l+r)/2, but avoids overflow for 
+        // large l and h 
+        int m = l + (r-l)/2; 
+  
+        // Sort first and second halves 
+        mergeSort(boxArr, l, m);
+        mergeSort(boxArr, m+1, r); 
+  
+        merge(boxArr, l, m, r); 
+    } 
+}
+
+function printBox(Box box) void {
+	println(str_of_int(box.width));
+}
+
+function printArr(array<Box> testArr, int sz) void {
+	for(int i = 0; i<sz; i++){
+		printBox(testArr[i]);
+	}
+}
+
+function mergeSortUser(array<Box> tester, int sz) void {
+	// do the merge sorting
+	mergeSort(tester,0,sz-1);
+
+	// print the array
+	printArr(tester, sz);
+}
+
+array<Box> test1;
+test1 = new(array<Box>[4]);
+test1[0] = box1;
+test1[1] = box2;
+test1[2] = box3;
+test1[3] = box4;
+
+array<Box> test = [box1, box2, box3, box4];
+
+mergeSortUser(test, 4);
+mergeSortUser(test1, 4);

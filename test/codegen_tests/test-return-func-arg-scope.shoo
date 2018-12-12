@@ -1,0 +1,27 @@
+// This function provides a printer for arrays of a
+// specific size. If the array is smaller than the 
+// specified size, the output might be strange... 
+function printArray (int size) func(array<float>; void) {
+    return function(array<float> newArr) void {
+        // Use the size from the outer scope.
+        for (int i = 0; i < size; i++) {
+            
+            print(str_of_float(newArr[i]) + " ");
+        }
+        println("");
+    };
+}
+
+int size = 10;
+
+func(array<float>; void) toPrintPrinter = printArray(size);
+
+array<float> toPrint = new(array<float>[size]);
+for (int i = 0; i < size; i++) {
+    toPrint[i] = float_of_int(i)*5.0;
+}
+
+toPrintPrinter(toPrint);
+
+array<float> sameSize = [0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0];
+toPrintPrinter(sameSize);

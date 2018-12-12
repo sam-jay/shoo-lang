@@ -1,0 +1,13 @@
+struct More{
+	int defield = 10;
+	float hello = 5.5;
+}
+
+struct Stuff {
+	int field = 5;
+	string msg = "hello";
+	More moreStuff = new(More);
+}
+
+Stuff temp = new(Stuff);
+println(str_of_int(temp.moreStuff.defield));

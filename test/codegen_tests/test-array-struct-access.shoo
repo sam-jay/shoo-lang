@@ -1,0 +1,23 @@
+array<int> p = new(array<int>[3]);
+
+struct B {
+    int i = 5;
+}
+B z = new(B);
+z.i = 4;
+p[0] = z.i;
+array<B> e = new(array<B>[2]);
+e[0] = new(B);
+e[0].i = 5; // TODO the problem is still here
+
+print(str_of_int(e[0].i));
+
+struct C {
+    array<bool> b; 
+    B j;
+}
+
+C y = new(C);
+y.b = new(array<bool>[5]);
+y.b[0] = true;
+println(str_of_bool(y.b[0]));

@@ -1,0 +1,15 @@
+function foo(int x) void {
+    function baz(int y) int {
+        return x + y;
+    }
+
+    function bar() int {
+        return baz(2);
+    }
+}
+
+function main() void {
+    println(str_of_int(bar()));
+}
+
+main();

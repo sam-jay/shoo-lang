@@ -1,0 +1,6 @@
+int x = 5;
+array<int> arr = new(array<int>[x]);
+arr[x-1] = 4;
+arr[x-2] = 0;
+println(str_of_int(arr[x-1]));
+println(str_of_int(arr[x-2]));
