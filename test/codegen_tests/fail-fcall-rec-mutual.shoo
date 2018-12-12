@@ -1,0 +1,15 @@
+function foo(int n) int {
+  if (n == 1) {
+    return 0;
+  }
+  return bar(n - 1);
+}
+
+function bar(int n) int {
+  if (n == 1) {
+    return 0;
+  }
+  return foo(n - 1);
+}
+
+println(str_of_int(foo(5)));
