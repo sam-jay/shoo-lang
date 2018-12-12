@@ -68,13 +68,13 @@ let translate functions =
     let printf_t = L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
     L.declare_function "printf" printf_t the_module in
 
-  let builtins = List.fold_left (fun m (name, ty) -> 
+  let builtins : (Sast.styp * L.llvalue) StringMap.t = List.fold_left (fun m (name, ty) -> 
     if name = "length" then m
     else 
       let ftype = match ty with SFunc(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
       let params = List.map ltype_of_typ ftype.sparam_typs in
       let ltype = L.function_type (ltype_of_typ ftype.sreturn_typ) (Array.of_list params) in
-      StringMap.add name (L.declare_function name ltype the_module) m
+      StringMap.add name (ty, (L.declare_function name ltype the_module)) m
   ) StringMap.empty Semant.builtins in
 
   (* Build each function signature without building the body *)
@@ -166,7 +166,9 @@ let translate functions =
             in llval'
         in llval*)
       let (_, llval) = try StringMap.find n m with
-        Not_found -> raise (Failure ("Codegen Variable not found: " ^ n)) 
+        Not_found ->
+          if StringMap.mem n builtins then StringMap.find name builtins
+          else raise (Failure ("Codegen Variable not found: " ^ n)) 
       in llval
      in
 
@@ -363,11 +365,11 @@ let translate functions =
                     ^ " not implemented for type " ^ (fmt_styp t)))
               ) e1' e2' "tmp" builder
         | SString -> (match op with
-            Add -> L.build_call (StringMap.find "string_concat" builtins) [| e1'; e2'|] "string_concat" builder
+            Add -> L.build_call (snd (StringMap.find "string_concat" builtins)) [| e1'; e2'|] "string_concat" builder
           | Equal -> (L.build_icmp L.Icmp.Ne) (L.const_int i32_t 0)
-                (L.build_call (StringMap.find "string_equals" builtins) [| e1'; e2'|] "string_equals" builder) "tmp" builder
+                (L.build_call (snd (StringMap.find "string_equals" builtins)) [| e1'; e2'|] "string_equals" builder) "tmp" builder
           | Neq -> (L.build_icmp L.Icmp.Eq) (L.const_int i32_t 0)
-                (L.build_call (StringMap.find "string_equals" builtins) [| e1'; e2'|] "string_equals" builder) "tmp" builder
+                (L.build_call (snd (StringMap.find "string_equals" builtins)) [| e1'; e2'|] "string_equals" builder) "tmp" builder
           | _ -> raise (Failure ("operation " ^ (fmt_op op)
                 ^ " not implemented for type " ^ (fmt_styp t))))
         | _ -> (match op with
@@ -401,7 +403,7 @@ let translate functions =
             (expr builder m (typ, sexpr)); |] "" builder
       | SFCall((_, SId(name)), args) when StringMap.mem name builtins ->
           let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
-          L.build_call (StringMap.find name builtins) arg_array "_result" builder
+          L.build_call (snd (StringMap.find name builtins)) arg_array "_result" builder
       | SFCall((t, s), args) ->
           let func_t = match t with
             SFunc(func_t) -> func_t
