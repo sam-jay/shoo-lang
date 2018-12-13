@@ -1,0 +1,14 @@
+// destructing structs and scoping
+struct FunParam {
+	int funner = 90;
+	string msg = "MY MESSAGE";
+}
+
+
+FunParam par = new(FunParam);
+int funner = 188;
+string msg = "VARS";
+// here the below is syntactic sugar for int funner... so it won't work
+{funner; msg; } = par;
+
+println(msg);
