@@ -470,6 +470,26 @@ let builtins = [
   ("int_of_str", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt })); 
 ]
 
+let builtinsFunc = [
+  ("println", Func({ param_typs = [String]; return_typ = Void }));
+  ("print", Func({ param_typs = [String]; return_typ = Void }));
+  ("str_of_int", Func({ param_typs = [Int]; return_typ = String }));
+  ("str_of_bool", Func({ param_typs = [Bool]; return_typ = String }));
+  ("string_concat", Func({ param_typs = [String; String]; return_typ = String })); 
+  ("string_equals", Func({ param_typs = [String; String]; return_typ = Int })); 
+  ("str_of_float", Func({ param_typs = [Float]; return_typ = String })); 
+  ("int_of_float", Func({ param_typs = [Float]; return_typ = Int })); 
+  ("float_of_int", Func({ param_typs = [Int]; return_typ = Float })); 
+  ("scan_line", Func({ param_typs = [Int]; return_typ = String })); 
+  ("exit_success", Func({ param_typs = [Int]; return_typ = Void })); 
+  ("die", Func({ param_typs = [String; Int]; return_typ = Void })); 
+  ("int_of_str", Func({ param_typs = [String]; return_typ = Int })); 
+]
+
+let makeMapFromBuiltinsFunc map arrElem = StringMap.add (fst arrElem) (snd arrElem) map
+
+let builtinMap = List.fold_left makeMapFromBuiltinsFunc StringMap.empty builtinsFunc
+
 let def_ctxt =
   let add_func ctxt (name, func_t) = add_to_ctxt func_t name ctxt in
   List.fold_left add_func [StringMap.empty] builtins
