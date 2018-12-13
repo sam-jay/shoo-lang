@@ -15,6 +15,7 @@ type styp =
 and sfunc_typ = {
   sparam_typs: styp list;
   sreturn_typ: styp;
+  sbuiltin: bool;
 }
 
 and sstruct_typ = {

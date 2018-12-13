@@ -90,6 +90,7 @@ let rec ignore_structs t = match t with
 | SFunc(f) -> SFunc({
     sparam_typs = List.map ignore_structs f.sparam_typs;
     sreturn_typ = ignore_structs f.sreturn_typ;
+    sbuiltin = f.sbuiltin;
   })
 | _ -> t
 
@@ -189,7 +190,16 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
 
 | Id(n) -> 
     let t = find_in_ctxt n ctxt in
-    (t, SId n)
+    (match t with
+      SFunc(f) when f.sbuiltin -> check_expr ctxt FExpr({
+      name = "";
+      typ = match builtinMap.find n with Func(func) -> func.return_typ | _ -> raise (Failure ("shouldn't happen"));
+      params = let typs = match builtinMap.find n with Func(func) -> func.param_typs | _ -> raise (Failure ("shouldn't happen")) in
+        List.mapi (fun i t -> ()) typs;
+      body = [
+
+      ];})
+    | _ -> (t, SId n))
 
 | Assign(e1, e2) ->
     let (t1, se1) = match e1 with
@@ -286,7 +296,11 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
 | FExpr(fexpr) ->
     let conv_params (typ, _ ) = (ignore_structs (styp_of_typ ctxt typ)) in
     let conv_params_with_both_fields (typ, str) = (ignore_structs (styp_of_typ ctxt typ),str) in
-    let sfunc_t = SFunc({ sreturn_typ = ignore_structs (styp_of_typ ctxt fexpr.typ); sparam_typs = List.map conv_params fexpr.params }) in
+    let sfunc_t = SFunc({
+      sreturn_typ = ignore_structs (styp_of_typ ctxt fexpr.typ);
+      sparam_typs = List.map conv_params fexpr.params;
+      sbuiltin = false;
+    }) in
     let create_scope list =
       let rec helper m = function
         [] -> m
@@ -318,7 +332,7 @@ and styp_of_typ ctxt = function
   | Float -> SFloat
   | String -> SString
   | Void -> SVoid
-  | Func f -> SFunc({ sparam_typs = List.map (styp_of_typ ctxt) f.param_typs; sreturn_typ = styp_of_typ ctxt f.return_typ })
+  | Func f -> SFunc({ sparam_typs = List.map (styp_of_typ ctxt) f.param_typs; sreturn_typ = styp_of_typ ctxt f.return_typ; sbuiltin = false; })
   | Struct s -> find_in_ctxt s.struct_name ctxt
   | Array t -> SArray(styp_of_typ ctxt t) 
   | ABSTRACT -> SABSTRACT
@@ -455,19 +469,19 @@ and check_stmt (ctxt : styp StringMap.t list) = function
 | _ -> (ctxt, SVoid, SExpr((SVoid, SNoexpr)))
 
 let builtins = [
-  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid }));
-  ("print", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid }));
-  ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString }));
-  ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString }));
-  ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString })); 
-  ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt })); 
-  ("str_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SString })); 
-  ("int_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SInt })); 
-  ("float_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SFloat })); 
-  ("scan_line", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString })); 
-  ("exit_success", SFunc({ sparam_typs = [SInt]; sreturn_typ = SVoid })); 
-  ("die", SFunc({ sparam_typs = [SString; SInt]; sreturn_typ = SVoid })); 
-  ("int_of_str", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt })); 
+  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid; sbuiltin = true; }));
+  ("print", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid; sbuiltin = true; }));
+  ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString; sbuiltin = true; }));
+  ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString; sbuiltin = true; }));
+  ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString; sbuiltin = true; })); 
+  ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt; sbuiltin = true; })); 
+  ("str_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SString; sbuiltin = true; })); 
+  ("int_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SInt; sbuiltin = true; })); 
+  ("float_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SFloat; sbuiltin = true; })); 
+  ("scan_line", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString; sbuiltin = true; })); 
+  ("exit_success", SFunc({ sparam_typs = [SInt]; sreturn_typ = SVoid; sbuiltin = true; })); 
+  ("die", SFunc({ sparam_typs = [SString; SInt]; sreturn_typ = SVoid; sbuiltin = true; })); 
+  ("int_of_str", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt; sbuiltin = true; })); 
 ]
 
 let def_ctxt =

@@ -58,7 +58,8 @@ let translate functions =
 
   let typ_of_lfexpr lfexpr = SFunc({
     sreturn_typ = lfexpr.lreturn_typ;
-    sparam_typs = List.map fst lfexpr.lparams
+    sparam_typs = List.map fst lfexpr.lparams;
+    sbuiltin = false;
   }) in
 
   let rec generate_seq n = if n >= 0 then (n :: (generate_seq (n-1))) else [] in
