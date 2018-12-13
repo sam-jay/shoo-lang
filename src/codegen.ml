@@ -8,7 +8,7 @@ module StringMap = Map.Make(String)
 
 let translate functions =
   let context = L.global_context () in
-  
+
   let i32_t      = L.i32_type    context
   and i1_t       = L.i1_type     context
   and float_t    = L.double_type context
@@ -34,24 +34,24 @@ let translate functions =
   and ltype_of_clsr name lfexpr =
     let func_t = L.pointer_type (ltype_of_lfexpr name lfexpr) in
     L.struct_type context [|func_t; void_ptr_t|]
-  
+
   and ltype_of_clsr_func name (sfunc : sfunc_typ) =
     let func_t = L.pointer_type (ltype_of_sfunction name sfunc) in
     L.struct_type context [|func_t; void_ptr_t|]
-  
+
   and ltype_of_typ = function
       SInt -> i32_t
-  | SFloat -> float_t
-  | SBool -> i1_t
-  | SString -> str_t
-  | SFunc ftype -> ltype_of_clsr_func "" ftype
-  | SVoid -> void_t
-  | SStruct(struct_t) ->
+    | SFloat -> float_t
+    | SBool -> i1_t
+    | SString -> str_t
+    | SFunc ftype -> ltype_of_clsr_func "" ftype
+    | SVoid -> void_t
+    | SStruct(struct_t) ->
       let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
       let st = L.struct_type context (Array.of_list (List.map ltype_of_typ t_members)) in
       L.pointer_type st
-  | SArray(array_typ) -> L.pointer_type (ltype_of_typ array_typ) 
-  | _ -> raise (Failure "not yet implemented")
+    | SArray(array_typ) -> L.pointer_type (ltype_of_typ array_typ) 
+    | _ -> raise (Failure "not yet implemented")
   in
 
   let insert_value builder agg i v = L.build_insertvalue agg v i "tmp__" builder in
@@ -65,13 +65,13 @@ let translate functions =
   let rec generate_seq n = if n >= 0 then (n :: (generate_seq (n-1))) else [] in
 
   let builtins : (Sast.styp * L.llvalue) StringMap.t = List.fold_left (fun m (name, ty) -> 
-    if name = "length" then m
-    else 
-      let ftype = match ty with SFunc(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
-      let params = List.map ltype_of_typ ftype.sparam_typs in
-      let ltype = L.function_type (ltype_of_typ ftype.sreturn_typ) (Array.of_list params) in
-      StringMap.add name (ty, (L.declare_function name ltype the_module)) m
-  ) StringMap.empty Semant.builtins in
+      if name = "length" then m
+      else 
+        let ftype = match ty with SFunc(f) -> f | _ -> (raise (Failure "shouldn't happen")) in
+        let params = List.map ltype_of_typ ftype.sparam_typs in
+        let ltype = L.function_type (ltype_of_typ ftype.sreturn_typ) (Array.of_list params) in
+        StringMap.add name (ty, (L.declare_function name ltype the_module)) m
+    ) StringMap.empty Semant.builtins in
 
   (* Build each function signature without building the body *)
   let function_decls : (L.llvalue * lfunc) StringMap.t =
@@ -87,7 +87,7 @@ let translate functions =
     let builder = L.builder_at_end context (L.entry_block the_function) in
 
     (* Unpacking args and env vars,
-      skip for main as its env is empty and has no params *)
+       skip for main as its env is empty and has no params *)
     let local_vars =
       let add_param m (t, n) p =
         let () = L.set_value_name n p in
@@ -113,24 +113,24 @@ let translate functions =
       let env_p = L.build_load env_void_ptr "env_p" builder in
 
       let params_of_lfexpr lfexpr = match lfexpr.lfvs with
-        [] -> params
-      | _ ->
-        let ptr_of_fv (t, _) = L.pointer_type (ltype_of_typ t) in
-        let env_struct = L.struct_type context (Array.of_list (List.map ptr_of_fv lfexpr.lfvs)) in
-        let env_ptr_t = L.pointer_type env_struct in
-        let env_ptr = L.build_bitcast env_p env_ptr_t "env_p" builder in
-        let env_val = L.build_load env_ptr "env_val" builder in
-        let add_free_var m (t, n) idx =
-          let free_var = L.build_extractvalue env_val idx "tmp_" builder in
-          StringMap.add n (t, free_var) m
-        in
-        let fvs_count = List.length lfexpr.lfvs in
-        List.fold_left2 add_free_var params lfexpr.lfvs (List.rev (generate_seq (fvs_count - 1)))
+          [] -> params
+        | _ ->
+          let ptr_of_fv (t, _) = L.pointer_type (ltype_of_typ t) in
+          let env_struct = L.struct_type context (Array.of_list (List.map ptr_of_fv lfexpr.lfvs)) in
+          let env_ptr_t = L.pointer_type env_struct in
+          let env_ptr = L.build_bitcast env_p env_ptr_t "env_p" builder in
+          let env_val = L.build_load env_ptr "env_val" builder in
+          let add_free_var m (t, n) idx =
+            let free_var = L.build_extractvalue env_val idx "tmp_" builder in
+            StringMap.add n (t, free_var) m
+          in
+          let fvs_count = List.length lfexpr.lfvs in
+          List.fold_left2 add_free_var params lfexpr.lfvs (List.rev (generate_seq (fvs_count - 1)))
       in
 
       let params_fvs = match name with
-        "main" -> params
-      | _ -> params_of_lfexpr lfexpr
+          "main" -> params
+        | _ -> params_of_lfexpr lfexpr
       in
 
       (* Allocate a closure of the function within itself for recursive calls *)
@@ -145,12 +145,12 @@ let translate functions =
     let rec expr builder (m : (styp * L.llvalue) StringMap.t) ((ty, e) : sexpr) =
 
       let lookup n =
-      let (_, llval) = try StringMap.find n m with
-        Not_found ->
-          if StringMap.mem n builtins then StringMap.find name builtins
-          else raise (Failure ("Codegen Variable not found: " ^ n)) 
-      in llval
-     in
+        let (_, llval) = try StringMap.find n m with
+            Not_found ->
+            if StringMap.mem n builtins then StringMap.find name builtins
+            else raise (Failure ("Codegen Variable not found: " ^ n)) 
+        in llval
+      in
 
       let build_clsr clsr =
         let fvs = List.map snd clsr.free_vars in
@@ -169,13 +169,13 @@ let translate functions =
         let (llfunc, sfexpr) = StringMap.find func_name function_decls in
         let llclosure_struct_t = ltype_of_clsr func_name sfexpr in
         let clsr_val = List.fold_left2 
-          (insert_value builder) 
-          (L.const_null llclosure_struct_t)
-          [0;1] 
-          [llfunc; env_struct_p]
+            (insert_value builder) 
+            (L.const_null llclosure_struct_t)
+            [0;1] 
+            [llfunc; env_struct_p]
         in clsr_val
       in
-      
+
       match e with
         SStrLit s -> L.build_global_stringptr s "str" builder
       | SIntLit x -> L.const_int i32_t x
@@ -184,210 +184,210 @@ let translate functions =
       | SId s -> L.build_load (lookup s) s builder
       | SNoexpr -> L.const_int i32_t 0
       | SAssign((_, SDot((SStruct(struct_t), e), name)), rhs) ->
-          let new_v = expr builder m rhs in
-          let lhs = expr builder m (SStruct(struct_t), e) in
-          let st = L.build_load lhs "structval" builder in
-          let compare_by (n1, _) (n2, _) = compare n1 n2 in
-          let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
-          let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
-          let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
-          let new_struct = L.build_insertvalue st new_v idx name builder in
-          ignore(L.build_store new_struct (lhs) builder); new_v
+        let new_v = expr builder m rhs in
+        let lhs = expr builder m (SStruct(struct_t), e) in
+        let st = L.build_load lhs "structval" builder in
+        let compare_by (n1, _) (n2, _) = compare n1 n2 in
+        let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
+        let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
+        let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
+        let new_struct = L.build_insertvalue st new_v idx name builder in
+        ignore(L.build_store new_struct (lhs) builder); new_v
       | SAssign((_, SArrayAccess(arr, i)), e2) ->
-          let new_v = expr builder m e2 in
-          let arr_var = expr builder m arr in
-          let idx = expr builder m i in 
-          let ptr = 
-            L.build_gep arr_var [| idx |] "" builder 
-            in 
-            ignore(L.build_store new_v ptr builder); new_v
+        let new_v = expr builder m e2 in
+        let arr_var = expr builder m arr in
+        let idx = expr builder m i in 
+        let ptr = 
+          L.build_gep arr_var [| idx |] "" builder 
+        in 
+        ignore(L.build_store new_v ptr builder); new_v
       | SAssign(e1, e2) ->
-          let new_v = expr builder m e2 in
-          (match snd e1 with
-            SId s -> ignore(L.build_store new_v (lookup s) builder); new_v
-          | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
+        let new_v = expr builder m e2 in
+        (match snd e1 with
+           SId s -> ignore(L.build_store new_v (lookup s) builder); new_v
+         | _ -> raise (Failure ("assignment for " ^ (fmt_sexpr e2) ^ "not implemented in codegen")))
       | SNew(SNArray(array_type, int_expr)) ->
-          let array_size = expr builder m int_expr in
-          let llarray_t = ltype_of_typ array_type in
-          let ptr = L.build_array_malloc llarray_t
+        let array_size = expr builder m int_expr in
+        let llarray_t = ltype_of_typ array_type in
+        let ptr = L.build_array_malloc llarray_t
             array_size "" builder
-          in ptr
+        in ptr
       | SNew(SNStruct(SStruct(struct_t))) ->
-          let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
-          let st = L.struct_type context (Array.of_list (List.map ltype_of_typ t_members)) in
+        let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
+        let st = L.struct_type context (Array.of_list (List.map ltype_of_typ t_members)) in
 
-          let compare_by (n1, _) (n2, _) = compare n1 n2 in
-          let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
-          let llstruct_t = st in
+        let compare_by (n1, _) (n2, _) = compare n1 n2 in
+        let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
+        let llstruct_t = st in
 
-          let vals = List.map (fun (_, (_, opt_e)) -> match opt_e with Some(e) -> Some(expr builder m e) | None -> None) (List.sort compare_by members) in
-          let idxs = List.rev (generate_seq ((List.length members) - 1)) in
-          let v = List.fold_left2 (fun agg i opt_v -> match opt_v with Some(v) -> insert_value builder agg i v | None -> agg) (L.const_null llstruct_t) idxs vals in
+        let vals = List.map (fun (_, (_, opt_e)) -> match opt_e with Some(e) -> Some(expr builder m e) | None -> None) (List.sort compare_by members) in
+        let idxs = List.rev (generate_seq ((List.length members) - 1)) in
+        let v = List.fold_left2 (fun agg i opt_v -> match opt_v with Some(v) -> insert_value builder agg i v | None -> agg) (L.const_null llstruct_t) idxs vals in
 
-          let ptr = L.build_malloc llstruct_t "structlit" builder in
-          ignore(L.build_store v ptr builder);
-          ptr
-          
+        let ptr = L.build_malloc llstruct_t "structlit" builder in
+        ignore(L.build_store v ptr builder);
+        ptr
+
       | SArrayLit(sexpr_list) -> 
-          if List.length sexpr_list = 0
-            then raise (Failure "empty array init is not supported")
-          else
-            let all_elem = List.map (fun e ->
-                expr builder m e) sexpr_list in
-            let llarray_t = L.type_of (List.hd all_elem) in
-            let num_elems = List.length sexpr_list in
-            let ptr = L.build_array_malloc llarray_t
-                (L.const_int i32_t num_elems) "" builder 
-            in
-            ignore (List.fold_left (fun i elem ->
-                let idx = L.const_int i32_t i in
-                let eptr = L.build_gep ptr [|idx|] "" builder in
-                let cptr = L.build_pointercast eptr 
-                    (L.pointer_type (L.type_of elem)) "" builder in
-                let _ = (L.build_store elem cptr builder) 
-                in i+1)
-           0 all_elem); ptr
-                
+        if List.length sexpr_list = 0
+        then raise (Failure "empty array init is not supported")
+        else
+          let all_elem = List.map (fun e ->
+              expr builder m e) sexpr_list in
+          let llarray_t = L.type_of (List.hd all_elem) in
+          let num_elems = List.length sexpr_list in
+          let ptr = L.build_array_malloc llarray_t
+              (L.const_int i32_t num_elems) "" builder 
+          in
+          ignore (List.fold_left (fun i elem ->
+              let idx = L.const_int i32_t i in
+              let eptr = L.build_gep ptr [|idx|] "" builder in
+              let cptr = L.build_pointercast eptr 
+                  (L.pointer_type (L.type_of elem)) "" builder in
+              let _ = (L.build_store elem cptr builder) 
+              in i+1)
+              0 all_elem); ptr
+
       | SArrayAccess(arr, i) ->
-          let arr_var = expr builder m arr in
-          let idx = expr builder m i in 
-          let ptr = 
-            L.build_load (L.build_gep arr_var 
-            [| idx |] "" builder) 
+        let arr_var = expr builder m arr in
+        let idx = expr builder m i in 
+        let ptr = 
+          L.build_load (L.build_gep arr_var 
+                          [| idx |] "" builder) 
             "" builder 
-          in ptr
+        in ptr
       | SStructInit(SStruct(struct_t), assigns) ->
-          let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
-          let st = L.struct_type context (Array.of_list (List.map ltype_of_typ t_members)) in
+        let t_members = List.map (fun (_, (t, _)) -> t) (StringMap.bindings struct_t.smembers) in
+        let st = L.struct_type context (Array.of_list (List.map ltype_of_typ t_members)) in
 
-          let compare_by (n1, _) (n2, _) = compare n1 n2 in
-          let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
-          let llstruct_t = st in
+        let compare_by (n1, _) (n2, _) = compare n1 n2 in
+        let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
+        let llstruct_t = st in
 
-          let vals = List.map (fun (_, e) -> expr builder m e) (List.sort compare_by assigns) in
-          let idxs = List.rev (generate_seq ((List.length members) - 1)) in
-          let v = List.fold_left2 (insert_value builder) (L.const_null llstruct_t) idxs vals in
+        let vals = List.map (fun (_, e) -> expr builder m e) (List.sort compare_by assigns) in
+        let idxs = List.rev (generate_seq ((List.length members) - 1)) in
+        let v = List.fold_left2 (insert_value builder) (L.const_null llstruct_t) idxs vals in
 
-          let ptr = L.build_malloc llstruct_t "structlit" builder in
-          ignore(L.build_store v ptr builder);
-          ptr
+        let ptr = L.build_malloc llstruct_t "structlit" builder in
+        ignore(L.build_store v ptr builder);
+        ptr
 
       | SDot((SStruct(struct_t), exp), name) ->
-          let lhs = expr builder m (SStruct(struct_t), exp) in
-          let s = L.build_load lhs "structval" builder in
-          let (* TODO need this? (*llstruct_t*)*) _
-             = ltype_of_typ (SStruct(struct_t)) in
-          let compare_by (n1, _) (n2, _) = compare n1 n2 in
-          let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
-          let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
-          let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
-          L.build_extractvalue s idx name builder
+        let lhs = expr builder m (SStruct(struct_t), exp) in
+        let s = L.build_load lhs "structval" builder in
+        let (* TODO need this? (*llstruct_t*)*) _
+          = ltype_of_typ (SStruct(struct_t)) in
+        let compare_by (n1, _) (n2, _) = compare n1 n2 in
+        let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
+        let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
+        let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
+        L.build_extractvalue s idx name builder
       | SPop (e, op) ->
         (*let (t, _) = e in TODO need this? *)
         let e' = expr builder m e in
-          (match op with
-          | Inc -> L.build_store (L.build_add e' (L.const_int i32_t 1) "tmp" builder)
-            (lookup (match snd e with
-                SId s -> ignore(L.build_store e' (lookup s) builder); s
-              | _ -> raise (Failure ("assignment not implemented in codegen"))
-            )) builder
-          | Dec -> L.build_store (L.build_sub e' (L.const_int i32_t 1) "tmp" builder)
-            (lookup(match snd e with
-                SId s -> ignore(L.build_store e' (lookup s) builder); s
-              | _ -> raise (Failure ("assignment not implemented in codegen"))
-            )) builder)
+        (match op with
+         | Inc -> L.build_store (L.build_add e' (L.const_int i32_t 1) "tmp" builder)
+                    (lookup (match snd e with
+                           SId s -> ignore(L.build_store e' (lookup s) builder); s
+                         | _ -> raise (Failure ("assignment not implemented in codegen"))
+                       )) builder
+         | Dec -> L.build_store (L.build_sub e' (L.const_int i32_t 1) "tmp" builder)
+                    (lookup(match snd e with
+                           SId s -> ignore(L.build_store e' (lookup s) builder); s
+                         | _ -> raise (Failure ("assignment not implemented in codegen"))
+                       )) builder)
       | SBinop (e1, op, e2) -> (*Ref: Justin's codegen.ml*)
         let (t, _) = e1
         and e1' = expr builder m e1
         and e2' = expr builder m e2 in
-          (match snd e1, snd e2 with
+        (match snd e1, snd e2 with
            _ -> (match t with
 
-          SFloat -> (match op with
-              Add     -> L.build_fadd
-            | Sub     -> L.build_fsub
-            | Mult    -> L.build_fmul
-            | Div     -> L.build_fdiv
-            | Equal   -> L.build_fcmp L.Fcmp.Oeq
-            | Neq     -> L.build_fcmp L.Fcmp.One
-            | Less    -> L.build_fcmp L.Fcmp.Olt
-            | Leq     -> L.build_fcmp L.Fcmp.Ole
-            | Greater -> L.build_fcmp L.Fcmp.Ogt
-            | Geq     -> L.build_fcmp L.Fcmp.Oge
-            | _ ->
-              raise (Failure "internal error: semant should have rejected and/or on float")
-              ) e1' e2' "tmp" builder
-        | SInt -> (match op with
-            | Add     -> L.build_add
-            | Sub     -> L.build_sub
-            | Mult    -> L.build_mul
-            | Div     -> L.build_sdiv
-            | And     -> L.build_and
-            | Or      -> L.build_or
-            | Equal   -> L.build_icmp L.Icmp.Eq
-            | Neq     -> L.build_icmp L.Icmp.Ne
-            | Less    -> L.build_icmp L.Icmp.Slt
-            | Leq     -> L.build_icmp L.Icmp.Sle
-            | Greater -> L.build_icmp L.Icmp.Sgt
-            | Geq     -> L.build_icmp L.Icmp.Sge
-            | Mod     -> L.build_srem
-              ) e1' e2' "tmp" builder
-        | SBool -> (match op with
-              And     -> L.build_and
-            | Or      -> L.build_or
-            | Equal   -> L.build_icmp L.Icmp.Eq
-            | Neq     -> L.build_icmp L.Icmp.Ne
-            | Less    -> L.build_icmp L.Icmp.Slt
-            | Leq     -> L.build_icmp L.Icmp.Sle
-            | Greater -> L.build_icmp L.Icmp.Sgt
-            | Geq     -> L.build_icmp L.Icmp.Sge
-            | _         -> raise (Failure ("operation " ^ (fmt_op op)
-                    ^ " not implemented for type " ^ (fmt_styp t)))
-              ) e1' e2' "tmp" builder
-        | SString -> (match op with
-            Add -> L.build_call (snd (StringMap.find "string_concat" builtins)) [| e1'; e2'|] "string_concat" builder
-          | Equal -> (L.build_icmp L.Icmp.Ne) (L.const_int i32_t 0)
-                (L.build_call (snd (StringMap.find "string_equals" builtins)) [| e1'; e2'|] "string_equals" builder) "tmp" builder
-          | Neq -> (L.build_icmp L.Icmp.Eq) (L.const_int i32_t 0)
-                (L.build_call (snd (StringMap.find "string_equals" builtins)) [| e1'; e2'|] "string_equals" builder) "tmp" builder
-          | _ -> raise (Failure ("operation " ^ (fmt_op op)
-                ^ " not implemented for type " ^ (fmt_styp t))))
-        | _ -> (match op with
-            Equal -> (L.build_icmp L.Icmp.Eq) e1' e2' "tmp" builder
-          | Neq -> (L.build_icmp L.Icmp.Ne) e1' e2' "tmp" builder
-          | _ -> raise (Failure ("operation " ^ (fmt_op op)
-                ^ " not implemented for type " ^ (fmt_styp t))))
-         ))
+               SFloat -> (match op with
+                   Add     -> L.build_fadd
+                 | Sub     -> L.build_fsub
+                 | Mult    -> L.build_fmul
+                 | Div     -> L.build_fdiv
+                 | Equal   -> L.build_fcmp L.Fcmp.Oeq
+                 | Neq     -> L.build_fcmp L.Fcmp.One
+                 | Less    -> L.build_fcmp L.Fcmp.Olt
+                 | Leq     -> L.build_fcmp L.Fcmp.Ole
+                 | Greater -> L.build_fcmp L.Fcmp.Ogt
+                 | Geq     -> L.build_fcmp L.Fcmp.Oge
+                 | _ ->
+                   raise (Failure "internal error: semant should have rejected and/or on float")
+               ) e1' e2' "tmp" builder
+             | SInt -> (match op with
+                 | Add     -> L.build_add
+                 | Sub     -> L.build_sub
+                 | Mult    -> L.build_mul
+                 | Div     -> L.build_sdiv
+                 | And     -> L.build_and
+                 | Or      -> L.build_or
+                 | Equal   -> L.build_icmp L.Icmp.Eq
+                 | Neq     -> L.build_icmp L.Icmp.Ne
+                 | Less    -> L.build_icmp L.Icmp.Slt
+                 | Leq     -> L.build_icmp L.Icmp.Sle
+                 | Greater -> L.build_icmp L.Icmp.Sgt
+                 | Geq     -> L.build_icmp L.Icmp.Sge
+                 | Mod     -> L.build_srem
+               ) e1' e2' "tmp" builder
+             | SBool -> (match op with
+                   And     -> L.build_and
+                 | Or      -> L.build_or
+                 | Equal   -> L.build_icmp L.Icmp.Eq
+                 | Neq     -> L.build_icmp L.Icmp.Ne
+                 | Less    -> L.build_icmp L.Icmp.Slt
+                 | Leq     -> L.build_icmp L.Icmp.Sle
+                 | Greater -> L.build_icmp L.Icmp.Sgt
+                 | Geq     -> L.build_icmp L.Icmp.Sge
+                 | _         -> raise (Failure ("operation " ^ (fmt_op op)
+                                                ^ " not implemented for type " ^ (fmt_styp t)))
+               ) e1' e2' "tmp" builder
+             | SString -> (match op with
+                   Add -> L.build_call (snd (StringMap.find "string_concat" builtins)) [| e1'; e2'|] "string_concat" builder
+                 | Equal -> (L.build_icmp L.Icmp.Ne) (L.const_int i32_t 0)
+                              (L.build_call (snd (StringMap.find "string_equals" builtins)) [| e1'; e2'|] "string_equals" builder) "tmp" builder
+                 | Neq -> (L.build_icmp L.Icmp.Eq) (L.const_int i32_t 0)
+                            (L.build_call (snd (StringMap.find "string_equals" builtins)) [| e1'; e2'|] "string_equals" builder) "tmp" builder
+                 | _ -> raise (Failure ("operation " ^ (fmt_op op)
+                                        ^ " not implemented for type " ^ (fmt_styp t))))
+             | _ -> (match op with
+                   Equal -> (L.build_icmp L.Icmp.Eq) e1' e2' "tmp" builder
+                 | Neq -> (L.build_icmp L.Icmp.Ne) e1' e2' "tmp" builder
+                 | _ -> raise (Failure ("operation " ^ (fmt_op op)
+                                        ^ " not implemented for type " ^ (fmt_styp t))))
+           ))
       | SUnop(op, e) -> (*ref: Justin's LRM*)
         let (t, _) = e in
         let e' = expr builder m e in
-          (match op with
-          Neg when t = SFloat -> L.build_fneg
-        | Neg when t = SInt -> L.build_neg
-        | Not when t = SBool -> L.build_not
-        | _ -> raise (Failure ("operation " ^ (fmt_uop op) ^ 
-          " not implemented for type " ^ (fmt_styp t)))) e' "tmp" builder
+        (match op with
+           Neg when t = SFloat -> L.build_fneg
+         | Neg when t = SInt -> L.build_neg
+         | Not when t = SBool -> L.build_not
+         | _ -> raise (Failure ("operation " ^ (fmt_uop op) ^ 
+                                " not implemented for type " ^ (fmt_styp t)))) e' "tmp" builder
 
       | SClosure clsr -> build_clsr clsr
       | SFCall((t, SId(name)), args) when StringMap.mem name builtins ->
-          (let func_t = match t with
-            SFunc(func_t) -> func_t 
+        (let func_t = match t with
+              SFunc(func_t) -> func_t 
             | _ -> raise (Failure "This should never happen")  in
-              (match func_t.sreturn_typ with 
-                SVoid -> (let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
-                  L.build_call (snd (StringMap.find name builtins)) arg_array "" builder)
-                | _ -> (let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
+         (match func_t.sreturn_typ with 
+            SVoid -> (let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
+                      L.build_call (snd (StringMap.find name builtins)) arg_array "" builder)
+          | _ -> (let arg_array = Array.of_list (List.map (fun arg -> expr builder m arg) args) in
                   L.build_call (snd (StringMap.find name builtins)) arg_array "_result" builder)))
       | SFCall((t, s), args) ->
-          let func_t = match t with
+        let func_t = match t with
             SFunc(func_t) -> func_t
           | _ -> raise (Failure "wrong type for function call") in
-          let clsr_val = expr builder m (t, s) in
-          let func_ptr = L.build_extractvalue clsr_val 0 "fp" builder in
-          let env_ptr = L.build_extractvalue clsr_val 1 "envp" builder in
-          let llargs = env_ptr :: (List.rev (List.map (expr builder m) (List.rev args))) in
-          let result = (match func_t.sreturn_typ with SVoid -> "" | _ -> "_result") in
-          L.build_call func_ptr (Array.of_list llargs) result builder
+        let clsr_val = expr builder m (t, s) in
+        let func_ptr = L.build_extractvalue clsr_val 0 "fp" builder in
+        let env_ptr = L.build_extractvalue clsr_val 1 "envp" builder in
+        let llargs = env_ptr :: (List.rev (List.map (expr builder m) (List.rev args))) in
+        let result = (match func_t.sreturn_typ with SVoid -> "" | _ -> "_result") in
+        L.build_call func_ptr (Array.of_list llargs) result builder
       | _ as x -> print_endline(fmt_sexpr (ty, x));  raise (Failure "not implemented in codegen")
     in
 
@@ -398,16 +398,16 @@ let translate functions =
     in
 
     let rec stmt builder m = function
-      SExpr e -> let _ = expr builder m e in (builder, m)
-    | SStructDef(n, mem) ->
+        SExpr e -> let _ = expr builder m e in (builder, m)
+      | SStructDef(n, mem) ->
         let struct_t = SStruct({
-          sstruct_name = n;
-          sincomplete = false;
-          signore = false;
-          smembers = List.fold_left (fun m (t, n, opt_se) -> StringMap.add n (t, opt_se) m) StringMap.empty mem;
-        }) in
+            sstruct_name = n;
+            sincomplete = false;
+            signore = false;
+            smembers = List.fold_left (fun m (t, n, opt_se) -> StringMap.add n (t, opt_se) m) StringMap.empty mem;
+          }) in
         (builder, StringMap.add n (struct_t, L.const_int i1_t 0) m)
-    | SVDecl(t, n, se) ->
+      | SVDecl(t, n, se) ->
         let alloc_clsr clsr =
           let func_name = ("f" ^ (string_of_int clsr.ind)) in
           let (_, lfexpr) = StringMap.find func_name function_decls in
@@ -416,14 +416,14 @@ let translate functions =
           L.build_malloc llclosure_struct_t n builder
         in
         let (builder, local_var) = match se with
-          None -> 
-              let local_var = L.build_malloc (ltype_of_typ t) n builder in
+            None -> 
+            let local_var = L.build_malloc (ltype_of_typ t) n builder in
             (builder, local_var)
-        | Some(e) -> 
+          | Some(e) -> 
             let (_, ex) = e in
             let local_var = match ex with
-              SClosure(clsr) -> alloc_clsr clsr
-            | _ -> L.build_malloc (ltype_of_typ t) n builder
+                SClosure(clsr) -> alloc_clsr clsr
+              | _ -> L.build_malloc (ltype_of_typ t) n builder
             in
             let e' = expr builder m e in
             let _ = L.build_store e' local_var builder in
@@ -433,47 +433,47 @@ let translate functions =
         (builder, m')
       (* Ref: Justin's codegen.ml *)
       | SIf (pred, then_stmts, else_stmts) ->
-         let bool_val = expr builder m pred in
-         let merge_bb = L.append_block context "merge" the_function in
-         let branch_instr = L.build_br merge_bb in
-         let then_bb = L.append_block context "then" the_function in
-         let (then_builder, _) = stmt_list (L.builder_at_end context then_bb) m then_stmts in
-           let () = add_terminal then_builder branch_instr in
-         let else_bb = L.append_block context "else" the_function in
-         let (else_builder, _) = stmt_list (L.builder_at_end context else_bb) m else_stmts in
-         let () = add_terminal else_builder branch_instr in
-         let _ = L.build_cond_br bool_val then_bb else_bb builder in
-         (L.builder_at_end context merge_bb, m)
-    | SReturn e ->
+        let bool_val = expr builder m pred in
+        let merge_bb = L.append_block context "merge" the_function in
+        let branch_instr = L.build_br merge_bb in
+        let then_bb = L.append_block context "then" the_function in
+        let (then_builder, _) = stmt_list (L.builder_at_end context then_bb) m then_stmts in
+        let () = add_terminal then_builder branch_instr in
+        let else_bb = L.append_block context "else" the_function in
+        let (else_builder, _) = stmt_list (L.builder_at_end context else_bb) m else_stmts in
+        let () = add_terminal else_builder branch_instr in
+        let _ = L.build_cond_br bool_val then_bb else_bb builder in
+        (L.builder_at_end context merge_bb, m)
+      | SReturn e ->
         let _ = match lfexpr.lreturn_typ with
-          SVoid -> L.build_ret_void builder
-        | _ -> L.build_ret (expr builder m e) builder
+            SVoid -> L.build_ret_void builder
+          | _ -> L.build_ret (expr builder m e) builder
         in (builder, m)
-    | SForLoop (init, predicate, incr, body) ->
+      | SForLoop (init, predicate, incr, body) ->
         (* Build a basic block for the init statement. *)
         let init_bb = L.append_block context "init_loop" the_function in
         let (init_builder, m_incr) = 
-            (match init with 
-                Some(init) -> 
-                    stmt (L.builder_at_end context init_bb) m init
-                | None -> ((L.builder_at_end context init_bb), m)) 
+          (match init with 
+             Some(init) -> 
+             stmt (L.builder_at_end context init_bb) m init
+           | None -> ((L.builder_at_end context init_bb), m)) 
         in 
-		let _ = L.build_br init_bb builder in        
+        let _ = L.build_br init_bb builder in        
 
         (* Build a basic block for the condition checking *)
         let pred_bb = L.append_block context "for" the_function in
-        
+
         (* Branch to the predicate to execute the condition from
          * the current block. *)
         let _ = L.build_br pred_bb init_builder in
         let body_bb = L.append_block context "for_body" the_function
         in
-        
+
         (* Don't need to keep the map because the variables declared in
          * the for loop only exist in the for loop. *)   
         let (for_builder, _) = List.fold_left (fun (b_bb, temp_map) s -> 
             let (build, map) = 
-                stmt b_bb temp_map s in (build, map)) 
+              stmt b_bb temp_map s in (build, map)) 
             (* TODO(claire) figure out why body needs List.rev *)
             ((L.builder_at_end context body_bb), m_incr) (List.rev body)
         in
@@ -482,24 +482,24 @@ let translate functions =
          * already have a terminator and it has an increment.*)
         let incr_for_builder = match incr with
             Some(incr) ->
-                (let has_incr = 
-                    match L.block_terminator 
-                        (L.insertion_block for_builder) with
-                    None -> (let (new_incr_builder, _) = 
-                        stmt for_builder m_incr (SExpr(incr)) in
-                        new_incr_builder)
-                    | Some _ -> for_builder in has_incr)
-             | None -> for_builder in
+            (let has_incr = 
+               match L.block_terminator 
+                       (L.insertion_block for_builder) with
+                 None -> (let (new_incr_builder, _) = 
+                            stmt for_builder m_incr (SExpr(incr)) in
+                          new_incr_builder)
+               | Some _ -> for_builder in has_incr)
+          | None -> for_builder in
         let() = add_terminal incr_for_builder (L.build_br pred_bb) in
-        
+
         (* Generate the predicate code in the predicate block *)
         let pred_builder = L.builder_at_end context pred_bb in
         let bool_val = match predicate with 
             Some(predicate) -> let has_predicate = 
-                expr pred_builder m_incr predicate in has_predicate
-            | None -> let always_true = 
-                expr pred_builder m_incr (SBool, SBoolLit(true)) in always_true
-         in
+                                 expr pred_builder m_incr predicate in has_predicate
+          | None -> let always_true = 
+                      expr pred_builder m_incr (SBool, SBoolLit(true)) in always_true
+        in
 
         (* Finish the loop *)
         let merge_bb = L.append_block context "merge" the_function in
@@ -508,12 +508,12 @@ let translate functions =
         (* Return m instead of m_incr because the incr variable doesn't
          * exist outside of the scope of this loop. *)
         (L.builder_at_end context merge_bb, m)
-        
-    | _ -> raise (Failure "not implemented in codegen")
+
+      | _ -> raise (Failure "not implemented in codegen")
 
     and stmt_list builder m sl =
       (* throw away the scope generated because it should not be modifying current scope.
-      does this need to change? *)
+         does this need to change? *)
       let helper (bldr, map) = stmt bldr map in
       let (b, _) = List.fold_left helper (builder, m) sl in
       (b, m)
@@ -523,10 +523,10 @@ let translate functions =
 
     (* add a return if the last block falls off the end *)
     add_terminal builder (match lfexpr.lreturn_typ with
-      SVoid -> L.build_ret_void
-    | SString -> L.build_ret (L.build_global_stringptr "" "str" builder)
-    | SFloat -> L.build_ret (L.const_float_of_string float_t "0.0")
-    | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
+          SVoid -> L.build_ret_void
+        | SString -> L.build_ret (L.build_global_stringptr "" "str" builder)
+        | SFloat -> L.build_ret (L.const_float_of_string float_t "0.0")
+        | t -> L.build_ret (L.const_int (ltype_of_typ t) 0))
 
   in
   List.iter build_function_body functions;

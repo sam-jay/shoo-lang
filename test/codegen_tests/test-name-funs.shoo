@@ -1,0 +1,8 @@
+function hello() func(int;string) {
+	func(int;string) namedFunction = function (int x) string {
+		return str_of_int(x+5);
+	};
+	return namedFunction;
+}
+
+println(hello()(4));
