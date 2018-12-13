@@ -41,7 +41,7 @@ type lfunc = {
 
 (* For inbuilt functions, create empty function types *)
 let built_in_decls =
-  let empty_func ty = ({ sreturn_typ = ty; sparam_typs = [] }) in
+  let empty_func ty = ({ sreturn_typ = ty; sparam_typs = []; sbuiltin = true; }) in
   let add_default map (name, ty) = StringMap.add name (SFunc ty) map in
   let builtins = List.map (fun (name, func_t) -> 
       let is_func = match func_t with 
@@ -270,7 +270,8 @@ and build_closure ?fname funcs env fexpr =
   } in
   let func_t = {
     sparam_typs = List.map fst fexpr.sparams;
-    sreturn_typ = fexpr.styp
+    sreturn_typ = fexpr.styp;
+    sbuiltin = false;
   } in
   (new_func :: funcs', fvs, (SFunc(func_t), clsr))
 

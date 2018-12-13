@@ -6,25 +6,25 @@ module StringMap = Map.Make (String)
 exception Type_mismatch of string
 exception Undeclared_reference of string
 
-(* READ-THIS!!
+let builtinsFunc = [
+  ("println", Func({ param_typs = [String]; return_typ = Void }));
+  ("print", Func({ param_typs = [String]; return_typ = Void }));
+  ("str_of_int", Func({ param_typs = [Int]; return_typ = String }));
+  ("str_of_bool", Func({ param_typs = [Bool]; return_typ = String }));
+  ("string_concat", Func({ param_typs = [String; String]; return_typ = String })); 
+  ("string_equals", Func({ param_typs = [String; String]; return_typ = Int })); 
+  ("str_of_float", Func({ param_typs = [Float]; return_typ = String })); 
+  ("int_of_float", Func({ param_typs = [Float]; return_typ = Int })); 
+  ("float_of_int", Func({ param_typs = [Int]; return_typ = Float })); 
+  ("scan_line", Func({ param_typs = [Int]; return_typ = String })); 
+  ("exit_success", Func({ param_typs = [Int]; return_typ = Void })); 
+  ("die", Func({ param_typs = [String; Int]; return_typ = Void })); 
+  ("int_of_str", Func({ param_typs = [String]; return_typ = Int })); 
+]
 
-   ctxt is a list of StringMaps [ StringMap; StringMap; ... ]
-   each StringMap is a map from string:v_name to (type, bool)
-   where bool indicates whether the var is initialized or not.
+let makeMapFromBuiltinsFunc map arrElem = StringMap.add (fst arrElem) (snd arrElem) map
 
-   Whenever we enter a new function scope, we append a new StringMap to
-   the FRONT of the ctxt list, and take it off the list when we leave that
-   scope.
-
-   This way we have a scope object at the head of the list that we add
-   new declarations to, which just gets popped off once we're done with that
-   scope.
-
-   However, since functions can access variables in outer scopes, we need to
-   maintain this "stack" of scopes, and make necessary modifications to the
-   outer scopes as we make progress through the program.
-
-*)
+let builtinMap = List.fold_left makeMapFromBuiltinsFunc StringMap.empty builtinsFunc
 
 let check_assign lvaluet rvaluet err =
   if lvaluet = rvaluet then lvaluet else raise err
@@ -90,8 +90,9 @@ let rec ignore_structs t = match t with
   | SFunc(f) -> SFunc({
       sparam_typs = List.map ignore_structs f.sparam_typs;
       sreturn_typ = ignore_structs f.sreturn_typ;
+      sbuiltin = f.sbuiltin;
     })
-  | _ -> t
+| _ -> t
 
 (* This functions gives the member map if the 
  * type given is a struct. *)
@@ -188,8 +189,22 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     else raise (Failure ("can't access array with non-integer type"))
 
   | Id(n) -> 
-    let t = find_in_ctxt n ctxt in
-    (t, SId n)
+    let t = find_in_ctxt (if String.contains n '~' then String.sub n 1 ((String.length n) - 1) else n) ctxt in
+    if (String.contains n '~') then (t, SId (String.sub n 1 ((String.length n) - 1)))
+    else (match t with
+      SFunc(f) when f.sbuiltin -> 
+        let ft = match StringMap.find n builtinMap with Func(func) -> func | _ -> raise (Failure ("shouldn't happen")) in
+      check_expr ctxt (FExpr({
+      name = "";
+      typ = ft.return_typ;
+      params = List.mapi (fun i t -> (t, "__p" ^ (string_of_int i))) ft.param_typs;
+      body = if ft.return_typ == Void then [
+        Expr(FCall(Id("~" ^ n), List.mapi (fun i t -> Id("__p" ^ (string_of_int i))) ft.param_typs))
+      ] else [
+        VDecl(ft.return_typ, "__ret", Some(FCall(Id("~" ^ n), List.mapi (fun i t -> Id("__p" ^ (string_of_int i))) ft.param_typs)));
+        Return(Id("__ret"))
+      ];}))
+    | _ -> (t, SId n))
 
   | Assign(e1, e2) ->
     let (t1, se1) = match e1 with
@@ -276,7 +291,10 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
       in
       helper [] (f_type.sparam_typs, args)
     in
-    let (t, se) = check_expr ctxt expr in
+    let (t, se) = match expr with
+      Id(s) when not (String.contains s '~') -> (find_in_ctxt s ctxt, SId(s))
+    | _ -> check_expr ctxt expr 
+    in
     let (func_t, sl) = match t with
         SFunc(func_t) -> (func_t, check_args func_t args)
       | _ -> raise (Failure "not a function")
@@ -286,7 +304,11 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
   | FExpr(fexpr) ->
     let conv_params (typ, _ ) = (ignore_structs (styp_of_typ ctxt typ)) in
     let conv_params_with_both_fields (typ, str) = (ignore_structs (styp_of_typ ctxt typ),str) in
-    let sfunc_t = SFunc({ sreturn_typ = ignore_structs (styp_of_typ ctxt fexpr.typ); sparam_typs = List.map conv_params fexpr.params }) in
+    let sfunc_t = SFunc({
+      sreturn_typ = ignore_structs (styp_of_typ ctxt fexpr.typ);
+      sparam_typs = List.map conv_params fexpr.params;
+      sbuiltin = false;
+    }) in
     let create_scope list =
       let rec helper m = function
           [] -> m
@@ -318,7 +340,7 @@ and styp_of_typ ctxt = function
   | Float -> SFloat
   | String -> SString
   | Void -> SVoid
-  | Func f -> SFunc({ sparam_typs = List.map (styp_of_typ ctxt) f.param_typs; sreturn_typ = styp_of_typ ctxt f.return_typ })
+  | Func f -> SFunc({ sparam_typs = List.map (styp_of_typ ctxt) f.param_typs; sreturn_typ = styp_of_typ ctxt f.return_typ; sbuiltin = false; })
   | Struct s -> find_in_ctxt s.struct_name ctxt
   | Array t -> SArray(styp_of_typ ctxt t) 
   | ABSTRACT -> SABSTRACT
@@ -455,40 +477,20 @@ and check_stmt (ctxt : styp StringMap.t list) = function
   | _ -> (ctxt, SVoid, SExpr((SVoid, SNoexpr)))
 
 let builtins = [
-  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid }));
-  ("print", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid }));
-  ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString }));
-  ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString }));
-  ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString })); 
-  ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt })); 
-  ("str_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SString })); 
-  ("int_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SInt })); 
-  ("float_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SFloat })); 
-  ("scan_line", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString })); 
-  ("exit_success", SFunc({ sparam_typs = [SInt]; sreturn_typ = SVoid })); 
-  ("die", SFunc({ sparam_typs = [SString; SInt]; sreturn_typ = SVoid })); 
-  ("int_of_str", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt })); 
+  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid; sbuiltin = true; }));
+  ("print", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid; sbuiltin = true; }));
+  ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString; sbuiltin = true; }));
+  ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString; sbuiltin = true; }));
+  ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString; sbuiltin = true; })); 
+  ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt; sbuiltin = true; })); 
+  ("str_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SString; sbuiltin = true; })); 
+  ("int_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SInt; sbuiltin = true; })); 
+  ("float_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SFloat; sbuiltin = true; })); 
+  ("scan_line", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString; sbuiltin = true; })); 
+  ("exit_success", SFunc({ sparam_typs = [SInt]; sreturn_typ = SVoid; sbuiltin = true; })); 
+  ("die", SFunc({ sparam_typs = [SString; SInt]; sreturn_typ = SVoid; sbuiltin = true; })); 
+  ("int_of_str", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt; sbuiltin = true; })); 
 ]
-
-let builtinsFunc = [
-  ("println", Func({ param_typs = [String]; return_typ = Void }));
-  ("print", Func({ param_typs = [String]; return_typ = Void }));
-  ("str_of_int", Func({ param_typs = [Int]; return_typ = String }));
-  ("str_of_bool", Func({ param_typs = [Bool]; return_typ = String }));
-  ("string_concat", Func({ param_typs = [String; String]; return_typ = String })); 
-  ("string_equals", Func({ param_typs = [String; String]; return_typ = Int })); 
-  ("str_of_float", Func({ param_typs = [Float]; return_typ = String })); 
-  ("int_of_float", Func({ param_typs = [Float]; return_typ = Int })); 
-  ("float_of_int", Func({ param_typs = [Int]; return_typ = Float })); 
-  ("scan_line", Func({ param_typs = [Int]; return_typ = String })); 
-  ("exit_success", Func({ param_typs = [Int]; return_typ = Void })); 
-  ("die", Func({ param_typs = [String; Int]; return_typ = Void })); 
-  ("int_of_str", Func({ param_typs = [String]; return_typ = Int })); 
-]
-
-let makeMapFromBuiltinsFunc map arrElem = StringMap.add (fst arrElem) (snd arrElem) map
-
-let builtinMap = List.fold_left makeMapFromBuiltinsFunc StringMap.empty builtinsFunc
 
 let def_ctxt =
   let add_func ctxt (name, func_t) = add_to_ctxt func_t name ctxt in

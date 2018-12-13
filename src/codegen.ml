@@ -57,9 +57,10 @@ let translate functions =
   let insert_value builder agg i v = L.build_insertvalue agg v i "tmp__" builder in
 
   let typ_of_lfexpr lfexpr = SFunc({
-      sreturn_typ = lfexpr.lreturn_typ;
-      sparam_typs = List.map fst lfexpr.lparams
-    }) in
+    sreturn_typ = lfexpr.lreturn_typ;
+    sparam_typs = List.map fst lfexpr.lparams;
+    sbuiltin = false;
+  }) in
 
   let rec generate_seq n = if n >= 0 then (n :: (generate_seq (n-1))) else [] in
 

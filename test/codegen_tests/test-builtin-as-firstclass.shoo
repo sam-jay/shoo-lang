@@ -1,0 +1,8 @@
+
+
+function foo(func(string;void) bar, func(int;string) baz) void {
+  bar("hello world" + baz(1234));
+  return;
+}
+
+foo(println, str_of_int);
