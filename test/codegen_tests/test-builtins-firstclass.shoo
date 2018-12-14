@@ -1,0 +1,11 @@
+// make struct with function as a member field
+
+struct First {
+	func (int;string) intToString;
+	int default = 5;
+}
+
+First temp = new(First);
+temp.intToString = str_of_int;
+
+println(temp.intToString(6));

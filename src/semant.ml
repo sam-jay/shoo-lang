@@ -199,9 +199,9 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
       typ = ft.return_typ;
       params = List.mapi (fun i t -> (t, "__p" ^ (string_of_int i))) ft.param_typs;
       body = if ft.return_typ == Void then [
-        Expr(FCall(Id("~" ^ n), List.mapi (fun i t -> Id("__p" ^ (string_of_int i))) ft.param_typs))
+        Expr(FCall(Id("~" ^ n), List.mapi (fun i _ -> Id("__p" ^ (string_of_int i))) ft.param_typs))
       ] else [
-        VDecl(ft.return_typ, "__ret", Some(FCall(Id("~" ^ n), List.mapi (fun i t -> Id("__p" ^ (string_of_int i))) ft.param_typs)));
+        VDecl(ft.return_typ, "__ret", Some(FCall(Id("~" ^ n), List.mapi (fun i _ -> Id("__p" ^ (string_of_int i))) ft.param_typs)));
         Return(Id("__ret"))
       ];}))
     | _ -> (t, SId n))
