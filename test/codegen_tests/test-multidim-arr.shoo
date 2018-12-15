@@ -1,0 +1,8 @@
+array<array<array<array<string>>>> multiDimArrMORE = new(array<array<array<array<string>>>>[10]);
+
+multiDimArrMORE[0] = new(array<array<array<string>>>[4]);
+multiDimArrMORE[0][0] = new(array<array<string>>[2]);
+multiDimArrMORE[0][0][0] = new(array<string>[5]);
+multiDimArrMORE[0][0][0][0] = "WE MADE IT";
+
+println(multiDimArrMORE[0][0][0][0]);

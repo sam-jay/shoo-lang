@@ -1,0 +1,54 @@
+//more testing with arrays of structs with functions that take in structs with arrays of arrays of structs as arguments
+
+struct InnerLevel {
+	array<int> deepArray = [3,34,83,4,2];
+	int msgCode = 6;
+}
+
+struct StuffInArr {
+	array<InnerLevel> midArray= new(array<InnerLevel>[4]);
+	int x = 16;
+}
+
+function populateStuffInArr(StuffInArr temp, int sz) void {
+	for (int i = 0; i < sz; i++) {
+		temp.midArray[i] = new(InnerLevel);
+		temp.midArray[i].msgCode = i;
+	}
+}
+
+struct MoreStuff {
+	array<StuffInArr> topArray= new(array<StuffInArr>[5]);
+	float boo = 16.9;
+}
+
+function populateMoreStuff(MoreStuff temp, int sz) void {
+	for (int i = 0; i < sz; i++) {
+		temp.topArray[i] = new(StuffInArr);
+		populateStuffInArr(temp.topArray[i], 4);
+		temp.topArray[i].x = i;
+	}
+}
+
+struct Complex{
+	func (MoreStuff;StuffInArr) hello = function (MoreStuff moar) StuffInArr {
+		println(str_of_int(moar.topArray[0].midArray[2].deepArray[1]));
+		return moar.topArray[3];
+	};
+	MoreStuff aStuff = new(MoreStuff);
+}
+
+array<Complex> myArr = new(array<Complex>[6]);
+
+// initialize
+for(int i = 0; i <6; i++) {
+	myArr[i] = new(Complex);
+	populateMoreStuff(myArr[i].aStuff, 5);
+}
+
+// this works
+myArr[0].hello(myArr[0].aStuff);
+
+// the below commented out line does not work
+// it compiles but the executable coredumps
+//myArr[0].hello(new(MoreStuff));
