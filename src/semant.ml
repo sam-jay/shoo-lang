@@ -440,8 +440,8 @@ and check_stmt (ctxt : styp StringMap.t list) = function
     (ctxt, t, SReturn((t, ss)))
   | ForLoop (s1, e2, e3, st) -> 
     let (ctxt1, s1') = match s1 with
-        None -> (ctxt, None)
-      | Some(s1) -> (let (nctxt, _, ns1) = check_stmt ctxt s1 in
+        None -> (StringMap.empty::ctxt, None)
+      | Some(s1) -> (let (nctxt, _, ns1) = check_stmt (StringMap.empty::ctxt) s1 in
                      (nctxt, Some(ns1)))
     in
     let (ctxt2, e2') = match e2 with
@@ -454,9 +454,9 @@ and check_stmt (ctxt : styp StringMap.t list) = function
       | Some(e3) -> (let (t_i, si) = 
                        check_expr ctxt2 e3 in (ctxt2, Some((t_i, si))))
     in
-    let (ctxt4, ret_t, st') = check_stmt_list ctxt3 st
+    let (_, ret_t, st') = check_stmt_list ctxt3 st
     in
-    (ctxt4, ret_t, SForLoop(s1', e2', e3', st'))
+    (ctxt, ret_t, SForLoop(s1', e2', e3', st'))
 
   (* Note: Handling the context variable of two branches is kinda tricky because
      it does not follow a linear flow. My assumption is that everything 
