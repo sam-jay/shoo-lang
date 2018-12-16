@@ -9,7 +9,7 @@ function errExit () void {
 
 println("Make an array of structs:");
 println("What size array do you want?");
-string szStr = scan_line(3);
+string szStr = scan_line(5);
 int sz = int_of_str(szStr);
 
 if (sz == -1){
