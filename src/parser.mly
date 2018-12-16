@@ -46,11 +46,11 @@ stmt:
 | typ ID opt_init SEMI { VDecl($1, $2, $3) }
 | RETURN expr_opt SEMI { Return($2) }
 | FUNCTION ID LPAREN params_opt RPAREN ret_typ LBRACKET stmt_list RBRACKET {
-  VDecl(Func({ param_typs = List.map (fun (ty, _) -> ty) $4; return_typ = $6 }), $2,
-    Some(FExpr({ name = $2; typ = $6; params = $4; body = List.rev $8 })))
-}
-| FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET stmt_list RBRACKET 
-    { ForLoop($3, $5, $7, List.rev $10) }
+  VDecl(Func({ param_typs = List.map (fun (ty, _) -> ty) $4; return_typ = $6 }), 
+    $2, Some(FExpr({ name = $2; typ = $6; params = $4; body = List.rev $8 })))
+  }
+| FOR LPAREN opt_loop_init SEMI opt_expr SEMI opt_expr RPAREN LBRACKET 
+    stmt_list RBRACKET { ForLoop($3, $5, $7, List.rev $10) }
 | FOR LPAREN typ ID IN expr RPAREN LBRACKET stmt_list RBRACKET {
 
     If(Binop(FCall(Id("length"), [$6]), Greater, IntLit(0)), [
@@ -66,7 +66,8 @@ stmt:
 | WHILE LPAREN opt_expr RPAREN LBRACKET stmt_list RBRACKET { 
   ForLoop(None, $3, None, List.rev $6) }
 | STRUCT STRUCTID LBRACKET mems_opt RBRACKET { StructDef($2, $4) }
-| IF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { If($3, List.rev $6, $8) }
+| IF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch 
+    { If($3, List.rev $6, $8) }
 
 opt_init:
   { None }
@@ -79,7 +80,8 @@ expr_opt:
 false_branch: elif { $1 } | cf_else { $1 } | %prec NOELSE { [] }
 
 elif:
-ELIF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch { [If($3, List.rev $6, $8)] }
+ELIF LPAREN expr RPAREN LBRACKET stmt_list RBRACKET false_branch 
+    { [If($3, List.rev $6, $8)] }
 
 cf_else:
 ELSE LBRACKET stmt_list RBRACKET { List.rev $3 }
@@ -163,7 +165,8 @@ typ:
 | STRING { String }
 | ARRAY LT typ GT { Array($3) }
 | func_type { Func($1) }
-| STRUCTID { Struct({ struct_name = $1; members = StringMap.empty; incomplete = true }) }
+| STRUCTID { Struct({ struct_name = $1; 
+    members = StringMap.empty; incomplete = true }) }
 
 /* This is the type for Func with the syntax
 func(parameter_type1, parameter_type2; return_type) */

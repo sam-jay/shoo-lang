@@ -24,9 +24,11 @@ let builtinsFunc = [
   ("rand_afterseed", Func({ param_typs = [Int]; return_typ = Int }));
 ]
 
-let makeMapFromBuiltinsFunc map arrElem = StringMap.add (fst arrElem) (snd arrElem) map
+let makeMapFromBuiltinsFunc map arrElem = 
+  StringMap.add (fst arrElem) (snd arrElem) map
 
-let builtinMap = List.fold_left makeMapFromBuiltinsFunc StringMap.empty builtinsFunc
+let builtinMap = List.fold_left 
+  makeMapFromBuiltinsFunc StringMap.empty builtinsFunc
 
 let check_assign lvaluet rvaluet err =
   if lvaluet = rvaluet then lvaluet else raise err
@@ -45,9 +47,10 @@ let check_asn lvalue_t rvalue_t =
   let found_match = compare_typs lvalue_t rvalue_t in
   if found_match
   then lvalue_t
-  else (*(print_endline(fmt_styp lvalue_t); print_endline(fmt_styp rvalue_t);*)
+  else
     (print_endline(Printexc.raw_backtrace_to_string(Printexc.get_callstack 100));
-     raise (Type_mismatch ("type mismatch error " ^ fmt_styp lvalue_t ^ " " ^ fmt_styp rvalue_t)))
+     raise (Type_mismatch ("type mismatch error " ^ 
+        fmt_styp lvalue_t ^ " " ^ fmt_styp rvalue_t)))
 
 (* This function takes a tuple with the type and the map 
  * as well as the variable name and the context map.
@@ -96,20 +99,6 @@ let rec ignore_structs t = match t with
     })
 | _ -> t
 
-(* This functions gives the member map if the 
- * type given is a struct. *)
-(*let get_members_if_struct v_type ctxt = match v_type with  
-  Struct(struct_name) -> 
-  let ((_,m), _) = find_in_ctxt struct_name ctxt
-  in 
-  (*        (match m with 
-  Some(map) -> map
-  | None -> None)*)
-  m
-  (* Not a struct so shouldn't have a members map *)
-  | _ -> None   
-*)
-
 (* Returns a tuple with a map and another tuple.
  * The second tuple has the type and the stype. *)
 let rec check_expr (ctxt : styp StringMap.t list) = function
@@ -126,8 +115,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     in
     if t_e <> SInt then raise (Failure ("array size must be an integer type"))
     else let st = ignore_structs(styp_of_typ ctxt t) in (SArray (st), 
-                                                         SNew(SNArray(st, (t_e, se_e))))
-
+                                        SNew(SNArray(st, (t_e, se_e))))
   | StructInit(assigns) -> 
     let (struct_t, assigns') = 
       let assigns' = List.map (fun (n, e) -> let se = check_expr ctxt e 
@@ -162,7 +150,8 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     then raise (Failure "empty array init is not supported")
     else 
       let (item_type, _) = check_expr ctxt (List.hd x) in
-      let item_type = ignore_structs item_type in (* recursively do this everywhere *)
+      let item_type = ignore_structs item_type in 
+        (* recursively do this everywhere *)
       let t = List.map (fun e1 ->
           let (t1, st1) = check_expr ctxt e1 in
           let t1 = ignore_structs t1 in
@@ -170,7 +159,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
           else raise (Failure("Error: cannot have multiple types in an array ("
                               ^ fmt_styp t1 ^ " and " ^ fmt_styp item_type ))
         ) x in (SArray(item_type), SArrayLit t)
-
+  
   | ArrayAccess(expr, int_expr) ->
     let (t1, se1) = check_expr ctxt expr in
     let (t2, se2) = check_expr ctxt int_expr in
@@ -182,19 +171,24 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     else raise (Failure ("can't access array with non-integer type"))
 
   | Id(n) -> 
-    let t = find_in_ctxt (if String.contains n '~' then String.sub n 1 ((String.length n) - 1) else n) ctxt in
-    if (String.contains n '~') then (t, SId (String.sub n 1 ((String.length n) - 1)))
+    let t = find_in_ctxt (if String.contains n '~' then String.sub n 1 
+        ((String.length n) - 1) else n) ctxt in
+    if (String.contains n '~') then 
+        (t, SId (String.sub n 1 ((String.length n) - 1)))
     else (match t with
       SFunc(f) when f.sbuiltin -> 
-        let ft = match StringMap.find n builtinMap with Func(func) -> func | _ -> raise (Failure ("shouldn't happen")) in
+        let ft = match StringMap.find n builtinMap with 
+            Func(func) -> func | _ -> raise (Failure ("shouldn't happen")) in
       check_expr ctxt (FExpr({
       name = "";
       typ = ft.return_typ;
       params = List.mapi (fun i t -> (t, "__p" ^ (string_of_int i))) ft.param_typs;
       body = if ft.return_typ == Void then [
-        Expr(FCall(Id("~" ^ n), List.mapi (fun i _ -> Id("__p" ^ (string_of_int i))) ft.param_typs))
+        Expr(FCall(Id("~" ^ n), List.mapi (fun i _ -> Id("__p" ^ 
+            (string_of_int i))) ft.param_typs))
       ] else [
-        VDecl(ft.return_typ, "__ret", Some(FCall(Id("~" ^ n), List.mapi (fun i _ -> Id("__p" ^ (string_of_int i))) ft.param_typs)));
+        VDecl(ft.return_typ, "__ret", Some(FCall(Id("~" ^ n), 
+            List.mapi (fun i _ -> Id("__p" ^ (string_of_int i))) ft.param_typs)));
         Return(Id("__ret"))
       ];}))
     | _ -> (t, SId n))
@@ -222,7 +216,8 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
              try (StringMap.find field_name struct_t.smembers, SStruct(struct_t))
              with Not_found -> 
                raise (Failure 
-                        ("struct " ^ s.sstruct_name ^ " has no member " ^ field_name)))
+                        ("struct " ^ s.sstruct_name ^ 
+                            " has no member " ^ field_name)))
           | _ -> print_endline(fmt_styp struct_type); 
             raise (Failure "dot operator used on non-struct type"))
       in (access_type, st)
@@ -241,10 +236,6 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
      | Add | Sub | Mult | Div when lt = SFloat && rt = SFloat 
        -> (SFloat, sbinop)
      | Add when lt = SString && rt = SString -> (SString,sbinop)
-     (* TODO(claire): make sure LRM says that we can compare all
-      * expressions of the same type using ==, including functions, 
-      * strings,
-      * structs, arrays? *)
      | Equal | Neq  when lt = rt -> (SBool, sbinop)
      | Less | Leq | Greater | Geq  
        when (lt = SInt && rt = SInt) 
@@ -269,7 +260,8 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
           ([], []) -> sl
         | (p_typ::pl, arg::al) ->
           let (a_typ, se) = check_expr ctxt arg in
-          if compare_typs p_typ (ignore_structs a_typ) then helper ((a_typ, se)::sl) (pl, al)
+          if compare_typs p_typ (ignore_structs a_typ) 
+            then helper ((a_typ, se)::sl) (pl, al)
           else raise (Failure "argument type mismatch")
         | _ -> raise (Failure "invalid number of arguments")
       in
@@ -287,7 +279,8 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
 
   | FExpr(fexpr) ->
     let conv_params (typ, _ ) = (ignore_structs (styp_of_typ ctxt typ)) in
-    let conv_params_with_both_fields (typ, str) = (ignore_structs (styp_of_typ ctxt typ),str) in
+    let conv_params_with_both_fields (typ, str) = 
+      (ignore_structs (styp_of_typ ctxt typ),str) in
     let sfunc_t = SFunc({
       sreturn_typ = ignore_structs (styp_of_typ ctxt fexpr.typ);
       sparam_typs = List.map conv_params fexpr.params;
@@ -306,17 +299,19 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     in
     let func_scope = create_scope fexpr.params in
     let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
-    ignore (check_asn (ignore_structs return_t) (ignore_structs (styp_of_typ ctxt fexpr.typ)));
+    ignore (check_asn (ignore_structs return_t) 
+      (ignore_structs (styp_of_typ ctxt fexpr.typ)));
     (sfunc_t, SFExpr({
          sname = fexpr.name;
          styp = ignore_structs(styp_of_typ ctxt fexpr.typ);
          sparams = List.map conv_params_with_both_fields fexpr.params;
          sbody = sl;
-         srecursive = false; (* TODO: handle recursion *)
+         srecursive = false;
        }))
 
   | Noexpr -> (SVoid, SNoexpr)
-  | _ as x -> print_endline(Ast.fmt_expr x); raise (Failure "not implemented in semant")
+  | _ as x -> print_endline(Ast.fmt_expr x); 
+    raise (Failure "not implemented in semant")
 
 and styp_of_typ ctxt = function
     Int -> SInt
@@ -324,11 +319,11 @@ and styp_of_typ ctxt = function
   | Float -> SFloat
   | String -> SString
   | Void -> SVoid
-  | Func f -> SFunc({ sparam_typs = List.map (styp_of_typ ctxt) f.param_typs; sreturn_typ = styp_of_typ ctxt f.return_typ; sbuiltin = false; })
+  | Func f -> SFunc({ sparam_typs = List.map (styp_of_typ ctxt) f.param_typs; 
+    sreturn_typ = styp_of_typ ctxt f.return_typ; sbuiltin = false; })
   | Struct s -> find_in_ctxt s.struct_name ctxt
   | Array t -> SArray(styp_of_typ ctxt t) 
   | ABSTRACT -> SABSTRACT
-(*| _ as x -> raise (Failure ("TODO NEED TO convert this typ to styp: " ^ (fmt_typ x)))*)
 
 and check_stmt_list (ctxt : styp StringMap.t list) = function
     [] -> (ctxt, SVoid, [])
@@ -338,7 +333,8 @@ and check_stmt_list (ctxt : styp StringMap.t list) = function
     let ret =
       if t = SVoid
       then t_rest 
-      else (if List.length tl <> 0 then raise (Failure "dead code after return") else (); t)
+      else (if List.length tl <> 0 then raise 
+        (Failure "dead code after return") else (); t)
     in
     (nctxt, ret, ss::ssl) (* returned something *)
 
@@ -366,10 +362,13 @@ and check_stmt (ctxt : styp StringMap.t list) = function
         let (ty, _) = StringMap.find x members in
         let v = check_expr nctxt (Dot(Id(tmp_n), x)) in
         (ty, x, SVDecl(ty, x, Some(v)))
-      (*| Destruct(keys2, Id(y), inner2) -> check_stmt nctxt (Destruct(keys2, Dot(Id(tmp_n, Id(y)), y)))*)
       | _ -> raise (Failure "should've been caught in parser")
     in
-    let (nctxt, decls) = List.fold_left (fun (ctxt, decls) k -> let (t, n, decl) = helper k in (add_to_ctxt t n ctxt, decl::decls)) (nctxt, [init]) keys in
+    let (nctxt, decls) = List.fold_left 
+      (fun (ctxt, decls) k -> 
+          let (t, n, decl) = helper k in 
+          (add_to_ctxt t n ctxt, decl::decls)) 
+      (nctxt, [init]) keys in
     (nctxt, SVoid, SVBlock(List.rev decls))
   | VDecl(ltype, n, i) ->
     let t = match ltype with 
@@ -390,7 +389,8 @@ and check_stmt (ctxt : styp StringMap.t list) = function
     let helper (map, list) (lt, n, i) =
       let lt = conv_typ lt in
       match lt with
-        SStruct(struct_t) when name = struct_t.sstruct_name -> raise (Failure ("illegal recursive struct " ^ name))
+        SStruct(struct_t) when name = struct_t.sstruct_name -> 
+            raise (Failure ("illegal recursive struct " ^ name))
       | _ ->
         try
           match (StringMap.find n map) with
@@ -401,13 +401,14 @@ and check_stmt (ctxt : styp StringMap.t list) = function
             | Some e ->
               let (rt, se) = check_expr ctxt e in
               let _ = check_asn (lt) rt in
-              (Some(rt, se), Some(rt, se)) (*this was changed to make it compile...idk if it's right*)
+              (Some(rt, se), Some(rt, se))
           in
           let new_map = StringMap.add n (lt, init) map in
           let new_list = (lt, n, opt_se)::list in
           (new_map, new_list)
     in
-    let (members, fields_se) = List.fold_left helper (StringMap.empty, []) fields in
+    let (members, fields_se) = List.fold_left helper 
+      (StringMap.empty, []) fields in
     let struct_t = SStruct({
         sstruct_name = name;
         smembers = members;
@@ -440,10 +441,6 @@ and check_stmt (ctxt : styp StringMap.t list) = function
     in
     (ctxt, ret_t, SForLoop(s1', e2', e3', st'))
 
-  (* Note: Handling the context variable of two branches is kinda tricky because
-     it does not follow a linear flow. My assumption is that everything 
-     defined in the block should not be effective outside of the if block
-     and that it should be consistent between For and If. *)
   | If (e, st1, st2) ->
     let e' = check_bool_expr ctxt e
     in
@@ -462,21 +459,36 @@ and check_stmt (ctxt : styp StringMap.t list) = function
   | _ -> (ctxt, SVoid, SExpr((SVoid, SNoexpr)))
 
 let builtins = [
-  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid; sbuiltin = true; }));
-  ("print", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid; sbuiltin = true; }));
-  ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString; sbuiltin = true; }));
-  ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString; sbuiltin = true; }));
-  ("string_concat", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SString; sbuiltin = true; })); 
-  ("string_equals", SFunc({ sparam_typs = [SString; SString]; sreturn_typ = SInt; sbuiltin = true; })); 
-  ("str_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SString; sbuiltin = true; })); 
-  ("int_of_float", SFunc({ sparam_typs = [SFloat]; sreturn_typ = SInt; sbuiltin = true; })); 
-  ("float_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SFloat; sbuiltin = true; })); 
-  ("scan_line", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString; sbuiltin = true; })); 
-  ("exit_success", SFunc({ sparam_typs = [SInt]; sreturn_typ = SVoid; sbuiltin = true; })); 
-  ("die", SFunc({ sparam_typs = [SString; SInt]; sreturn_typ = SVoid; sbuiltin = true; })); 
-  ("int_of_str", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt; sbuiltin = true; })); 
-  ("rand_autoseed", SFunc({ sparam_typs = [SInt]; sreturn_typ = SVoid; sbuiltin = true; }));
-  ("rand_afterseed", SFunc({ sparam_typs = [SInt]; sreturn_typ = SInt; sbuiltin = true; }));  
+  ("println", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid; 
+    sbuiltin = true; }));
+  ("print", SFunc({ sparam_typs = [SString]; sreturn_typ = SVoid; 
+    sbuiltin = true; }));
+  ("str_of_int", SFunc({ sparam_typs = [SInt]; sreturn_typ = SString; 
+    sbuiltin = true; }));
+  ("str_of_bool", SFunc({ sparam_typs = [SBool]; sreturn_typ = SString; 
+    sbuiltin = true; }));
+  ("string_concat", SFunc({ sparam_typs = [SString; SString]; 
+    sreturn_typ = SString; sbuiltin = true; })); 
+  ("string_equals", SFunc({ sparam_typs = [SString; SString]; 
+    sreturn_typ = SInt; sbuiltin = true; })); 
+  ("str_of_float", SFunc({ sparam_typs = [SFloat]; 
+    sreturn_typ = SString; sbuiltin = true; })); 
+  ("int_of_float", SFunc({ sparam_typs = [SFloat]; 
+    sreturn_typ = SInt; sbuiltin = true; })); 
+  ("float_of_int", SFunc({ sparam_typs = [SInt]; 
+    sreturn_typ = SFloat; sbuiltin = true; })); 
+  ("scan_line", SFunc({ sparam_typs = [SInt]; 
+    sreturn_typ = SString; sbuiltin = true; })); 
+  ("exit_success", SFunc({ sparam_typs = [SInt]; 
+    sreturn_typ = SVoid; sbuiltin = true; })); 
+  ("die", SFunc({ sparam_typs = [SString; SInt]; 
+    sreturn_typ = SVoid; sbuiltin = true; })); 
+  ("int_of_str", SFunc({ sparam_typs = [SString]; 
+    sreturn_typ = SInt; sbuiltin = true; })); 
+  ("rand_autoseed", SFunc({ sparam_typs = [SInt]; 
+    sreturn_typ = SVoid; sbuiltin = true; }));
+  ("rand_afterseed", SFunc({ sparam_typs = [SInt]; 
+    sreturn_typ = SInt; sbuiltin = true; }));  
 ]
 
 let def_ctxt =
@@ -488,5 +500,6 @@ let check_program (prog : stmt list) =
   then raise (Failure "illegal return statement")
   else
     let (_, _, ssl) = check_stmt_list def_ctxt prog in
-    List.flatten (List.map (fun s -> match s with SVBlock(sl) -> sl | _ as x -> [x]) ssl)
+    List.flatten (List.map 
+      (fun s -> match s with SVBlock(sl) -> sl | _ as x -> [x]) ssl)
 

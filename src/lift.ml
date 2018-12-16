@@ -48,10 +48,12 @@ let rec dfs_sstmt funcs env sstmt =
           let (funcs', fvs', e') = dfs_sexpr funcs env e in
           (funcs', fvs@fvs', (ty, n, Some(e'))::members)
       in
-      let (funcs', fvs', members') = List.fold_left helper (funcs, [], []) members in
+      let (funcs', fvs', members') = 
+        List.fold_left helper (funcs, [], []) members in
       let new_typ = SStruct({
           sstruct_name = name;
-          smembers = List.fold_left (fun m (t, n, e) -> StringMap.add n (t, e) m) StringMap.empty members';
+          smembers = List.fold_left 
+            (fun m (t, n, e) -> StringMap.add n (t, e) m) StringMap.empty members';
           sincomplete = false;
           signore = false
         }) in
@@ -113,7 +115,8 @@ let rec dfs_sstmt funcs env sstmt =
           ) (funcs3, [fvs3; fvs2; fvs1], env', []) body in
       (funcs4, List.concat (List.rev fvs4), env_body, 
        SForLoop(s1', e1', e2', body'))   
-    | _ -> print_endline(fmt_sstmt sstmt); raise (Failure "not implemented in lifter") in
+    | _ -> print_endline(fmt_sstmt sstmt); 
+      raise (Failure "not implemented in lifter") in
   let check_scope (_, fv) = not (StringMap.mem fv env.variables) in
   let fvs' = List.filter check_scope fvs' in
   (funcs', fvs', env', sstmt')
@@ -147,7 +150,8 @@ and dfs_sexpr ?fname funcs env (t, expr) =
         let (funcs', fvs', se') = dfs_sexpr funcs env se in
         (funcs', fvs@fvs', (n, se')::assigns)
       in
-      let (funcs', fvs', assigns') = List.fold_left helper (funcs, [], []) assigns in
+      let (funcs', fvs', assigns') = 
+        List.fold_left helper (funcs, [], []) assigns in
       (funcs', fvs', (t, SStructInit(ty, assigns')))
     | SDot(se1, field_name) ->
       let (funcs', fvs', expr') = dfs_sexpr funcs env se1 in
@@ -223,7 +227,8 @@ and dfs_sexprs funcs env = function
 and build_closure ?fname funcs env fexpr =
   let vars = List.fold_left add_bind StringMap.empty fexpr.sparams in
   let name = match fname with Some x -> x | None -> "" in
-  let vars_rec = match name with "" -> vars | _ -> StringMap.add name SABSTRACT vars in
+  let vars_rec = match name with "" -> vars 
+    | _ -> StringMap.add name SABSTRACT vars in
   let new_env = {
     variables = vars_rec;
     parent = Some env
@@ -263,20 +268,12 @@ let lift sstmts =
   let named_funcs = List.mapi name (List.rev funcs) in
   (("main", main_func) :: named_funcs)
 
-
-(*
-type lfunc = {
-  lname: string;
-  lfvs: bind list; (* Free variables *)
-  lreturn_typ: typ;
-  lparams: bind list;
-  lbody: sstmt list;
-}*)
-
 let fmt_lfunc f = String.concat "\n" [
-    " -fvs: " ^ String.concat "" (List.map (fun (t, n) -> (fmt_styp t) ^ " " ^ n) f.lfvs);
+    " -fvs: " ^ String.concat "" 
+      (List.map (fun (t, n) -> (fmt_styp t) ^ " " ^ n) f.lfvs);
     " -return_t: " ^ fmt_styp f.lreturn_typ;
-    " -params: " ^ String.concat "" (List.map (fun (t, n) -> (fmt_styp t) ^ " " ^ n) f.lparams);
+    " -params: " ^ String.concat "" 
+      (List.map (fun (t, n) -> (fmt_styp t) ^ " " ^ n) f.lparams);
     " -lbody: \n" ^ fmt_sstmt_list f.lbody ~spacer:"    ";
   ]
 

@@ -122,8 +122,6 @@ let rec fmt_typ = function
   | Array(t) -> fmt_one "array" (fmt_typ t)
   | ABSTRACT -> "ABSTRACT"
 
-
-
 and fmt_typ_list l =
   let typs = List.map fmt_typ l in
   fmt_list typs

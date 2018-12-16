@@ -80,7 +80,6 @@ let string_of_sstmt = function
   | _ -> "Other"
 
 (* PRETTY PRINTING based off of printer.ml *)
-
 let rec fmt_styp = function
     SVoid -> "svoid"
   | SFunc(e) -> "sfunc(" ^ 
@@ -91,7 +90,8 @@ let rec fmt_styp = function
   | SBool -> "sbool"
   | SString -> "sstring"
   | SStruct(st) -> fmt_four "sstruct" st.sstruct_name 
-                     (fmt_list (List.map (fun (k, _) -> k) (StringMap.bindings st.smembers))) 
+                     (fmt_list (List.map (fun (k, _) -> k) 
+                     (StringMap.bindings st.smembers))) 
                      (string_of_bool st.sincomplete)
                      (string_of_bool st.signore)
   | SArray(t) -> fmt_one "sarray" (fmt_styp t)
@@ -118,7 +118,7 @@ let rec fmt_sexpr (_,s) =
    | SArrayAccess(s, e) -> fmt_two "ArrayAccess" (fmt_sexpr s) (fmt_sexpr e)
    | SDot(e, s) -> fmt_two "Dot" (fmt_sexpr e) s
    | SFCall(se, a) -> "SFCall(\n      " ^ ((fmt_sexpr se) ^ "\n") ^ ("      " 
-                                                                     ^ fmt_list (List.map fmt_sexpr a) ^ "\n    )")
+                                ^ fmt_list (List.map fmt_sexpr a) ^ "\n    )")
    (* below actually is parsed with {name = e.name; param = e.params;
     * typ = e.typ; body = e.body}. See test programs for examples. *)
    | SFExpr(s) -> fmt_three "FExpr" (fmt_sparams s.sparams)
@@ -127,7 +127,8 @@ let rec fmt_sexpr (_,s) =
    | SArrayLit(l) -> fmt_one "ArrayLit" (fmt_list (List.map fmt_sexpr l))
    | SNew(t) -> fmt_one "New" (fmt_sn t)
    | SClosure(clsr) -> fmt_two "Closure" (string_of_int clsr.ind) 
-                         (fmt_list (List.map (fun (t, n) -> fmt_styp t ^ " " ^ n) clsr.free_vars))
+                         (fmt_list (List.map (fun (t, n) -> fmt_styp t ^ " " ^ n) 
+                            clsr.free_vars))
    | SNoexpr -> ""
   )
 
