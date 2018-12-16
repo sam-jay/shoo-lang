@@ -2,3 +2,6 @@ function foo() void {
   return;
 }
 foo();
+
+function bar() void {
+}

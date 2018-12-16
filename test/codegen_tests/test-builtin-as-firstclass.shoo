@@ -1,8 +1,17 @@
-
-
 function foo(func(string;void) bar, func(int;string) baz) void {
   bar("hello world" + baz(1234));
   return;
 }
 
 foo(println, str_of_int);
+
+struct B {
+    func(float; string) a = str_of_float;
+    float b = 5.0;
+    string c;
+}
+
+B someStruct = new(B);
+someStruct.c = someStruct.a(someStruct.b);
+println(someStruct.c);
+

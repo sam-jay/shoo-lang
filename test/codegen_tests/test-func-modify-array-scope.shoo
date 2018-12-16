@@ -22,8 +22,7 @@ MyArray a1 = { s = ["hi", "bye", "okay"]; size = 3; };
 function indexValueStruct (MyArray problem, int index2)  func(; string) {
     // Assume the index is vaild.
     return function() string {
-        return problem.s[index2]; // TODO the issue is here; can't find
-                                 // var "problem". But works find for arrays...
+        return problem.s[index2]; 
     };
 }
 

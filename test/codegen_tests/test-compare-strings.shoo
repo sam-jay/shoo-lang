@@ -19,3 +19,22 @@ if (p == z) {
 } else {
     println("strings aren't equal");
 } 
+
+
+string s1 = "hi";
+string s2 = "hi";
+if (string_equals(s1, s2) == 1) {
+    println("built-in");
+} else {
+    println("not built-in");
+}
+
+s2 = "bye";
+if (string_equals(s1, s2) == 1) {
+    println("is one");
+} elif (string_equals(s1, s2) == 0) {
+    println("is zero");
+} else {
+    println("is other");
+}
+
