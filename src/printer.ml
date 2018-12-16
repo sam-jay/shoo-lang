@@ -104,7 +104,6 @@ and fmt_stmt = function
       (fmt_opt_expr e2) 
       (fmt_opt_expr e3) (fmt_stmt_list s)
   | StructDef(n, m) -> fmt_two "StructDef" n (fmt_members m)
-  | EnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n (fmt_expr e) (fmt_stmt_list b)
   | If(e, tL, fL) -> fmt_three "If" (fmt_expr e) (fmt_stmt_list tL) (fmt_stmt_list fL)
 
 and fmt_stmt_list l =

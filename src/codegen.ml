@@ -283,7 +283,6 @@ let translate functions =
         let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
         L.build_extractvalue s idx name builder
       | SPop (e, op) ->
-        (*let (t, _) = e in TODO need this? *)
         let e' = expr builder m e in
         (match op with
          | Inc -> L.build_store (L.build_add e' (L.const_int i32_t 1) "tmp" builder)

@@ -72,7 +72,6 @@ and sstmt =
   | SIf of sexpr * sstmt list * sstmt list
   | SForLoop of (sstmt option) * (sexpr option) * (sexpr option) * sstmt list
   | SStructDef of string * (styp * string * sexpr option) list
-  | SEnhancedFor of styp * string * sexpr * sstmt list
 
 type sprogram = sstmt list
 
@@ -130,7 +129,7 @@ let rec fmt_sexpr (_,s) =
    | SClosure(clsr) -> fmt_two "Closure" (string_of_int clsr.ind) 
                          (fmt_list (List.map (fun (t, n) -> fmt_styp t ^ " " ^ n) clsr.free_vars))
    | SNoexpr -> ""
-  ) (*^ "   // " ^ fmt_styp t*)
+  )
 
 and fmt_sn = function
     SNArray(t, s) -> fmt_two "NArray" (fmt_styp t) (fmt_sexpr s)
@@ -157,8 +156,6 @@ and fmt_sstmt = function
       (fmt_opt_sexpr e2) 
       (fmt_opt_sexpr e3) (fmt_sstmt_list s)
   | SStructDef(n, m) -> fmt_two "StructDef" n (fmt_smembers m)
-  | SEnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" 
-                                  (fmt_styp t) n (fmt_sexpr e) (fmt_sstmt_list b)
   | SIf(e, tL, fL) -> fmt_three "If" (fmt_sexpr e) (fmt_sstmt_list tL) 
                         (fmt_sstmt_list fL)
   | SVBlock(_) -> "SVBlock"

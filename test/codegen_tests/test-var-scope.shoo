@@ -8,8 +8,7 @@ if (q == 7) {
 
 for (int i = 0; i < 10; i++) {
     int q = 9;
-    //println(str_of_int(q++));
-    str_of_int(q++);
+    println(str_of_int(q++));
 }
 
 function foo(int a) int {

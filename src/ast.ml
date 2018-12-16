@@ -91,7 +91,6 @@ and stmt =
 | ForLoop of (stmt option) * (expr option) * (expr option) * stmt list
 | WhileLoop of (expr option) * stmt list
 | StructDef of string * (typ * string * expr option) list
-| EnhancedFor of typ * string * expr * stmt list
 
 type program = stmt list
 
@@ -117,7 +116,7 @@ let rec fmt_typ = function
   | Bool -> "bool"
   | String -> "string"
   | Struct(st) -> fmt_three "struct" st.struct_name 
-        (fmt_list (List.map (fun (k, (* TODO delete this? (*v*)*)_) -> k) 
+        (fmt_list (List.map (fun (k, _) -> k) 
             (StringMap.bindings st.members))) 
         (string_of_bool st.incomplete)
   | Array(t) -> fmt_one "array" (fmt_typ t)
@@ -169,7 +168,7 @@ let rec fmt_expr = function
 | Assign(e1, e2) -> fmt_two "Assign" (fmt_expr e1) (fmt_expr e2)
 | ArrayAccess(s, e) -> fmt_two "ArrayAccess" (fmt_expr s) (fmt_expr e)
 | Dot(e, s) -> fmt_two "Dot" (fmt_expr e) s
-| FCall((* TODO need this? (*n*)*)_, (*a*)_) -> "FCall"
+| FCall(_, _) -> "FCall"
 (* below actually is parsed with {name = e.name; param = e.params;
  * typ = e.typ; body = e.body}. See test programs for examples. *)
 | FExpr(e) -> fmt_three "FExpr" (fmt_params e.params) 
@@ -208,8 +207,6 @@ and fmt_stmt = function
 | WhileLoop (e, s) ->
   fmt_two "WhileLoop" (fmt_opt_expr e) (fmt_stmt_list s)
 | StructDef(n, m) -> fmt_two "StructDef" n (fmt_members m)
-| EnhancedFor(t, n, e, b) -> fmt_four "EnhancedFor" (fmt_typ t) n 
-  (fmt_expr e) (fmt_stmt_list b)
 | If(e, tL, fL) -> fmt_three "If" (fmt_expr e) (fmt_stmt_list tL) 
   (fmt_stmt_list fL)
 
