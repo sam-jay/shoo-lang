@@ -1,1 +1,1 @@
-Fatal error: exception Failure("assignment not implemented in codegen")
+Fatal error: exception Failure("assignment for IntLit(12)\n    -\n    IntLit(1)not implemented in codegen")

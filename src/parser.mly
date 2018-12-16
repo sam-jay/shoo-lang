@@ -85,8 +85,8 @@ cf_else:
 ELSE LBRACKET stmt_list RBRACKET { List.rev $3 }
 
 expr:
-| expr INCREMENT { Pop($1, Inc) }
-| expr DECREMENT { Pop($1, Dec) }
+| expr INCREMENT { Assign($1, Binop($1, Add, IntLit(1))) }
+| expr DECREMENT { Assign($1, Binop($1, Sub, IntLit(1))) }
 | expr ASSIGN expr { Assign($1, $3) }
 | expr PLUS expr { Binop($1, Add, $3) }
 | expr MINUS expr { Binop($1, Sub, $3) }

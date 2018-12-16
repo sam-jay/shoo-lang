@@ -273,14 +273,6 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
      | Not when t = SBool -> (SBool, sunop)
      | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
 
-  | Pop(e, op) ->
-    let (t, e) = check_expr ctxt e in 
-    let spop = SPop((t, e), op) in
-    (match op with 
-       Inc when t = SInt -> (SInt, spop)
-     | Dec when t = SInt -> (SInt, spop)
-     | _ -> raise (Type_mismatch "Type mismatch for unary operator"))
-
   | FCall(expr, args) ->
     let check_args f_type args =
       let rec helper sl = function
