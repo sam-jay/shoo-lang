@@ -1,0 +1,64 @@
+struct Object {
+	int index;
+	int data;
+}
+
+function compareData(Object a, Object b) bool {
+    return a.data < b.data;
+}
+
+function compareIndex(Object a, Object b) bool {
+    return a.index < b.index;
+}
+
+function printData(array<Object> arr, int n) void {
+	for (int i = 0; i < n; i++) {
+		println(str_of_int(arr[i].data));
+	}
+	
+	return;
+}
+
+function printIndex(array<Object> arr, int n) void {
+	for (int i = 0; i < n; i++) {
+		println(str_of_int(arr[i].index));
+	}
+	
+	return;
+}
+
+function bubbleSort(array<Object> arr, int n, func(Object, Object; bool) compare) array<Object> {
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = 0; j < n - i - 1; j++) {
+			if (arr[j].index > arr[i].index) {
+				Object temp = arr[j];
+				arr[j] = arr[i];
+				arr[i] = temp;
+			}
+		}
+	}
+	
+	return arr;
+}
+
+array<int> indices = [1,3,8,6,9,6,0,2,4,5];
+array<int> datapoints = [106,101,104,108,105,103,102,109,107,100];
+array<Object> objects = new(array<Object>[10]);
+
+for (int i = 0; i < 10; i++) {
+	//objects[i] = new(Object);
+	objects[i].index = indices[i]; 
+	objects[i].data = datapoints[i];
+}
+
+printIndex(objects, n);
+printData(objects, n);
+
+bubbleSort(arr, n, compareIndex);
+printIndex(objects, n);
+
+bubbleSort(arr, n, compareData);
+printData(objects, n);
+
+
+
