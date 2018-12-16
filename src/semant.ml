@@ -20,6 +20,8 @@ let builtinsFunc = [
   ("exit_success", Func({ param_typs = [Int]; return_typ = Void })); 
   ("die", Func({ param_typs = [String; Int]; return_typ = Void })); 
   ("int_of_str", Func({ param_typs = [String]; return_typ = Int })); 
+  ("rand_autoseed", Func({ param_typs = [Int]; return_typ = Void }));  
+  ("rand_afterseed", Func({ param_typs = [Int]; return_typ = Int }));
 ]
 
 let makeMapFromBuiltinsFunc map arrElem = StringMap.add (fst arrElem) (snd arrElem) map
@@ -490,6 +492,8 @@ let builtins = [
   ("exit_success", SFunc({ sparam_typs = [SInt]; sreturn_typ = SVoid; sbuiltin = true; })); 
   ("die", SFunc({ sparam_typs = [SString; SInt]; sreturn_typ = SVoid; sbuiltin = true; })); 
   ("int_of_str", SFunc({ sparam_typs = [SString]; sreturn_typ = SInt; sbuiltin = true; })); 
+  ("rand_autoseed", SFunc({ sparam_typs = [SInt]; sreturn_typ = SVoid; sbuiltin = true; }));
+  ("rand_afterseed", SFunc({ sparam_typs = [SInt]; sreturn_typ = SInt; sbuiltin = true; }));  
 ]
 
 let def_ctxt =

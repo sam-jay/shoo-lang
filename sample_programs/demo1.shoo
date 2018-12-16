@@ -1,0 +1,260 @@
+// apply a function filter to an array of structs
+// the function filter is dependent on the user choice
+
+
+function errExit () void {
+	println("Invalid option. Exiting");
+	exit_success(0);
+}
+
+println("Make an array of structs:");
+println("What size array do you want?");
+string szStr = scan_line(3);
+int sz = int_of_str(szStr);
+
+if (sz == -1){
+	errExit();
+}
+
+rand_autoseed(0);
+
+println("Make a struct to populate the array:");
+println("Here are your choices:");
+println("1: BankAccount");
+println("2: Rectangle");
+println("3: Point");
+println("4: Student");
+println("Pick a number:");
+string structTypeStr = scan_line(5);
+int structType = int_of_str(structTypeStr);
+
+struct BankAccount {
+	float balance = float_of_int(rand_afterseed(0)%100)+.5;
+	int id = rand_afterseed(0);
+}
+
+struct Rectangle {
+	float width = float_of_int(rand_afterseed(0)%10);
+	float length = float_of_int(rand_afterseed(0)%10);
+}
+
+struct Point {
+	float x = float_of_int(rand_afterseed(0)%10);
+	float y = float_of_int(rand_afterseed(0)%10);
+}
+
+struct Student {
+	int id = rand_afterseed(0)%10;
+	string name = "NoName";
+	int year = 2018;
+	int numClasses = 0;
+}
+
+// this wrapper allows us to mimic a wildcard-like type
+struct Wrapper {
+	BankAccount ba;
+	Rectangle rec;
+	Point pt;
+	Student st;
+}
+
+array<Wrapper> arr = new(array<Wrapper>[sz]);
+
+// based on the user chosen type, initialize the type
+function initializeWrapperArr(array<Wrapper> temp, int sz, int whichType) void {
+	for(int j = 0; j< sz; j++){
+		temp[j] = new(Wrapper);
+	}
+
+	if (whichType == 1) {
+		for(int i = 0; i<sz; i++) {
+			temp[i].ba = new(BankAccount);
+		}
+	} elif (whichType == 2) {
+		for(int i = 0; i<sz; i++) {
+			temp[i].rec = new(Rectangle);
+		}
+	} elif (whichType == 3) {
+		for(int i = 0; i<sz; i++) {
+			temp[i].pt = new(Point);
+		}	
+	} else{
+		for(int i = 0; i<sz; i++) {
+			temp[i].st = new(Student);
+		}	
+	}
+}
+
+if (structType >= 1 && structType <=4) {
+	initializeWrapperArr(arr, sz, structType);
+} else {
+	errExit();
+}
+
+// 12 different kinds of functions to choose from to apply to your array
+array<func (Wrapper;void)> baFns = new(array<func (Wrapper;void)>[3]);
+array<func (Wrapper;void)> recFns = new(array<func (Wrapper;void)>[3]);
+array<func (Wrapper;void)> ptFns = new(array<func (Wrapper;void)>[3]);
+array<func (Wrapper;void)> stFns = new(array<func (Wrapper;void)>[3]);
+
+baFns[0] = function (Wrapper wrap) void {
+	wrap.ba.balance = wrap.ba.balance + 500.0;
+};
+
+baFns[1] = function (Wrapper wrap) void {
+	wrap.ba.balance = wrap.ba.balance - 20.0;
+};
+
+baFns[2] = function (Wrapper wrap) void {
+	wrap.ba.id = wrap.ba.id + 2;
+};
+
+recFns[0] = function (Wrapper wrap) void {
+	wrap.rec.length = wrap.rec.length + 2.0;
+};
+
+recFns[1] = function (Wrapper wrap) void {
+	wrap.rec.length = wrap.rec.length / 5.0;
+};
+
+recFns[2] = function (Wrapper wrap) void {
+	wrap.rec.width = wrap.rec.width * 3.0;
+};
+
+ptFns[0] = function (Wrapper wrap) void {
+	wrap.pt.x = wrap.pt.x + 7.9;
+};
+
+ptFns[1] = function (Wrapper wrap) void {
+	wrap.pt.x = wrap.pt.x * -1.0;
+};
+
+ptFns[2] = function (Wrapper wrap) void {
+	wrap.pt.y = wrap.pt.y - 15.0;
+};
+
+stFns[0] = function (Wrapper wrap) void {
+	wrap.st.name = "Bob";
+};
+
+stFns[1] = function (Wrapper wrap) void {
+	wrap.st.numClasses = rand_afterseed(0);
+};
+
+stFns[2] = function (Wrapper wrap) void {
+	wrap.st.id = wrap.st.id + 3;
+};
+
+// the function which applies a function to each element of an array
+function applyToEach(array<Wrapper> arr, func (Wrapper;void) fn, int sz) void {
+	for (int i = 0; i<sz; i++) {
+		fn(arr[i]);
+	}
+}
+
+// print the array of structs
+function printArr(array<Wrapper> arr, int structType, int sz) void {
+	println("[");
+	if (structType == 1) {
+		// BankAccount
+		for(int i = 0; i< sz; i++) {
+			println("balance: " + str_of_float(arr[i].ba.balance));
+			println("id: " + str_of_int(arr[i].ba.id));
+			println(";");
+		}
+	} elif (structType == 2) {
+		// Rectangle
+		for(int i = 0; i< sz; i++) {
+			println("width: " + str_of_float(arr[i].rec.width));
+			println("length: " + str_of_float(arr[i].rec.length));
+			println(";");
+		}
+	} elif (structType == 3) {
+		// Point
+		for(int i = 0; i< sz; i++) {
+			println("x: " + str_of_float(arr[i].pt.x));
+			println("y: " + str_of_float(arr[i].pt.y));
+			println(";");
+		}
+	} elif (structType == 4){
+		// student
+		for(int i = 0; i< sz; i++) {
+			println("name: " + arr[i].st.name);
+			println("year: " + str_of_int(arr[i].st.year));
+			println("numClasses: " + str_of_int(arr[i].st.numClasses));
+			println("id: " + str_of_int(arr[i].st.id));
+			println(";");
+		}
+	} else {
+		errExit();
+	}
+	println("]");
+}
+
+string fnResultStr;
+int fnResult;
+
+println("Here's the initial array of structs");
+printArr(arr, structType, sz);
+
+if (structType == 1) {
+	// BankAccount
+	println("Now choose a function to apply to the array of structs:");
+	println("1: Give everyone 500$!");
+	println("2: Take 20$ from everyone.");
+	println("3: Increase IDs by 2");
+	println("Pick a number:");
+	fnResultStr = scan_line(25);
+	fnResult = int_of_str(fnResultStr);
+	if (fnResult >= 1 && fnResult <=3) {
+		applyToEach(arr, baFns[fnResult-1], sz);
+	} else {
+		errExit();
+	}
+} elif (structType == 2) {
+	// Rectangle
+	println("Now choose a function to apply to the array of structs:");
+	println("1: Increase the length by 2");
+	println("2: Divide the length by 5");
+	println("3: Multiply width by 3");
+	println("Pick a number:");
+	fnResultStr = scan_line(25);
+	fnResult = int_of_str(fnResultStr);
+	if (fnResult >= 1 && fnResult <=3) {
+		applyToEach(arr, recFns[fnResult-1], sz);
+	} else {
+		errExit();
+	}
+} elif (structType == 3) {
+	// point
+	println("Now choose a function to apply to the array of structs:");
+	println("1: Move point right by 7.9");
+	println("2: Flip point across y-axis");
+	println("3: Move point down by 15");
+	println("Pick a number:");
+	fnResultStr = scan_line(25);
+	fnResult = int_of_str(fnResultStr);
+	if (fnResult >= 1 && fnResult <=3) {
+		applyToEach(arr, ptFns[fnResult-1], sz);
+	} else {
+		errExit();
+	}
+} else{
+	// student
+	println("Now choose a function to apply to the array of structs:");
+	println("1: Give each student a name");
+	println("2: Change the number of classes");
+	println("3: Change the student ID");
+	println("Pick a number:");
+	fnResultStr = scan_line(25);
+	fnResult = int_of_str(fnResultStr);
+	if (fnResult >= 1 && fnResult <=3) {
+		applyToEach(arr, stFns[fnResult-1], sz);
+	} else {
+		errExit();
+	}
+}
+
+println("Here is the changed array of structs.");
+printArr(arr, structType, sz);
+

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #define MAXFLOATSIZE 50
 
@@ -99,6 +100,7 @@ char* scan_line(int max_size){
     return NULL;
   }
     char *str = (char*)malloc(sizeof(char)*(max_size+1));
+    memset(str, 0, max_size+1);
     fgets(str,max_size, stdin);
     if (str[strlen(str)-1] == '\n') {
       str[strlen(str)-1] = '\0'; // remove terminating newline
@@ -131,3 +133,14 @@ void print(char * str){
   return;
 }
 
+// call this once before calling rand_afterseed() to seed the RNG
+void rand_autoseed(int null){
+  time_t t;
+  srand((unsigned)time(&t));
+  return;   
+}
+
+// call this after calling rand_autoseed to get random numbers
+int rand_afterseed(int null){
+  return rand();
+}

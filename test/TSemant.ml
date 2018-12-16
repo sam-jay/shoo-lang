@@ -67,7 +67,7 @@ let if_stat_empty_else _ = assert_equal "" (check "if (false) {} else {} ")
 
 let if_not_bool _ = 
   let f = fun () -> check "if (3 + 4) {} " in
-  assert_raises (Failure("expected Boolean expression")) f
+  assert_raises (Failure("Error: sint is not a boolean type")) f
   
 
 (* For Loop *)
@@ -75,7 +75,7 @@ let for_stat_empty _ = assert_equal "" (check "for (int i = 0; true; i++) {} ")
 
 let for_not_bool _ = 
   let f = fun () -> check "for (int i = 0; 3 + 4; i++) {} " in
-  assert_raises (Failure("expected Boolean expression")) f
+  assert_raises (Failure("Error: sint is not a boolean type")) f
 
 
 (* Function Declaration *)
@@ -108,8 +108,8 @@ function foo() int {\
 let dead_code_after_return _ =
   let f = fun () -> check "\
   function foo() int {\
-    return 5;
-    int x = 5;
+    return 5;\
+    int x = 5;\
   }\
   " in
   assert_raises (Failure "dead code after return") f
@@ -117,7 +117,7 @@ let dead_code_after_return _ =
 let illegal_void_param _ =
   let f = fun () -> check "\
   function foo(void x) int {\
-    return 5;
+    return 5;\
   }\
   " in
   assert_raises (Parsing.Parse_error) f
@@ -129,9 +129,9 @@ function foo() void {\
 
 let simple_call _ = assert_equal "" (check "\
 function foo() string {\
-  return \"Hello World\";
+  return \"Hello World\";\
 }\
-println(foo());
+println(foo());\
 ")
 
 let call_nonfunc _ =
@@ -173,7 +173,7 @@ struct BankAccount {\
   int number;\
   int balance = 0;\
 }\
-BankAccount foo = new(BankAccount);
+BankAccount foo = new(BankAccount);\
 ")
 
 let struct_as_member _ = assert_equal "" (check "\
@@ -213,7 +213,7 @@ let struct_duplicate_decl _ =
 
 let recursive_struct _ =
   let f = fun () -> check "struct Recursive { Recursive x; }" in
-  assert_raises (Failure "illegal recursive struct Recursive") f
+  assert_raises (Failure "undeclared reference Recursive") f
 
 let simple_new_array _ = assert_equal "" (check "\
 new(array<int>[5]);\
