@@ -18,3 +18,9 @@ function foo(int a) int {
 
 foo(7);
 
+struct C {
+    int q = 10;
+}
+
+C a = {q = 8;};
+println(str_of_float(float_of_int(a.q)));
