@@ -275,7 +275,7 @@ let translate functions =
       | SDot((SStruct(struct_t), exp), name) ->
         let lhs = expr builder m (SStruct(struct_t), exp) in
         let s = L.build_load lhs "structval" builder in
-        let (* TODO need this? (*llstruct_t*)*) _
+        let _
           = ltype_of_typ (SStruct(struct_t)) in
         let compare_by (n1, _) (n2, _) = compare n1 n2 in
         let members = List.sort compare_by (StringMap.bindings struct_t.smembers) in
@@ -474,7 +474,6 @@ let translate functions =
         let (for_builder, _) = List.fold_left (fun (b_bb, temp_map) s -> 
             let (build, map) = 
               stmt b_bb temp_map s in (build, map)) 
-            (* TODO(claire) figure out why body needs List.rev *)
             ((L.builder_at_end context body_bb), m_incr) (List.rev body)
         in
 

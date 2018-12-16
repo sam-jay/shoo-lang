@@ -2,29 +2,6 @@ open Sast
 
 module StringMap = Map.Make(String)
 
-(* 
-this needs to go into semant.ml once the issues there are cleaned up
-
-| FExpr(fexpr) ->
-  let func_t = Func({
-    param_typs = List.map fst fexpr.params;
-    return_typ = fexpr.typ;
-  }) in
-  let nctxt = match fexpr.name with
-    "" -> ctxt
-  | name -> add_to_ctxt (func_t, None) name ctxt in
-  let nctxt = (create_scope fexpr.params)::nctxt in
-  let (nctxt, t, ssl) = check_stmt_list nctxt fexpr.body in
-  if t = fexpr.typ then (List.tl nctxt, (func_t, SFExpr({
-    srecursive = false; (* TODO: handle recursion *)
-    styp = fexpr.typ;
-    sparams = fexpr.params;
-    sbody = ssl
-  })))
-  else raise (Failure "invalid function return type")
-
-*)
-
 type environment = {
   variables: styp StringMap.t;
   parent: environment option;
@@ -115,7 +92,6 @@ let rec dfs_sstmt funcs env sstmt =
           Some(s1) -> (let (funcs1', fvs1', env'', s1'') = 
                          dfs_sstmt funcs env s1 in 
                        (funcs1', fvs1', env'', Some(s1'')))
-        (* TODO(claire) what should these be?? *)
         | None -> (funcs, [], env, None) 
       in
       let (funcs2, fvs2, e1') = match e1 with
@@ -174,7 +150,6 @@ and dfs_sexpr ?fname funcs env (t, expr) =
       let (funcs', fvs', assigns') = List.fold_left helper (funcs, [], []) assigns in
       (funcs', fvs', (t, SStructInit(ty, assigns')))
     | SDot(se1, field_name) ->
-      (* TODO need to do something with field name? *)
       let (funcs', fvs', expr') = dfs_sexpr funcs env se1 in
       (funcs', fvs', (t, SDot(expr', field_name))) 
     | SArrayLit(sexpr_list) ->
@@ -228,7 +203,7 @@ and dfs_sexpr ?fname funcs env (t, expr) =
          in (funcs1, fvs', (t, SFCall((lt, se), args')))
        | _ ->
          (* Need this for recursion. *)
-         let (funcs1, fvs1, (* TODO need this? (*se1*)*)_) 
+         let (funcs1, fvs1, _) 
            = dfs_sexpr funcs env (lt, se) in
          let (funcs2, fvs2, args') = dfs_sexprs funcs1 env args in
          (funcs2, fvs1@fvs2, (t, SFCall((lt, se), args'))))
