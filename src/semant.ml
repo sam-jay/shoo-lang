@@ -306,7 +306,7 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     in
     let func_scope = create_scope fexpr.params in
     let (_, return_t, sl) = check_stmt_list (func_scope::ctxt) fexpr.body in
-    ignore (check_asn return_t (ignore_structs (styp_of_typ ctxt fexpr.typ)));
+    ignore (check_asn (ignore_structs return_t) (ignore_structs (styp_of_typ ctxt fexpr.typ)));
     (sfunc_t, SFExpr({
          sname = fexpr.name;
          styp = ignore_structs(styp_of_typ ctxt fexpr.typ);
