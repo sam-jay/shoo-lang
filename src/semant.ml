@@ -17,11 +17,12 @@ let builtinsFunc = [
   ("int_of_float", Func({ param_typs = [Float]; return_typ = Int })); 
   ("float_of_int", Func({ param_typs = [Int]; return_typ = Float })); 
   ("scan_line", Func({ param_typs = [Int]; return_typ = String })); 
-  ("exit_success", Func({ param_typs = [Int]; return_typ = Void })); 
+  ("exit_success", Func({ param_typs = []; return_typ = Void })); 
   ("die", Func({ param_typs = [String; Int]; return_typ = Void })); 
   ("int_of_str", Func({ param_typs = [String]; return_typ = Int })); 
-  ("rand_autoseed", Func({ param_typs = [Int]; return_typ = Void }));  
-  ("rand_afterseed", Func({ param_typs = [Int]; return_typ = Int }));
+  ("rand_autoseed", Func({ param_typs = []; return_typ = Void }));  
+  ("rand_afterseed", Func({ param_typs = []; return_typ = Int }));
+  ("scan_char", Func({ param_typs = []; return_typ = String }));
 ]
 
 let makeMapFromBuiltinsFunc map arrElem = 
@@ -489,6 +490,8 @@ let builtins = [
     sreturn_typ = SVoid; sbuiltin = true; }));
   ("rand_afterseed", SFunc({ sparam_typs = [SInt]; 
     sreturn_typ = SInt; sbuiltin = true; }));  
+  ("scan_char", SFunc({ sparam_typs = []; sreturn_typ = SString; 
+    sbuiltin = true; }));  
 ]
 
 let def_ctxt =
