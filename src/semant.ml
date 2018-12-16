@@ -155,17 +155,9 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
     (struct_t, SStructInit(struct_t, assigns'))
 
   (* Go through all the items in the square brackets to see if they match *)
-  (* TODO(claire) check_expr never changes the map so we shouldn't pass
-   * it around all the time. Change this so there is a function above that
-   * takes the map and then an nest function that does nothing and doesn't
-   * take the map. *)
+  (* check_expr never changes the map so we shouldn't pass
+   * it around all the time. *) 
   | ArrayLit(x) -> 
-    (* TODO(claire) need to check if the list is empty 
-     * TODO(claire) actually we shouldn't allow this to be empty because
-     * then you don't know the type of the array and that is a big mess.
-     * So many in the parser we should add something to reject if they
-     * try to use [] to init an array and [] is empty. They should just
-     * used new instead. *)
     if List.length x = 0
     then raise (Failure "empty array init is not supported")
     else 
@@ -173,9 +165,8 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
       let item_type = ignore_structs item_type in (* recursively do this everywhere *)
       let t = List.map (fun e1 ->
           let (t1, st1) = check_expr ctxt e1 in
-          (* TODO(claire) need to check both? *)
           let t1 = ignore_structs t1 in
-          if (t1 = item_type) (*&& (st1 = item_s_type)*) then (t1, st1)
+          if (t1 = item_type) then (t1, st1)
           else raise (Failure("Error: cannot have multiple types in an array ("
                               ^ fmt_styp t1 ^ " and " ^ fmt_styp item_type ))
         ) x in (SArray(item_type), SArrayLit t)
@@ -249,7 +240,6 @@ let rec check_expr (ctxt : styp StringMap.t list) = function
        -> (SInt, sbinop)
      | Add | Sub | Mult | Div when lt = SFloat && rt = SFloat 
        -> (SFloat, sbinop)
-     (* allow string concatenation TODO(crystal): update LRM *)
      | Add when lt = SString && rt = SString -> (SString,sbinop)
      (* TODO(claire): make sure LRM says that we can compare all
       * expressions of the same type using ==, including functions, 
