@@ -480,15 +480,15 @@ let builtins = [
     sreturn_typ = SFloat; sbuiltin = true; })); 
   ("scan_line", SFunc({ sparam_typs = [SInt]; 
     sreturn_typ = SString; sbuiltin = true; })); 
-  ("exit_success", SFunc({ sparam_typs = [SInt]; 
+  ("exit_success", SFunc({ sparam_typs = []; 
     sreturn_typ = SVoid; sbuiltin = true; })); 
   ("die", SFunc({ sparam_typs = [SString; SInt]; 
     sreturn_typ = SVoid; sbuiltin = true; })); 
   ("int_of_str", SFunc({ sparam_typs = [SString]; 
     sreturn_typ = SInt; sbuiltin = true; })); 
-  ("rand_autoseed", SFunc({ sparam_typs = [SInt]; 
+  ("rand_autoseed", SFunc({ sparam_typs = []; 
     sreturn_typ = SVoid; sbuiltin = true; }));
-  ("rand_afterseed", SFunc({ sparam_typs = [SInt]; 
+  ("rand_afterseed", SFunc({ sparam_typs = []; 
     sreturn_typ = SInt; sbuiltin = true; }));  
   ("scan_char", SFunc({ sparam_typs = []; sreturn_typ = SString; 
     sbuiltin = true; }));  
