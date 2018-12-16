@@ -1,0 +1,9 @@
+struct Foo {
+  int x = 5;
+}
+
+Foo f = new(Foo);
+f.x++;
+println(str_of_int(f.x));
+f.x--;
+println(str_of_int(f.x));
