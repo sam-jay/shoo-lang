@@ -1,0 +1,212 @@
+// ascii art demo
+// store each letter as a 2d array
+// based on the "standard" font at http://www.figlet.org/fonts/standard.flf
+// here we only have capital alphabet characters
+array<string> mapNumToLetter = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"];
+array<array<string>> alphabet = new(array<array<string>>[26]);
+for(int i = 0; i< 26; i++) {
+	alphabet[i] = new(array<string>[6]);
+}
+
+alphabet[0][0] = "     _    ";
+alphabet[0][1] = "    / \   ";
+alphabet[0][2] = "   / _ \  ";
+alphabet[0][3] = "  / ___ \ ";
+alphabet[0][4] = " /_/   \_\";
+alphabet[0][5] = "          ";
+
+alphabet[1][0] = "  ____  ";
+alphabet[1][1] = " | __ ) ";
+alphabet[1][2] = " |  _ \ ";
+alphabet[1][3] = " | |_) |";
+alphabet[1][4] = " |____/ ";
+alphabet[1][5] = "        ";
+
+alphabet[2][0] = "   ____ ";
+alphabet[2][1] = "  / ___|";
+alphabet[2][2] = " | |    ";
+alphabet[2][3] = " | |___ ";
+alphabet[2][4] = "  \____|";
+alphabet[2][5] = "        ";
+
+alphabet[3][0] = "  ____  ";
+alphabet[3][1] = " |  _ \ ";
+alphabet[3][2] = " | | | |";
+alphabet[3][3] = " | |_| |";
+alphabet[3][4] = " |____/ ";
+alphabet[3][5] = "        ";
+
+alphabet[4][0] = "  _____ ";
+alphabet[4][1] = " | ____|";
+alphabet[4][2] = " |  _|  ";
+alphabet[4][3] = " | |___ ";
+alphabet[4][4] = " |_____|";
+alphabet[4][5] = "        ";
+
+alphabet[5][0] = "  _____ ";
+alphabet[5][1] = " | ____|";
+alphabet[5][2] = " | |_   ";
+alphabet[5][3] = " |  _|  ";
+alphabet[5][4] = " |_|    ";
+alphabet[5][5] = "        ";
+
+alphabet[6][0] = "   ____ ";
+alphabet[6][1] = "  / ___|";
+alphabet[6][2] = " | |  _ ";
+alphabet[6][3] = " | |_| |";
+alphabet[6][4] = "  \____|";
+alphabet[6][5] = "        ";
+
+alphabet[7][0] = "  _   _ ";
+alphabet[7][1] = " | | | |";
+alphabet[7][2] = " | |_| |";
+alphabet[7][3] = " |  _  |";
+alphabet[7][4] = " |_| |_|";
+alphabet[7][5] = "        ";
+
+alphabet[8][0] = "  ___ ";
+alphabet[8][1] = " |_ _|";
+alphabet[8][2] = "  | | ";
+alphabet[8][3] = "  | | ";
+alphabet[8][4] = " |___|";
+alphabet[8][5] = "      ";
+
+alphabet[9][0] = "      _ ";
+alphabet[9][1] = "     | |";
+alphabet[9][2] = "  _  | |";
+alphabet[9][3] = " | |_| |";
+alphabet[9][4] = "  \___/ ";
+alphabet[9][5] = "        ";
+
+alphabet[10][0] = "  _  __";
+alphabet[10][1] = " | |/ /";
+alphabet[10][2] = " | ' / ";
+alphabet[10][3] = " | . \ ";
+alphabet[10][4] = " |_|\_\";
+alphabet[10][5] = "       ";
+
+alphabet[11][0] = "  _     ";
+alphabet[11][1] = " | |    ";
+alphabet[11][2] = " | |    ";
+alphabet[11][3] = " | |___ ";
+alphabet[11][4] = " |_____|";
+alphabet[11][5] = "        ";
+
+alphabet[12][0] = "  __  __ ";
+alphabet[12][1] = " |  \/  |";
+alphabet[12][2] = " | |\/| |";
+alphabet[12][3] = " | |  | |";
+alphabet[12][4] = " |_|  |_|";
+alphabet[12][5] = "         ";
+
+alphabet[13][0] = "  _   _ ";
+alphabet[13][1] = " | \ | |";
+alphabet[13][2] = " |  \| |";
+alphabet[13][3] = " | |\  |";
+alphabet[13][4] = " |_| \_|";
+alphabet[13][5] = "        ";
+
+alphabet[14][0] = "   ___  ";
+alphabet[14][1] = "  / _ \ ";
+alphabet[14][2] = " | | | |";
+alphabet[14][3] = " | |_| |";
+alphabet[14][4] = "  \___/ ";
+alphabet[14][5] = "        ";
+
+alphabet[15][0] = "  ____  ";
+alphabet[15][1] = " |  _ \ ";
+alphabet[15][2] = " | |_) |";
+alphabet[15][3] = " |  __/ ";
+alphabet[15][4] = " |_|    ";
+alphabet[15][5] = "        ";
+
+alphabet[16][0] = "   ___  ";
+alphabet[16][1] = "  / _ \ ";
+alphabet[16][2] = " | | | |";
+alphabet[16][3] = " | |_| |";
+alphabet[16][4] = "  \__\_\";
+alphabet[16][5] = "        ";
+
+alphabet[17][0] = "  ____  ";
+alphabet[17][1] = " |  _ \ ";
+alphabet[17][2] = " | |_) |";
+alphabet[17][3] = " |  _ < ";
+alphabet[17][4] = " |_| \_\";
+alphabet[17][5] = "        ";
+
+alphabet[18][0] = "  ____  ";
+alphabet[18][1] = " / ___| ";
+alphabet[18][2] = " \___ \ ";
+alphabet[18][3] = "  ___) |";
+alphabet[18][4] = " |____/ ";
+alphabet[18][5] = "        ";
+
+alphabet[19][0] = "  _____ ";
+alphabet[19][1] = " |_   _|";
+alphabet[19][2] = "   | |  ";
+alphabet[19][3] = "   | |  ";
+alphabet[19][4] = "   |_|  ";
+alphabet[19][5] = "        ";
+
+alphabet[20][0] = "  _   _ ";
+alphabet[20][1] = " | | | |";
+alphabet[20][2] = " | | | |";
+alphabet[20][3] = " | | | |";
+alphabet[20][4] = "  \___/ ";
+alphabet[20][5] = "        ";
+
+alphabet[21][0] = " __     __";
+alphabet[21][1] = " \ \   / /";
+alphabet[21][2] = "  \ \ / / ";
+alphabet[21][3] = "   \ V /  ";
+alphabet[21][4] = "    \_/   ";
+alphabet[21][5] = "          ";
+
+alphabet[22][0] = " __        __";
+alphabet[22][1] = " \ \      / /";
+alphabet[22][2] = "  \ \ /\ / / ";
+alphabet[22][3] = "   \ V  V /  ";
+alphabet[22][4] = "    \_/\_/   ";
+alphabet[22][5] = "             ";
+
+alphabet[23][0] = " __  __";
+alphabet[23][1] = " \ \/ /";
+alphabet[23][2] = "  \  / ";
+alphabet[23][3] = "  /  \ ";
+alphabet[23][4] = " /_/\_\";
+alphabet[23][5] = "       ";
+
+alphabet[24][0] = " __   __";
+alphabet[24][1] = " \ \ / /";
+alphabet[24][2] = "  \ V / ";
+alphabet[24][3] = "   | |  ";
+alphabet[24][4] = "   |_|  ";
+alphabet[24][5] = "        ";
+
+alphabet[25][0] = "  _____";
+alphabet[25][1] = " |__  /";
+alphabet[25][2] = "   / / ";
+alphabet[25][3] = "  / /_ ";
+alphabet[25][4] = " /____|";
+alphabet[25][5] = "       ";
+
+function printLetter (array<string> letter, int sz) void {
+	for(int i = 0; i<sz; i++) {
+		println(letter[i]);
+	}
+}
+
+function printString (string toPrint) void {
+	
+}
+
+// TODO: remove the below
+println("Here's a sample of the font");
+for (int i = 0; i<3; i++){
+	// print all the letters
+	printLetter(alphabet[i], 6);
+}
+
+println("Now ascii-fy your own string up to 10 characters:");
+string result = scan_line(12);
+
