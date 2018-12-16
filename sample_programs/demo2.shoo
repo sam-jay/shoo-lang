@@ -190,23 +190,61 @@ alphabet[25][3] = "  / /_ ";
 alphabet[25][4] = " /____|";
 alphabet[25][5] = "       ";
 
+// technically can hardcode 6 below
 function printLetter (array<string> letter, int sz) void {
 	for(int i = 0; i<sz; i++) {
 		println(letter[i]);
 	}
 }
 
-function printString (string toPrint) void {
-	
+// match the character to the alphabet index
+function lookupIndex (string char) int {
+	for (int i = 0; i<26; i++){
+		if (mapNumToLetter[i]==char) {
+			return i;
+		}
+	}
+	return -1;
 }
 
-// TODO: remove the below
+// the passed in argument is an array of CHARACTERS
+function printString (array<string> toPrint, int sz) void {
+	int idx = 0;
+	for(int j = 0; j<6; j++){
+		for(int i = 0; i<sz; i++){
+			idx = lookupIndex(toPrint[i]);
+			if (idx!=-1) {
+				print(alphabet[idx][j]);
+			}
+		}
+		println("");
+	}
+}
+
 println("Here's a sample of the font");
 for (int i = 0; i<3; i++){
-	// print all the letters
+	// print 3 letters
 	printLetter(alphabet[i], 6);
 }
 
-println("Now ascii-fy your own string up to 10 characters:");
-string result = scan_line(12);
+array<string> toPrintStr = new(array<string>[10]);
 
+println("Now ascii-fy your own string up to 10 characters");
+//TODO: fix so don't have to do this one character at a time thing
+println("Please input one character at a time");
+println("When you are done inputting characters type '!'");
+
+function getUserIn() int {
+	for (int i = 0; i<10; i++){
+		println("Enter character:");
+		string result = scan_line(3);
+		if(result == "!"){
+			return i;
+		}
+		toPrintStr[i] = result;
+	} 
+	return 10;
+}
+
+int numChars = getUserIn();
+printString(toPrintStr, numChars);
