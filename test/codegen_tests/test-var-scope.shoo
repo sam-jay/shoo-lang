@@ -1,0 +1,21 @@
+int q = 7;
+if (q == 7) {
+    int q = 9;
+    println(str_of_int(q));
+} else {
+    println("no");
+}
+
+for (int i = 0; i < 10; i++) {
+    int q = 9;
+    //println(str_of_int(q++));
+    str_of_int(q = q+1);
+}
+
+function foo(int a) int {
+    int q = 21;
+    return a;
+}
+
+foo(7);
+
