@@ -465,9 +465,10 @@ and check_stmt (ctxt : styp StringMap.t list) = function
   | If (e, st1, st2) ->
     let e' = check_bool_expr ctxt e
     in
-    let (_, rt1, st1') = check_stmt_list ctxt st1
+    let ifctxt = StringMap.empty::ctxt in
+    let (_, rt1, st1') = check_stmt_list ifctxt st1
     in
-    let (_, rt2, st2') = check_stmt_list ctxt st2
+    let (_, rt2, st2') = check_stmt_list ifctxt st2
     in
     let rt = match rt1, rt2 with
         (SVoid, _) -> SVoid
