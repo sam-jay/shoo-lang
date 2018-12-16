@@ -185,9 +185,6 @@ and dfs_sexpr ?fname funcs env (t, expr) =
     | SUnop(op, e1) ->
       let (funcs1, fvs1, e1') = dfs_sexpr funcs env e1 in
       (funcs1, fvs1, (t, SUnop(op, e1')))
-    | SPop(e1, op) ->
-      let (funcs1, fvs1, e1') = dfs_sexpr funcs env e1 in
-      (funcs1, fvs1, (t, SPop(e1', op)))
     | SFCall((lt, se), args) ->
       (match se with
          SId(s1) ->

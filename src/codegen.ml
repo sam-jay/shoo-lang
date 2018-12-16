@@ -282,19 +282,6 @@ let translate functions =
         let idxs = List.mapi (fun i (n, _) -> (n, i)) members in
         let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
         L.build_extractvalue s idx name builder
-      | SPop (e, op) ->
-        let e' = expr builder m e in
-        (match op with
-         | Inc -> L.build_store (L.build_add e' (L.const_int i32_t 1) "tmp" builder)
-                    (lookup (match snd e with
-                           SId s -> ignore(L.build_store e' (lookup s) builder); s
-                         | _ -> raise (Failure ("assignment not implemented in codegen"))
-                       )) builder
-         | Dec -> L.build_store (L.build_sub e' (L.const_int i32_t 1) "tmp" builder)
-                    (lookup(match snd e with
-                           SId s -> ignore(L.build_store e' (lookup s) builder); s
-                         | _ -> raise (Failure ("assignment not implemented in codegen"))
-                       )) builder)
       | SBinop (e1, op, e2) -> (*Ref: Justin's codegen.ml*)
         let (t, _) = e1
         and e1' = expr builder m e1
