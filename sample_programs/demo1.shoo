@@ -4,7 +4,7 @@
 
 function errExit () void {
 	println("Invalid option. Exiting");
-	exit_success(0);
+	exit_success();
 }
 
 println("Make an array of structs:");
@@ -16,7 +16,7 @@ if (sz == -1){
 	errExit();
 }
 
-rand_autoseed(0);
+rand_autoseed();
 
 println("Make a struct to populate the array:");
 println("Here are your choices:");
@@ -29,22 +29,22 @@ string structTypeStr = scan_line(5);
 int structType = int_of_str(structTypeStr);
 
 struct BankAccount {
-	float balance = float_of_int(rand_afterseed(0)%100)+.5;
-	int id = rand_afterseed(0);
+	float balance = float_of_int(rand_afterseed()%100)+.5;
+	int id = rand_afterseed();
 }
 
 struct Rectangle {
-	float width = float_of_int(rand_afterseed(0)%10);
-	float length = float_of_int(rand_afterseed(0)%10);
+	float width = float_of_int(rand_afterseed()%10);
+	float length = float_of_int(rand_afterseed()%10);
 }
 
 struct Point {
-	float x = float_of_int(rand_afterseed(0)%10);
-	float y = float_of_int(rand_afterseed(0)%10);
+	float x = float_of_int(rand_afterseed()%10);
+	float y = float_of_int(rand_afterseed()%10);
 }
 
 struct Student {
-	int id = rand_afterseed(0)%10;
+	int id = rand_afterseed()%10;
 	string name = "NoName";
 	int year = 2018;
 	int numClasses = 0;
@@ -138,7 +138,7 @@ stFns[0] = function (Wrapper wrap) void {
 };
 
 stFns[1] = function (Wrapper wrap) void {
-	wrap.st.numClasses = rand_afterseed(0);
+	wrap.st.numClasses = rand_afterseed();
 };
 
 stFns[2] = function (Wrapper wrap) void {

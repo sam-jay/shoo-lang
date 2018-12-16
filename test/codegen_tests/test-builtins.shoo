@@ -27,6 +27,6 @@ println(hello1);
 println(str_of_float(2.456));
 
 //test regular exit
-exit_success(1);
+exit_success();
 
 println("THIS SHOULDNT PRINT");

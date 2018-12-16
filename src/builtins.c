@@ -109,7 +109,7 @@ char* scan_line(int max_size){
 }
 
 // regular successful exit
-void exit_success(int code){
+void exit_success(){
   exit(0);
   return;
 }
@@ -134,13 +134,26 @@ void print(char * str){
 }
 
 // call this once before calling rand_afterseed() to seed the RNG
-void rand_autoseed(int null){
+void rand_autoseed(){
   time_t t;
   srand((unsigned)time(&t));
   return;   
 }
 
 // call this after calling rand_autoseed to get random numbers
-int rand_afterseed(int null){
+int rand_afterseed(){
   return rand();
+}
+
+// returns empty string if newline is given
+// otherwise returns the character as a string
+char* scan_char(){
+  char c = fgetc(stdin);
+  if (c == '\n') {
+    return ""; 
+  }
+  char *str = (char*)malloc(sizeof(char)*(2));
+  memset(str, 0, 2);
+  str[0] = c;
+  return str;
 }

@@ -28,7 +28,8 @@ globallog=testall.log
 rm -f $globallog
 error=0
 globalerror=0
-
+passed=0
+total=0
 keep=0
 
 Usage() {
@@ -101,13 +102,15 @@ Check() {
 
     # Report the status and clean up the generated files
 
-    #echo "before rror check"
+    #echo "before error check"
+    total=$((total+1))
     if [ $error -eq 0 ] ; then
         if [ $keep -eq 0 ] ; then
             rm -f $generatedfiles
         fi
         echo "OK"
         echo "###### SUCCESS" 1>&2
+        passed=$((passed+1))
     else
         echo "failed - maybe segfault"
         echo "###### FAILED" 1>&2
@@ -134,13 +137,14 @@ CheckFail() {
     Compare ${basename}.err ${reffile}.err ${basename}.diff
 
     # Report the status and clean up the generated files
-
+    total=$((total+1))
     if [ $error -eq 0 ] ; then
         if [ $keep -eq 0 ] ; then
             rm -f $generatedfiles
         fi
         echo "OK"
         echo "###### SUCCESS" 1>&2
+        passed=$((passed+1))
     else
         echo "failed - maybe segfault?"
         echo "###### FAILED" 1>&2
@@ -191,5 +195,7 @@ do
 	    ;;
     esac
 done
+
+echo $passed" out of "$total" tests passed!"
 
 exit $globalerror

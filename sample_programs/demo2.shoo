@@ -230,15 +230,12 @@ for (int i = 0; i<3; i++){
 array<string> toPrintStr = new(array<string>[10]);
 
 println("Now ascii-fy your own string up to 10 characters");
-//TODO: fix so don't have to do this one character at a time thing
-println("Please input one lowercase character at a time");
-println("When you are done inputting characters type '!' as a seperate character.");
+println("Please input a string of just lower case characters");
 
 function getUserIn() int {
 	for (int i = 0; i<10; i++){
-		println("Enter one lowercase character:");
-		string result = scan_line(3);
-		if(result == "!"){
+		string result = scan_char();
+		if(result == ""){
 			return i;
 		}
 		toPrintStr[i] = result;
