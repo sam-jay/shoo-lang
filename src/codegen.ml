@@ -303,7 +303,7 @@ let translate functions =
         let idx = snd (List.hd (List.filter (fun (n, _) -> n = name) idxs)) in
         L.build_extractvalue s idx name builder
       
-      | SBinop (e1, op, e2) -> (*Ref: Justin's codegen.ml*)
+      | SBinop (e1, op, e2) -> 
         let (t, _) = e1
         and e1' = expr builder m e1
         and e2' = expr builder m e2 in
@@ -454,7 +454,6 @@ let translate functions =
         in
         let m' = StringMap.add n (t, local_var) m in
         (builder, m')
-      (* Ref: Justin's codegen.ml *)
       | SIf (pred, then_stmts, else_stmts) ->
         let bool_val = expr builder m pred in
         let merge_bb = L.append_block context "merge" the_function in
