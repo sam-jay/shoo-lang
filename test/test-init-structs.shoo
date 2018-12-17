@@ -1,0 +1,10 @@
+struct BankAccount {
+	int balance;
+	int ownerId;
+}
+
+BankAccount myAccount; // Declare a variable of struct type BankAccount.
+myAccount = {balance = 0; ownerId = 12345;};
+
+myAccount.balance = 5;
+println(str_of_int(myAccount.ownerId));

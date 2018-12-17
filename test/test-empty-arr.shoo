@@ -1,0 +1,2 @@
+array<int> stuff = new(array<int>[0]);
+println("empty");
