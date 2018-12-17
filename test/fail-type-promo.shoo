@@ -1,0 +1,4 @@
+int x = 5;
+float y = 4.0;
+
+x+y;
