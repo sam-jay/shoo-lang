@@ -1,0 +1,13 @@
+function makeAdd (int add) func(int;int) {
+
+	return function (int value) int {
+		return add + value;
+	};
+}
+
+// make a function that adds 5 to the input
+func(int;int) myAdd = makeAdd(5);
+
+int x = 6;
+
+println(str_of_int(myAdd(6)));
