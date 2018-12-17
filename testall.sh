@@ -41,10 +41,8 @@ Usage() {
 
 SignalError() {
     if [ $error -eq 0 ] ; then
-	echo "FAILED"
 	error=1
     fi
-    echo "  $1"
 }
 
 # Compare <outfile> <reffile> <difffile>
@@ -86,8 +84,6 @@ Check() {
     reffile=`echo $1 | sed 's/.shoo$//'`
     basedir="`echo $1 | sed 's/\/[^\/]*$//'`/."
 
-    echo -n "$basename..."
-
     echo 1>&2
     echo "###### Testing $basename" 1>&2
 
@@ -108,11 +104,13 @@ Check() {
         if [ $keep -eq 0 ] ; then
             rm -f $generatedfiles
         fi
-        echo "OK"
+        echo -n "."
         echo "###### SUCCESS" 1>&2
         passed=$((passed+1))
     else
-        echo "failed - maybe segfault"
+    	printf "\n"
+    	echo -n "$basename..."
+        echo "failed"
         echo "###### FAILED" 1>&2
         globalerror=$error
     fi
@@ -124,8 +122,6 @@ CheckFail() {
                              s/.shoo//'`
     reffile=`echo $1 | sed 's/.shoo$//'`
     basedir="`echo $1 | sed 's/\/[^\/]*$//'`/."
-
-    echo -n "$basename..."
 
     echo 1>&2
     echo "###### Testing $basename" 1>&2
@@ -142,11 +138,13 @@ CheckFail() {
         if [ $keep -eq 0 ] ; then
             rm -f $generatedfiles
         fi
-        echo "OK"
+        echo -n "."
         echo "###### SUCCESS" 1>&2
         passed=$((passed+1))
     else
-        echo "failed - maybe segfault?"
+    	printf "\n"
+    	echo -n "$basename..."
+        echo "failed"
         echo "###### FAILED" 1>&2
         globalerror=$error
     fi
@@ -195,7 +193,7 @@ do
 	    ;;
     esac
 done
-
+printf "\n"
 echo $passed" out of "$total" tests passed!"
 
 exit $globalerror
