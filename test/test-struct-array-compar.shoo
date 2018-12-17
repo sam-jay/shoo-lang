@@ -1,0 +1,49 @@
+struct Hello {
+	int age = 30;
+	string greeting = "hello";
+}
+
+Hello myHello = new(Hello);
+Hello yourHello = new(Hello);
+Hello hi = myHello;
+
+if(myHello == yourHello) {
+	println("UNEXPECTED");
+} else {
+	println("EXPECTED");
+}
+
+array<string> arr = new(array<string>[5]);
+array<string> arr2 = new(array<string>[5]);
+
+array<string> arr3 = arr2;
+
+if(arr == arr2) {
+	println("UNEXPECTED");
+} else {
+	println("EXPECTED");
+}
+
+if(arr2 == arr3) {
+	println("EXPECTED");
+} else {
+	println("UNEXPECTED");
+}
+
+if(arr2 == arr2) {
+	println("EXPECTED");
+} else {
+	println("UNEXPECTED");
+}
+
+if(myHello == hi) {
+	println("EXPECTED");
+} else {
+	println("UNEXPECTED");
+}
+
+if(myHello == myHello) {
+	println("EXPECTED");
+} else {
+	println("UNEXPECTED");
+}
