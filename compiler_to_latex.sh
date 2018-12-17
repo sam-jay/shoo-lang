@@ -1,12 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
 #justin's latex script
-
+cd src/
 TARGET='../latex_compiler.txt'
 
 echo "" > $TARGET
 
-declare -a FILES=("grapl.ml" "scanner.mll" "ast.ml" "parser.mly" "sast.ml" "semant.ml" "hindley_milner.ml" "lift.ml" "codegen.ml" "graph.c")
+declare -a FILES
+FILES=("shoo.ml" "scanner.mll" "ast.ml" "parser.mly" "sast.ml" "semant.ml" "lift.ml" "codegen.ml" "builtins.c")
 
 
 for f in ${FILES[@]}

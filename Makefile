@@ -16,19 +16,6 @@ shoo.native :
 builtins.o :
 	cc -c -o builtins.o src/builtins.c -lm
 
-.PHONY : printer
-printer:
-	ocamlbuild -use-ocamlfind src/printer.native
-
-.PHONY : infer
-infer:
-	ocamlbuild -use-ocamlfind src/infer.native
-
-.PHONY : test
-test:
-	ocamlbuild -use-ocamlfind test/test.native
-	# "make clean" removes all generated files
-
 .PHONY : clean
 clean :
 	ocamlbuild -clean
