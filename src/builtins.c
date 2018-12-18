@@ -41,29 +41,25 @@ char* str_of_float(double x) {
 // overflow may occur and the result is undefined.
 int int_of_str(char *str){
   // reference: https://www.geeksforgeeks.org/write-your-own-atoi/
-    int res = 0;  // Initialize result 
-    int sign = 1;  // Initialize sign as positive 
-    int i = 0;  // Initialize index of first digit 
+  int res = 0;  // Initialize result 
+  int sign = 1;  // Initialize sign as positive 
+  int i = 0;  // Initialize index of first digit 
+  // If number is negative, then update sign 
+  if (str[0] == '-'){ 
+    sign = -1;   
+    i++;  // Also update index of first digit 
+  } 
        
-    // If number is negative, then update sign 
-    if (str[0] == '-') 
-    { 
-        sign = -1;   
-        i++;  // Also update index of first digit 
-    } 
-       
-    // Iterate through all digits and update the result 
-    for (; str[i] != '\0'; ++i) {
-        if(str[i]<48 || str[i]>57) {
-          // not a digit
-          return -1;
-        }
-        res = res*10 + str[i] - '0'; 
+  // Iterate through all digits and update the result 
+  for (; str[i] != '\0'; ++i) {
+    if(str[i]<48 || str[i]>57) {
+       // not a digit
+       return -1;
     }
-     
-    // Return result with sign 
-    return sign*res; 
-
+    res = res*10 + str[i] - '0'; 
+  } 
+  // Return result with sign 
+  return sign*res;
 }
 
 // rounds float to nearest int
@@ -76,19 +72,19 @@ double float_of_int(int x){
 }
 
 char* string_concat(char * str1, char* str2) {
-	int totalLength = strlen(str1) + strlen(str2) + 1;
-	char* result = calloc( totalLength, 1 );
-	strcat(result, str1);
-	strcat(result, str2);
-	return result;
+  int totalLength = strlen(str1) + strlen(str2) + 1;
+  char* result = calloc( totalLength, 1 );
+  strcat(result, str1);
+  strcat(result, str2);
+  return result;
 }
 
 int string_equals(char * str1, char* str2) {
-	int res = strcmp(str1, str2);
-	if (res == 0) {
-		return 1;
-	}
-	return 0;
+  int res = strcmp(str1, str2);
+  if (res == 0) {
+    return 1;
+  }
+  return 0;
 }
 
 // max_size doesn't have to include the terminating \0
@@ -99,13 +95,13 @@ char* scan_line(int max_size){
   if (max_size > 4096){
     return NULL;
   }
-    char *str = (char*)malloc(sizeof(char)*(max_size+1));
-    memset(str, 0, max_size+1);
-    fgets(str,max_size, stdin);
-    if (str[strlen(str)-1] == '\n') {
-      str[strlen(str)-1] = '\0'; // remove terminating newline
-    }
-    return str;
+  char *str = (char*)malloc(sizeof(char)*(max_size+1));
+  memset(str, 0, max_size+1);
+  fgets(str,max_size, stdin);
+  if (str[strlen(str)-1] == '\n') {
+    str[strlen(str)-1] = '\0'; // remove terminating newline
+  }
+  return str;
 }
 
 // regular successful exit
