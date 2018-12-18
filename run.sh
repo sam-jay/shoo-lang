@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# author: Crystal Ren
 set -e
 
 if [ -z "$1" ]
