@@ -1,3 +1,5 @@
+(* Authors: Sam Jayasinghe, Claire Adams, Crystal Ren, Cindy Le *)
+
 { open Parser }
 
 rule token = parse
