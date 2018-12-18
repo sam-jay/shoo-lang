@@ -8,7 +8,7 @@ function errExit () void {
 }
 
 println("Make an array of structs:");
-println("What size array do you want?");
+println("What size array do you want? (2 digits or less)");
 string szStr = scan_line(5);
 int sz = int_of_str(szStr);
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# authors: MicroC testall.sh modified by Crystal Ren
+
 # Regression testing script for Shoo
 # Step through a list of files
 #  Compile, run, and check the output of each expected-to-work test

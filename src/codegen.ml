@@ -1,3 +1,4 @@
+(* Authors: Sam Jayasinghe, Claire Adams, Crystal Ren, Cindy Le *)
 module L = Llvm
 
 open Ast

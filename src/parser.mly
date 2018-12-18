@@ -1,3 +1,4 @@
+/* Authors: Sam Jayasinghe, Claire Adams, Crystal Ren, Cindy Le */
 %{
   open Ast
   module StringMap = Map.Make (String)

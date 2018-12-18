@@ -1,3 +1,5 @@
+(* Authors: Sam Jayasinghe, Claire Adams, Cindy Le, Crystal Ren *)
+
 open Sast
 
 module StringMap = Map.Make(String)
