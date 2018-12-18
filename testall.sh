@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Regression testing script for Shoo
 # Step through a list of files
