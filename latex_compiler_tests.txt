@@ -1,12 +1,12 @@
 
 \subsection{fail-array-access-expr.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("can't access array with non-integer type")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-array-access-expr.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<string> a = ["hi", "bye"];
 a[1.234];
@@ -14,52 +14,52 @@ a[1.234];
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-array-access-expr-string.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("can't access array with non-integer type")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-array-access-expr-string.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<string> a = ["hi", "bye"];
 a[1.234];
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-arraylit.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("empty array init is not supported")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-arraylit.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // can't be empty
 array<int> a = [];
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-array-void.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Parsing.Parse_error
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-array-void.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // arrays can't be of type void
 array<void> a;
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-binop-floats-ints.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Semant.Type_mismatch("type mismatch error sint sfloat")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-binop-floats-ints.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int a = 5;
 float b = 6;
@@ -74,24 +74,24 @@ if (c == 11) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-call-nonfunc.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("not a function")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-call-nonfunc.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int foo = 5; foo();\end{lstlisting}
 \end{mdframed}
 \subsection{fail-compare-floats-ints.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("Error: cannot use == with types: sfloat and sint")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-compare-floats-ints.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int a = 5;
 float b = 5.0;
@@ -104,12 +104,12 @@ if (a == b) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-destruct-scope.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("funner already declared")\end{lstlisting}
 \end{mdframed}
 \subsection{fail-destruct-scope.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // destructing structs and scoping
 struct FunParam {
@@ -127,13 +127,13 @@ string msg = "VARS";
 println(msg);\end{lstlisting}
 \end{mdframed}
 \subsection{fail-elif-without-if.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Parsing.Parse_error
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-elif-without-if.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 float b = 0.23;
 
@@ -147,13 +147,13 @@ println("nothing");
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-else-without-if.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Parsing.Parse_error
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-else-without-if.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 float b = 0.23;
 
@@ -165,29 +165,29 @@ println("nothing");
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-empty-arr.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("empty array init is not supported")\end{lstlisting}
 \end{mdframed}
 \subsection{fail-empty-arr.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<string> empty = [];\end{lstlisting}
 \end{mdframed}
 \subsection{fail-fcall.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("argument type mismatch")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-fcall-rec-mutual.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Semant.Undeclared_reference("undeclared reference bar")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-fcall-rec-mutual.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo(int n) int {
   if (n == 1) {
@@ -206,18 +206,18 @@ function bar(int n) int {
 println(str_of_int(foo(5)));\end{lstlisting}
 \end{mdframed}
 \subsection{fail-fcall.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 println(5);\end{lstlisting}
 \end{mdframed}
 \subsection{fail-func-missing-return.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Semant.Type_mismatch("type mismatch error svoid sint")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-func-missing-return.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function hi(int q) int {
     q+5;
@@ -227,13 +227,13 @@ hi(8);
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-if-dead-code.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("dead code after return")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-if-dead-code.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct C {
     int a;
@@ -255,13 +255,13 @@ deadCode(thing);
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-if-without-expr.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Parsing.Parse_error
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-if-without-expr.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 if () {
     println("wow");
@@ -269,37 +269,37 @@ if () {
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-illegal-char.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("illegal character $")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-illegal-char.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int $a = 5;
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-illegal-voidparam.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Parsing.Parse_error
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-illegal-voidparam.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo(void x) int {
     return 5;
 }\end{lstlisting}
 \end{mdframed}
 \subsection{fail-loops-init.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("Error: sint is not a boolean type")\end{lstlisting}
 \end{mdframed}
 \subsection{fail-loops-init.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // failiure because while only takes boolean in field
 
@@ -308,24 +308,24 @@ while(1){
 }\end{lstlisting}
 \end{mdframed}
 \subsection{fail-mult-types.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("a already declared")\end{lstlisting}
 \end{mdframed}
 \subsection{fail-mult-types.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int a = 4;
 float a = 5.4;\end{lstlisting}
 \end{mdframed}
 \subsection{fail-nested-func-scope.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Semant.Undeclared_reference("undeclared reference bar")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-nested-func-scope.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo(int x) void {
     function baz(int y) int {
@@ -345,23 +345,23 @@ main();
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-pop-int-dec.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("assignment for IntLit(12)\n    -\n    IntLit(1)not implemented in codegen")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-pop-int-dec.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 12--;\end{lstlisting}
 \end{mdframed}
 \subsection{fail-return-type-mismatch.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Semant.Type_mismatch("type mismatch error sstring sint")\end{lstlisting}
 \end{mdframed}
 \subsection{fail-return-type-mismatch.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function test() int {
 	int a = 4;
@@ -369,12 +369,12 @@ function test() int {
 }\end{lstlisting}
 \end{mdframed}
 \subsection{fail-scoping.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("message already declared")\end{lstlisting}
 \end{mdframed}
 \subsection{fail-scoping.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 string msg = "comment ca va?";
 // scoping for parameters vs locals
@@ -386,23 +386,23 @@ function hello1(string message) void {
 hello1(msg);\end{lstlisting}
 \end{mdframed}
 \subsection{fail-toplevel-return.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("illegal return statement")
 \end{lstlisting}
 \end{mdframed}
 \subsection{fail-toplevel-return.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 return;\end{lstlisting}
 \end{mdframed}
 \subsection{fail-type-promo.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Failure("Error: cannot use + with types: sfloat and sint")\end{lstlisting}
 \end{mdframed}
 \subsection{fail-type-promo.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int x = 5;
 float y = 4.0;
@@ -410,25 +410,25 @@ float y = 4.0;
 x+y;\end{lstlisting}
 \end{mdframed}
 \subsection{fail-unop.err}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Fatal error: exception Semant.Type_mismatch("Type mismatch for unary operator")\end{lstlisting}
 \end{mdframed}
 \subsection{fail-unop.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 bool x = -true;
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-2d.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 0
 5
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-2d.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<array<int>> a = new(array<array<int>>[2]);
 
@@ -447,13 +447,13 @@ println(str_of_int(a[1][50]));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-access-expr.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 3
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-access-expr.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<int> a = [1,2];
 a[0+1] = 3;
@@ -461,7 +461,7 @@ println(str_of_int(a[1]));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-access.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 0
 1
@@ -475,7 +475,7 @@ println(str_of_int(a[1]));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-access.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<int> a = [0,1,2];
 println(str_of_int(a[0]));
@@ -498,7 +498,7 @@ println(str_of_int(foo()[4]));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-lift.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 hi
 true
@@ -506,7 +506,7 @@ false
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-lift.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function redeclareArray(array<bool> b) array<bool> {
     b = [true,false,true];
@@ -544,12 +544,12 @@ println(str_of_bool(c[1]));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-arraylit.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-arraylit.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 [5,6];
 
@@ -597,7 +597,7 @@ array<array<string>> f = [["hi","ki"], ["ok"], ["l","r","m"]];
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-new.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 0
 1
@@ -609,7 +609,7 @@ hi
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-new.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<int> a = new(array<int>[5]);
 a[0] = 0;
@@ -640,7 +640,7 @@ d[2] = true;
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-of-struct.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 5
 6
@@ -648,7 +648,7 @@ d[2] = true;
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-of-struct.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct B {
     int i;
@@ -674,14 +674,14 @@ println(str_of_int(c.i));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-size-runtime.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 true
 false
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-size-runtime.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function set_size(int n) array<bool> {
     array<bool> b = new(array<bool>[n]);
@@ -696,14 +696,14 @@ println(str_of_bool(c[9]));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-arrays-structs-fns.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 2
 3
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-arrays-structs-fns.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Box {
 	int width;
@@ -743,13 +743,13 @@ fun(test, 2);
 fun(test2, 2);\end{lstlisting}
 \end{mdframed}
 \subsection{test-array-struct-access.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 5true
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-array-struct-access.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<int> p = new(array<int>[3]);
 
@@ -777,12 +777,12 @@ println(str_of_bool(y.b[0]));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-arrs-of-structs-w-funcs.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 34\end{lstlisting}
 \end{mdframed}
 \subsection{test-arrs-of-structs-w-funcs.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 //more testing with arrays of structs with functions that take in structs with arrays of arrays of structs as arguments
 
@@ -840,7 +840,7 @@ myArr[0].hello(myArr[0].aStuff);
 //myArr[0].hello(new(MoreStuff));\end{lstlisting}
 \end{mdframed}
 \subsection{test-assign.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Hello World
 Hello World
@@ -849,7 +849,7 @@ Hello World
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-assign.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 string foo;
 foo = "Hello World";
@@ -865,12 +865,12 @@ println(baz());
 println(str_of_int(x));\end{lstlisting}
 \end{mdframed}
 \subsection{test-assoc-dot.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 10\end{lstlisting}
 \end{mdframed}
 \subsection{test-assoc-dot.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct More{
 	int defield = 10;
@@ -887,12 +887,12 @@ Stuff temp = new(Stuff);
 println(str_of_int(temp.moreStuff.defield));\end{lstlisting}
 \end{mdframed}
 \subsection{test-binop-eq.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-binop-eq.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 string x = "Hello "+"World"+"!";
 string y = "what";
@@ -902,19 +902,19 @@ int j = 0;
 i!=j;\end{lstlisting}
 \end{mdframed}
 \subsection{test-binop-expression.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 6\end{lstlisting}
 \end{mdframed}
 \subsection{test-binop-expression.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int x;
 x =  5 + (4-2)/2;
 println(str_of_int(x));\end{lstlisting}
 \end{mdframed}
 \subsection{test-binop.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 11
 6
@@ -941,7 +941,7 @@ yes good
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-binop.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int x = 5+6;
 println(str_of_int(x));
@@ -1052,7 +1052,7 @@ if (!j) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-binop-str.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Hello World!
 Hello World!
@@ -1060,7 +1060,7 @@ yay
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-binop-str.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 string x = "Hello "+"World"+"!";
 println(x);
@@ -1077,7 +1077,7 @@ if (x == y) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-bubblesort-array-fcall-struct.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 1
 3
@@ -1122,7 +1122,7 @@ if (x == y) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-bubblesort-array-fcall-struct.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Object {
 	int index;
@@ -1193,14 +1193,14 @@ printData(objects, n);
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-builtin-as-firstclass.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 hello world1234
 5
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-builtin-as-firstclass.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo(func(string;void) bar, func(int;string) baz) void {
   bar("hello world" + baz(1234));
@@ -1222,12 +1222,12 @@ println(someStruct.c);
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-builtins-firstclass.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 6\end{lstlisting}
 \end{mdframed}
 \subsection{test-builtins-firstclass.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // make struct with function as a member field
 
@@ -1242,7 +1242,7 @@ temp.intToString = str_of_int;
 println(temp.intToString(6));\end{lstlisting}
 \end{mdframed}
 \subsection{test-builtins.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 HI
 BYE
@@ -1253,7 +1253,7 @@ GOOD
 2.456\end{lstlisting}
 \end{mdframed}
 \subsection{test-builtins.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int x = int_of_float(4.5);
 float y = float_of_int(4);
@@ -1289,7 +1289,7 @@ exit_success();
 println("THIS SHOULDNT PRINT");\end{lstlisting}
 \end{mdframed}
 \subsection{test-compare-arrays.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 same ptr
 same
@@ -1299,7 +1299,7 @@ yes
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-compare-arrays.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<int> a = [1,2,3,4,5];
 array<int> b = [1,2,3,4,5];
@@ -1345,7 +1345,7 @@ if (b == d) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-compare-primitives.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int works
 int works
@@ -1361,7 +1361,7 @@ bool works
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-compare-primitives.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int a = 5;
 int b = 5;
@@ -1449,7 +1449,7 @@ if (h == h) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-compare-strings.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 strings are equal
 strings are equal
@@ -1458,7 +1458,7 @@ is zero
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-compare-strings.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 string z = "hijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj";
 string q = "hijjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj";
@@ -1503,13 +1503,13 @@ if (string_equals(s1, s2) == 1) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-declaring-two-structs.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 no
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-declaring-two-structs.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct B {
    int a;
@@ -1536,7 +1536,7 @@ if (5 == 5) {
 }\end{lstlisting}
 \end{mdframed}
 \subsection{test-default-values-structs.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 10
 PRINTING THIS
@@ -1544,7 +1544,7 @@ GOOD WE WANT TO PRINT
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-default-values-structs.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct TestStruct {
 	int hello = 5;
@@ -1568,14 +1568,14 @@ if (temp.hello==5) {
 }\end{lstlisting}
 \end{mdframed}
 \subsection{test-destruct.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 10
 5
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-destruct.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Foo {
   int x = 10;
@@ -1592,13 +1592,13 @@ println(str_of_int(y));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-dot-and-array.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 100
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-dot-and-array.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 
 struct Foo {
@@ -1627,14 +1627,14 @@ println(str_of_int(b.baz[0].bar[0].foo[1]));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-dynamic-size-array.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 4
 0
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-dynamic-size-array.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int x = 5;
 array<int> arr = new(array<int>[x]);
@@ -1644,23 +1644,23 @@ println(str_of_int(arr[x-1]));
 println(str_of_int(arr[x-2]));\end{lstlisting}
 \end{mdframed}
 \subsection{test-empty-arr.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 empty\end{lstlisting}
 \end{mdframed}
 \subsection{test-empty-arr.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<int> stuff = new(array<int>[0]);
 println("empty");\end{lstlisting}
 \end{mdframed}
 \subsection{test-empty-structs.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-empty-structs.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Empty{
 }
@@ -1670,25 +1670,25 @@ Empty temp;
 Empty temp2 = new(Empty);\end{lstlisting}
 \end{mdframed}
 \subsection{test-exit.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Hello
 AHH!!!!\end{lstlisting}
 \end{mdframed}
 \subsection{test-exit.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 println("Hello");
 die("AHH!!!!",0);
 println("this shouldn't print");\end{lstlisting}
 \end{mdframed}
 \subsection{test-fcall-rec.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 3\end{lstlisting}
 \end{mdframed}
 \subsection{test-fcall-rec.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function countdown(int n) int {
     if (n == 1) { return 1; }
@@ -1700,13 +1700,13 @@ println(str_of_int(countdown(3)));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-fcall-simple.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Hello World
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-fcall-simple.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo() string {
   return "Hello World";
@@ -1714,13 +1714,13 @@ function foo() string {
 println(foo());\end{lstlisting}
 \end{mdframed}
 \subsection{test-fibonacci.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 34
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-fibonacci.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function fib(int n) int {
     if (n <= 1) {
@@ -1734,13 +1734,13 @@ println(str_of_int(fib(9)));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-missing-all.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 done!
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-missing-all.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function infinite(int c) string {
     for ( ; ; ) {
@@ -1758,7 +1758,7 @@ println(s);
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-no-incr.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 hello 0
 hello 2
@@ -1768,7 +1768,7 @@ hello 8
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-no-incr.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 for (int i = 0; i < 10;  ) {
     println("hello " + str_of_int(i));
@@ -1777,7 +1777,7 @@ for (int i = 0; i < 10;  ) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-no-init.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 0
 1
@@ -1787,7 +1787,7 @@ for (int i = 0; i < 10;  ) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-no-init.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int i = 0;
 for (; i < 5; i = i + 1) {
@@ -1796,13 +1796,13 @@ for (; i < 5; i = i + 1) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-no-predicate.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 100
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-no-predicate.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function hi() int {
     for (int k = 1; ; k = k + 7) {
@@ -1817,7 +1817,7 @@ println(str_of_int(hi()));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 hello 0
 hello 1
@@ -1827,13 +1827,13 @@ hello 4
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-return.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 hello 5
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop-return.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 
 
@@ -1846,7 +1846,7 @@ function foo() string {
 println(foo());\end{lstlisting}
 \end{mdframed}
 \subsection{test-for-loop.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 for (int i = 0; i < 5; i++) {
     println("hello " + str_of_int(i));
@@ -1854,12 +1854,12 @@ for (int i = 0; i < 5; i++) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-freturn-void.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-freturn-void.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo() void {
   return;
@@ -1871,14 +1871,14 @@ function bar() void {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-func-modify-array-scope.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 2
 bye
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-func-modify-array-scope.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // Returns a function to return the value at a specific, static index for an array
 function indexValue (array<int> arr, int index1)  func(; string) {
@@ -1913,12 +1913,12 @@ println(print1ForStruct()); // should print bye
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-func-ret-func.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 11\end{lstlisting}
 \end{mdframed}
 \subsection{test-func-ret-func.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function makeAdd (int add) func(int;int) {
 
@@ -1936,13 +1936,13 @@ println(str_of_int(myAdd(6)));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-hello2.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Hello World!
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-hello2.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function create_get_hello() func(;string) {
   string x = "Hello";
@@ -1961,13 +1961,13 @@ function create_hello_func() func(string;string) {
 println(create_hello_func()("World"));\end{lstlisting}
 \end{mdframed}
 \subsection{test-hello.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Hello World
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-hello.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo() func(int;string) {
   string x = "Hello World";
@@ -1978,7 +1978,7 @@ function foo() func(int;string) {
 println(foo()(5));\end{lstlisting}
 \end{mdframed}
 \subsection{test-if.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 GOOD
 JOB
@@ -1987,7 +1987,7 @@ yes
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-if-return.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 correct
 correct
@@ -1996,7 +1996,7 @@ correct
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-if-return.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo() string {
     string x = "Hello "+"World"+"!";
@@ -2054,7 +2054,7 @@ println(str_of_int(other(false)));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-if.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 string x = "Hello "+"World"+"!";
 string y = "what";
@@ -2101,7 +2101,7 @@ if (i == 4) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-if-without-else.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Yes
 yes
@@ -2109,7 +2109,7 @@ not not
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-if-without-else.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 bool b = 5 < 6;
 if (!b) {
@@ -2130,12 +2130,12 @@ if (!!b) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-init-structs.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 12345\end{lstlisting}
 \end{mdframed}
 \subsection{test-init-structs.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct BankAccount {
 	int balance;
@@ -2149,7 +2149,7 @@ myAccount.balance = 5;
 println(str_of_int(myAccount.ownerId));\end{lstlisting}
 \end{mdframed}
 \subsection{test-loops-init.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 hello
 bye
@@ -2173,7 +2173,7 @@ END
 stuff\end{lstlisting}
 \end{mdframed}
 \subsection{test-loops-init.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 //add tests to declare any variable of any type in the for loop; and add failure tests to not allow anything except initializations and assignments
 
@@ -2210,13 +2210,13 @@ while(f){
 }\end{lstlisting}
 \end{mdframed}
 \subsection{test-multi-arg-passing-func.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 bye
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-multi-arg-passing-func.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function myPrint(func(string; string) printme, string mystring) void {
     printme(mystring);
@@ -2233,12 +2233,12 @@ myPrint(hello, "bye");
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-multidim-arr.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 WE MADE IT\end{lstlisting}
 \end{mdframed}
 \subsection{test-multidim-arr.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 array<array<array<array<string>>>> multiDimArrMORE = new(array<array<array<array<string>>>>[10]);
 
@@ -2250,13 +2250,13 @@ multiDimArrMORE[0][0][0][0] = "WE MADE IT";
 println(multiDimArrMORE[0][0][0][0]);\end{lstlisting}
 \end{mdframed}
 \subsection{test-name-funs.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 9
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-name-funs.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function hello() func(int;string) {
 	func(int;string) namedFunction = function (int x) string {
@@ -2268,13 +2268,13 @@ function hello() func(int;string) {
 println(hello()(4));\end{lstlisting}
 \end{mdframed}
 \subsection{test-new-array-of-struct.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 10
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-new-array-of-struct.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 
 struct B {
@@ -2289,13 +2289,13 @@ println(str_of_int(e[0].i));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-new-struct-default-func.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Hello World
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-new-struct-default-func.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct A {
   int x = 10;
@@ -2310,27 +2310,27 @@ println(foo.hello());
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-pop-int-incre.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 1
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-pop-int-incre.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int i = 0;
 i++;
 println(str_of_int(i));\end{lstlisting}
 \end{mdframed}
 \subsection{test-pop-struct.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 6
 5
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-pop-struct.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Foo {
   int x = 5;
@@ -2343,7 +2343,7 @@ f.x--;
 println(str_of_int(f.x));\end{lstlisting}
 \end{mdframed}
 \subsection{test-print.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 5
 5
@@ -2357,7 +2357,7 @@ hi
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-print.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int a = 5;
 println(str_of_int(a));
@@ -2385,7 +2385,7 @@ println("");
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-rec-mergesort-int.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 0
 1
@@ -2394,7 +2394,7 @@ println("");
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-rec-mergesort-int.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Box {
 	int width;
@@ -2515,7 +2515,7 @@ function mergeSortUser(array<int> tester, int sz) void {
 mergeSortUser(test, 4);\end{lstlisting}
 \end{mdframed}
 \subsection{test-rec-mergesort-structs.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 2
 8
@@ -2528,7 +2528,7 @@ mergeSortUser(test, 4);\end{lstlisting}
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-rec-mergesort-structs.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Box {
 	int width;
@@ -2660,13 +2660,13 @@ mergeSortUser(test1, 4);
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-return-after-for.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Hello World
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-return-after-for.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function foo() string {
   for(int i = 0; i < 10; i = i + 1) {
@@ -2678,14 +2678,14 @@ function foo() string {
 println(foo());\end{lstlisting}
 \end{mdframed}
 \subsection{test-return-func-arg-scope.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 0 5 10 15 20 25 30 35 40 45 
 0 1 2 3 4 5 6 7 8 9 
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-return-func-arg-scope.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // This function provides a printer for arrays of a
 // specific size. If the array is smaller than the 
@@ -2717,13 +2717,13 @@ toPrintPrinter(sameSize);
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-scope-structs-firstclassfns.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 HI
 secret message is heresecond secret message6\end{lstlisting}
 \end{mdframed}
 \subsection{test-scope-structs-firstclassfns.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // struct of same name inside firstclass fn inside struct of same name
 struct Fancy {
@@ -2752,13 +2752,13 @@ println(myNew.hello);
 println(result);\end{lstlisting}
 \end{mdframed}
 \subsection{test-scoping.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 ca va bien
 ca va mal\end{lstlisting}
 \end{mdframed}
 \subsection{test-scoping.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 //scoping for globals vs locals
 
@@ -2779,7 +2779,7 @@ function hello2(string msg) void {
 hello2("ca va mal");\end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-array-compar.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 EXPECTED
 EXPECTED
@@ -2789,7 +2789,7 @@ EXPECTED
 EXPECTED\end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-array-compar.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Hello {
 	int age = 30;
@@ -2843,13 +2843,13 @@ if(myHello == myHello) {
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-empty.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 does nothing
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-empty.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Empty{}
 Empty e;
@@ -2857,13 +2857,13 @@ println("does nothing");
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-func.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 11
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-func.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 // Struct with function in it.
 function add5(int y) int {
@@ -2883,7 +2883,7 @@ m.doAdd(6); // this seg faults
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-helloworld.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Sam says hello to Stephen for the 0th time
 Sam says hello to Stephen for the 1st time
@@ -2893,7 +2893,7 @@ Sam says hello to Stephen for the 4th time
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-helloworld.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Professor {
   string name;
@@ -2938,14 +2938,14 @@ Professor stephen = createProfessor("Stephen");
 createStudentCreator("hello")("Sam").greet(stephen);\end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-init.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 MALLOC DOES WORK
 5
 hello\end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-init.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct FunStuff {
 	string hello;
@@ -2968,13 +2968,13 @@ println(hi.hello);
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-nested.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 name
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-struct-nested.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 struct Member {
     string name;
@@ -3001,14 +3001,14 @@ println(nestedStruct());
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-unop.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 Somebody once told me
 the world is gonna roll me
 I ain't the sharpest tool in the shed\end{lstlisting}
 \end{mdframed}
 \subsection{test-unop.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 bool x=true;
 if (!x) {
@@ -3032,7 +3032,7 @@ if(b==-4.8){
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-var-scope.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 9
 10
@@ -3049,7 +3049,7 @@ if(b==-4.8){
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-var-scope.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int q = 7;
 if (q == 7) {
@@ -3080,7 +3080,7 @@ println(str_of_float(float_of_int(a.q)));
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-void-func.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 equal
 not equal
@@ -3088,7 +3088,7 @@ okay
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-void-func.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 function thing(float p, float q) void {
     if (p == q) {
@@ -3113,7 +3113,7 @@ more(9, thing, "okay");
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-while-loop-int-incre.out}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 0
 1
@@ -3121,7 +3121,7 @@ more(9, thing, "okay");
 \end{lstlisting}
 \end{mdframed}
 \subsection{test-while-loop-int-incre.shoo}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+\begin{mdframed}[hidealllines=true,backgroundcolor=green!10]
 \begin{lstlisting}
 int i = 0;
 while (i < 3) {
