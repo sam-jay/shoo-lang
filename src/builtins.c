@@ -1,3 +1,5 @@
+/* Authors: Crystal Ren, Claire Adams */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
