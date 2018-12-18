@@ -1,0 +1,101 @@
+// partially based off the Java implementation of a sudoku solver here:
+// https://www.baeldung.com/java-sudoku
+// and partially based off of Cindy Le's Leetcode solution to Sudoku solver
+
+// print a n x n board
+function printBoard (array<array<int>> board, int sz) void {
+	// sz should be 9... but we won't hardcode it here
+	for(int i =0; i<9; i++){
+		for(int j = 0; j<9; j++){
+			print(str_of_int(board[i][j]));
+			print(", ");
+		}
+		println("");
+	}
+}
+
+
+function solveHelper(array<array<int>> board, int index) bool {
+	if (index >= 81) {
+		return true;
+	}
+	int x = index / 9;
+	int y = index % 9;
+	if (board[x][y] != 0) {
+		return solveHelper(board, index + 1);
+	}
+
+	array<bool> used = new(array<bool>[10]);
+	for (int i = 0; i < 9; i++) {
+		used[board[x][i]] = true;
+		used[board[i][y]] = true;
+	}
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			used[board[(x/3)*3+i][(y/3)*3+j]] = true;
+		}
+	}
+
+	for (int i = 1; i <= 9; i++) {
+		if (!used[i]) {
+			board[x][y] = i;
+			if (solveHelper(board, index + 1)) {
+				return true;
+			}
+		}
+	}
+
+	board[x][y] = 0;
+	return false;
+}
+
+// initialize the sudoku board
+array<array<int>> board = new(array<array<int>>[9]);
+
+for(int i = 0; i<9; i++) {
+	board[i] = new(array<int>[9]);
+	for(int k = 0; k<9; k++){
+		board[i][k] = 0;
+	}
+}
+
+// set up the default board
+// expects a zero'd out, initialized 9x9 board
+function defaultBoard(array<array<int>> board) void {
+	board[0][0] = 8;
+	board[1][2] = 3;
+	board[1][3] = 6;
+	board[2][1] = 7;
+	board[2][4] = 9;
+	board[2][6] = 2;
+	board[3][1] = 5;
+	board[3][5] = 7;
+	board[4][4] = 4;
+	board[4][5] = 5;
+	board[4][6] = 7;
+	board[5][3] = 1;
+	board[5][7] = 3;
+	board[6][2] = 1;
+	board[6][7] = 6;
+	board[6][8] = 8;
+	board[7][2] = 8;
+	board[7][3] = 5;
+	board[7][7] = 1;
+	board[8][1] = 9;
+	board[8][6] = 4;
+}
+
+// set up and print default board
+println("Here is the default board:");
+defaultBoard(board);
+printBoard(board, 9);
+
+// actually solve the sudoku board
+println("");
+solveHelper(board, 0);
+println("************************************************");
+println("Here is the solved board:");
+printBoard(board, 9);
+
+//TODO: implement reading a board from stdin
