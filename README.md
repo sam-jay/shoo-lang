@@ -5,85 +5,117 @@
 
 ## Table of Contents
 
+- [Introduction](#introduction)
 - [Requirements](#requirements)
 - [Usage](#usage)
-- [Introduction](#introduction)
-- [Running tests](#running-tests)
+- [Sample Program](#sampleprogram)
+
+## Introduction
+
+Shoo is a general-purpose programming language that is statically scoped and strongly typed. Ithas imperative and functional programming features with C-like syntax.  Supporting first classfunctions,  structs,  and  arrays,  it  can  perform  reasonably  complex  tasks  in  a  single-threadedsetting.
 
 ## Requirements
 
-Install OCaml and OPAM.
-OCaml version 4.04.0 or higher is required.
+First, install LLVM 6.0.0. Then, install OCaml and OPAM. OCaml version 4.05.0 is required. 
 
-* Install dependencies:
-```sh
+```
 $ opam install ounit
 ```
 
 ## Usage
 
-Build the compiler binary using make.
+Build the compiler binary using make. Sometimes a clean is needed.
 
-```sh
+```
+$ make clean
 $ make
 ```
 
-## Introduction
+Take a look inside testall.sh for the variables which need to be set to the correct system paths of various programs, and set them accordingly. The path to the LLVM interpreter is variable "lli". Set the path to the LLVM compiler as "llc". Set the path to the C compiler as "cc". The following command runs all tests.
 
-Shoo is a programming language with C-like syntax while supporting first class functions, structs, and type inference.
+```
+$./testall.sh
+```
+When you run the command above, all the tests that came with the compiler will be run and should pass. If they do not all pass, go back to section 2.1 Environment Setup and ensure that your environment is set up correctly.
+
+To write Shoo source code, first create a file with a .shoo extension. Inside that file, write a program following the rules outlined in this language reference manual. Then, save your file and run it following the instructions below. If you need inspiration for your first Shoo program, feel free to copy any of the many examples provided throughout this manual.
+
+To compile a Shoo program into LLVM code:
+```
+$ ./shoo.native <filename>
+```
+
+To compile and execute a Shoo program:
+```
+./run.sh <filename>
+```
+
+## Sample Program
 
 Here is a sample program written in Shoo:
 
 ```
-struct Professor {
-  string name;
+struct Object {
+	int index;
+	int data;
 }
 
-struct Student {
-  string name;
-  func(Professor;void) greet;
+function compareData(Object a, Object b) bool {
+    return a.data < b.data;
 }
 
-function createProfessor(string name) Professor {
-  return { name = name; };
+function compareIndex(Object a, Object b) bool {
+    return a.index < b.index;
 }
 
-function createStudentCreator(string defaultGreeting) func(string;Student) {
-  return function(string name) Student {
-    function helper(int i) string {
-      string x = "st";
-      if (i == 0 || i == 4) {
-        x = "th";
-      } elif (i == 2) {
-        x = "nd";
-      } elif (i == 3) {
-        x = "rd";
-      }
-      return str_of_int(i) + x;
-    }
-    return {
-      name = name;
-      greet = function(Professor p) void {
-        for (int i = 0; i < 5; i = i + 1) {
-          println(name + " says " + defaultGreeting + " to " + p.name + " for the " + helper(i) + " time");
-        }
-        return;
-      };
-    };
-  };
+function printData(array<Object> arr, int n) void {
+	for (int i = 0; i < n; i++) {
+		println(str_of_int(arr[i].data));
+	}
+	
+	return;
 }
 
-Professor stephen = createProfessor("Stephen");
+function printIndex(array<Object> arr, int n) void {
+	for (int i = 0; i < n; i++) {
+		println(str_of_int(arr[i].index));
+	}
+	
+	return;
+}
 
-createStudentCreator("hello")("Sam").greet(stephen);
-```
+function bubbleSort(array<Object> arr, int n, func(Object, Object; bool) compare) array<Object> {
+	for (int i = 0; i < n - 1; i++) {
+		for (int j = 0; j < n - i - 1; j++) {
+			if (compare(arr[j + 1], arr[j])) {
+				Object temp = arr[j];
+				arr[j] = arr[j + 1];
+				arr[j + 1] = temp;
+			}
+		}
+	}
+	
+	return arr;
+}
 
-## Running tests
+array<int> indices = [1,3,8,6,9,7,0,2,4,5];
+array<int> datapoints = [106,101,104,108,105,103,102,109,107,100];
 
-Take a look inside testall.sh for the variables which set the path to the LLVM interpreter as variable "lli". 
-Set the path to the LLVM compiler as "llc". Set the path to the C compiler as "cc".
+int n = 10;
+array<Object> objects = new(array<Object>[n]);
 
-```sh
-$ make
-$ ./testall.sh
+for (int i = 0; i < n; i++) {
+	objects[i] = new(Object);
+	objects[i].index = indices[i]; 
+	objects[i].data = datapoints[i];
+}
+
+printIndex(objects, n);
+printData(objects, n);
+
+bubbleSort(objects, n, compareIndex);
+printIndex(objects, n);
+
+bubbleSort(objects, n, compareData);
+printData(objects, n);
 ```
