@@ -8,7 +8,7 @@
 - [Introduction](#introduction)
 - [Requirements](#requirements)
 - [Usage](#usage)
-- [Sample Program](#sampleprogram)
+- [Example](#example)
 
 ## Introduction
 
@@ -50,7 +50,7 @@ To compile and execute a Shoo program:
 ./run.sh <filename>
 ```
 
-## Sample Program
+## Example
 
 Here is a sample program written in Shoo:
 
