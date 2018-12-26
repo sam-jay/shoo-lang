@@ -12,7 +12,7 @@
 
 ## Introduction
 
-Shoo is a general-purpose programming language that is statically scoped and strongly typed. Ithas imperative and functional programming features with C-like syntax.  Supporting first classfunctions,  structs,  and  arrays,  it  can  perform  reasonably  complex  tasks  in  a  single-threadedsetting.
+Shoo is a general-purpose programming language that is statically scoped and strongly typed. It has imperative and functional programming features with C-like syntax.  Supporting first class functions,  structs,  and  arrays,  it  can  perform  reasonably  complex  tasks  in  a  single-threaded setting.
 
 ## Requirements
 
