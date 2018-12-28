@@ -18,10 +18,6 @@ Shoo is a general-purpose programming language that is statically scoped and str
 
 First, install LLVM 6.0.0. Then, install OCaml and OPAM. OCaml version 4.05.0 is required. 
 
-```
-$ opam install ounit
-```
-
 ## Usage
 
 Build the compiler binary using make. Sometimes a clean is needed.
