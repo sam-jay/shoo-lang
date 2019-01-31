@@ -135,7 +135,7 @@ println(str_of_int(a[1][2]));
 
 Additionally, you can have a struct with an array as a member so you can achieve nested arrays by having arrays of structs that have arrays as members.
 
-### Accessing Array Elements}
+### Accessing Array Elements
 To access an element in an array, you use the variable name for that array followed by square brackets with an integer expression inside the square brackets as the index of the desired element. For nested arrays, square brackets with indices in them are concatenated to get to the element at the desired layer of the nested array. Accessing elements beyond the size of the array causes undefined behavior. 
 ```
 array<int> a = new(array<int>[5]);
